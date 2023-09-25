@@ -405,6 +405,8 @@ const loginUser = async (req, res) => {
             res.cookie("ukImmigrationJwtoken", token, {
               expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
               httpOnly: true,
+              sameSite: "None",
+              secure: true
             });
             return res.status(200).json({isCaseWorker: true, success: true});
 
