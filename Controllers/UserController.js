@@ -347,6 +347,8 @@ const loginUser = async (req, res) => {
         res.cookie("ukImmigrationJwtoken", token, {
           expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
           httpOnly: true,
+          sameSite: "none",
+          secure: true,
         });
 
         return res.status(200).json({message:'Login Successfully', success: true});
@@ -405,8 +407,8 @@ const loginUser = async (req, res) => {
             res.cookie("ukImmigrationJwtoken", token, {
               expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
               httpOnly: true,
-              sameSite: "None",
-              secure: true
+              sameSite: "none",
+              secure: true,
             });
             return res.status(200).json({isCaseWorker: true, success: true});
 
@@ -432,6 +434,8 @@ const loginUser = async (req, res) => {
           res.cookie("ukImmigrationJwtoken", token, {
             expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
             httpOnly: true,
+            sameSite: "none",
+            secure: true,
           });
           return res.status(200).json({
             message: "Login Successfully",
