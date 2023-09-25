@@ -20,7 +20,7 @@ const applicationSchema = mongoose.Schema(
         required: true,
       },
       birthDate: {
-        type: String,
+        type: Date,
         required: true,
       },
       country: {
@@ -88,11 +88,11 @@ const applicationSchema = mongoose.Schema(
       general: {
         fullName: {
           type: String,
-          required: true,
+          required: false,
         },
         isKnownByOtherName: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         previousName: {
           type: String,
@@ -105,19 +105,19 @@ const applicationSchema = mongoose.Schema(
         },
         countryOfBirth: {
           type: String,
-          required: true,
+          required: false,
         },
         placeOfBirth: {
           type: String,
-          required: true,
+          required: false,
         },
         currentNationality: {
           type: String,
-          required: true,
+          required: false,
         },
         isOtherNationality: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         otherNationality: {
           type: String,
@@ -130,27 +130,27 @@ const applicationSchema = mongoose.Schema(
         },
         currentPassportNumber: {
           type: String,
-          required: true,
+          required: false,
         },
         passportIssueDate: {
           type: Date,
-          required: true,
+          required: false,
         },
         passportExpiryDate: {
           type: Date,
-          required: true,
+          required: false,
         },
         issuingAuthority: {
           type: String,
-          required: true,
+          required: false,
         },
         passportPlaceOfIssue: {
           type: String,
-          required: true,
+          required: false,
         },
         isNationalIDCard: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         idCardNumber: {
           type: String,
@@ -160,7 +160,7 @@ const applicationSchema = mongoose.Schema(
         },
         isBrp: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         brpNumber: {
           type: String,
@@ -170,47 +170,47 @@ const applicationSchema = mongoose.Schema(
         },
         motherName: {
           type: String,
-          required: true,
+          required: false,
         },
         motherDob: {
           type: Date,
-          required: true,
+          required: false,
         },
         motherNationality: {
           type: String,
-          required: true,
+          required: false,
         },
         motherCountry: {
           type: String,
-          required: true,
+          required: false,
         },
         motherPlaceOfBirth: {
           type: String,
-          required: true,
+          required: false,
         },
         fatherName: {
           type: String,
-          required: true,
+          required: false,
         },
         fatherDob: {
           type: Date,
-          required: true,
+          required: false,
         },
         fatherNationality: {
           type: String,
-          required: true,
+          required: false,
         },
         fatherCountry: {
           type: String,
-          required: true,
+          required: false,
         },
         fatherPlaceOfBirth: {
           type: String,
-          required: true,
+          required: false,
         },
         isUKNINumber: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         ukNINumber: {
           type: String,
@@ -220,7 +220,7 @@ const applicationSchema = mongoose.Schema(
         },
         isUKDrivingLicense: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         ukDrivingLicenseNumber: {
           type: String,
@@ -230,49 +230,49 @@ const applicationSchema = mongoose.Schema(
         },
         email: {
           type: String,
-          required: true,
+          required: false,
         },
         mobileNumber: {
           type: String,
-          required: true,
+          required: false,
         },
       },
       accommodation: {
         address1: {
           type: String,
-          required: true,
+          required: false,
         },
         address2: {
           type: String,
-          required: true,
+          required: false,
         },
         locationName: {
           type: String,
-          required: true,
+          required: false,
         },
         locationCode: {
           type: String,
-          required: true,
+          required: false,
         },
         town: {
           type: String,
-          required: true,
+          required: false,
         },
         county: {
           type: String,
-          required: true,
+          required: false,
         },
         postCode: {
           type: String,
-          required: true,
+          required: false,
         },
         countryPrefix: {
           type: Number,
-          required: true,
+          required: false,
         },
         country: {
           type: String,
-          required: true,
+          required: false,
         },
         fax: {
           type: String,
@@ -282,15 +282,15 @@ const applicationSchema = mongoose.Schema(
         },
         moveInDate: {
           type: Date,
-          required: true,
+          required: false,
         },
         timeLivedAtCurrentAddress: {
           type: String,
-          required: true,
+          required: false,
         },
         homeType: {
           type: String,
-          required: true,
+          required: false,
         },
         landLordName: {
           type: String,
@@ -357,14 +357,14 @@ const applicationSchema = mongoose.Schema(
       family: {
         maritalStatus: {
           type: String,
-          required: true,
+          required: false,
         },
         spouseName: {
           type: String,
         },
         isMarried: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         marriageDate: {
           type: Date,
@@ -392,14 +392,14 @@ const applicationSchema = mongoose.Schema(
         },
         isLiveTogether: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         whichDateStartedLivingTogether: {
           type: Date,
         },
         isChildren: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         childName: {
           type: String,
@@ -430,7 +430,7 @@ const applicationSchema = mongoose.Schema(
         },
         isMarriedBefore: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         exName: {
           type: String,
@@ -449,7 +449,7 @@ const applicationSchema = mongoose.Schema(
         },
         isCurrentPartnerMarriedBefore: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         currentPartnerExName: {
           type: String,
@@ -468,7 +468,7 @@ const applicationSchema = mongoose.Schema(
         },
         isFamilyFriendsInHomeCountry: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         relativeName: {
           type: String,
@@ -480,11 +480,11 @@ const applicationSchema = mongoose.Schema(
       languageProficiency: {
         isDegreeTaughtInEnglish: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         isPassedAnyEnglishTest: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         testType: {
           type: String,
@@ -493,41 +493,41 @@ const applicationSchema = mongoose.Schema(
       education: {
         qualification: {
           type: String,
-          required: true,
+          required: false,
         },
         awardingInstitute: {
           type: String,
-          required: true,
+          required: false,
         },
         grade: {
           type: String,
-          required: true,
+          required: false,
         },
         courseSubject: {
           type: String,
-          required: true,
+          required: false,
         },
         courseLength: {
           type: String,
-          required: true,
+          required: false,
         },
         yearOfAward: {
           type: Number,
-          required: true,
+          required: false,
         },
         countryOfAward: {
           type: String,
-          required: true,
+          required: false,
         },
         state: {
           type: String,
-          required: true,
+          required: false,
         },
       },
       employment: {
         isEmployed: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         jobStartDate: {
           type: Date,
@@ -587,33 +587,33 @@ const applicationSchema = mongoose.Schema(
       maintenance: {
         bankName: {
           type: String,
-          required: true,
+          required: false,
         },
         isRegisteredFinancialInstitute: {
           type: String,
-          required: true,
+          required: false,
         },
         countryFundsHeldIn: {
           type: String,
-          required: true,
+          required: false,
         },
         currencyFundsHeldIn: {
           type: String,
-          required: true,
+          required: false,
         },
         amountHeld: {
           type: String,
-          required: true,
+          required: false,
         },
         fundsDateHeldFrom: {
           type: Date,
-          required: true,
+          required: false,
         },
       },
       travel: {
         areYouCurrentlyInUk: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         countryVisited: {
           type: String,
@@ -719,28 +719,28 @@ const applicationSchema = mongoose.Schema(
       character: {
         everChargedWithCriminalOffence: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         reasonForCharged: {
           type: String,
         },
         isPendingProsecutions: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         reasonForPendingProsecutions: {
           type: String,
         },
         isTerroristViews: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         reasonForTerroristViews: {
           type: String,
         },
         isWorkedForJudiciary: {
           type: Boolean,
-          required: true,
+          required: false,
         },
         reasonForJudiciaryWork: {
           type: String,
@@ -763,9 +763,12 @@ const applicationSchema = mongoose.Schema(
       type: String,
       default: "pending",
     },
+    rejectPhaseReason: {
+      type: String,
+    },
     requestedPhase: {
       type: Number,
-      default: 1,
+      default: 0,
     },
     phaseSubmittedByClient: {
       type: Number,

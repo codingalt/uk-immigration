@@ -15,11 +15,14 @@ const postApplicationPhase1 = async(req,res)=>{
       }
         const user = await UserModel.findById(req.userId.toString());
         if(!user) return res.status(400).json({message: "User not found", success: false})
+       
         const application = await new ApplicationModel(req.body).save();
+        console.log(application);
         res.status(200).json({ application, success: true });
         
     } catch (err) {
     res.status(500).json({ message: err.message, success: false });
+    console.log(err);
     }  
 }
 
@@ -52,6 +55,13 @@ const postApplicationPhase2 = async(req,res)=>{
         const user = await UserModel.findById(req.userId.toString());
         if(!user) return res.status(400).json({message: "User not found", success: false})
 
+        // Check if admin has requested client for phase 
+        const isRequested = await ApplicationModel.findById(applicationId);
+
+        if(isRequested.requestedPhase < 2){
+          return res.status(400).json({message: "You can't submit phase 2 data right now, Untill admin requests you to submit phase 2 data."})
+        }
+
         // Update Phase 2 
         const application = await ApplicationModel.findByIdAndUpdate(applicationId, {phase2: filesObj, phaseSubmittedByClient: 2}, { new: true, useFindAndModify: false });
         res.status(200).json({ application,success: true });
@@ -80,6 +90,13 @@ const postApplicationPhase3 = async (req, res) => {
       return res
         .status(400)
         .json({ message: "User not found", success: false });
+
+        // Check if admin has requested client for phase 
+        const isRequested = await ApplicationModel.findById(applicationId);
+
+        if(isRequested.requestedPhase < 3){
+          return res.status(400).json({message: "You can't submit phase 3 data right now, Untill admin requests you to submit phase 3 data."})
+        }
 
      // Update Phase 3 
     const application = await ApplicationModel.findByIdAndUpdate(
@@ -340,6 +357,16 @@ const getApplicationData = async (req, res) => {
   }
 };
 
+const getApplicationDataById = async (req, res) => {
+  try {
+    const {applicationId} = req.params;
+    const application = await ApplicationModel.findById(applicationId);
+    res.status(200).json({ application, success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
 const getApplicationDataByUser = async (req, res) => {
   try {
     const application = await ApplicationModel.find({}).select({"phase1.name": true, "phase1.applicationType": true, "applicationStatus": true});
@@ -370,14 +397,20 @@ const updateApplicationData = async (req, res) => {
 
 const rejectApplication = async (req, res) => {
   try {
-    const { applicationId } = req.body;
+    const { applicationId, rejectPhaseReason } = req.body;
     const isApplication = await ApplicationModel.findById(applicationId);
     if(!isApplication) {
         return res.status(400).json({message: "Application not found with this id.", success: false});
     }
      await ApplicationModel.updateOne(
        { _id: applicationId },
-       { $set: { applicationStatus: "rejected", phaseStaus: phaseStaus.Rejected } }
+       {
+         $set: {
+           applicationStatus: "rejected",
+           phaseStaus: phaseStaus.Rejected,
+           rejectPhaseReason: rejectPhaseReason,
+         },
+       }
      );
     res
       .status(200)
@@ -463,6 +496,7 @@ module.exports = {
   postApplicationPhase3,
   postApplicationPhase4,
   getApplicationData,
+  getApplicationDataById,
   getApplicationDataByUser,
   updateApplicationData,
   rejectApplication,

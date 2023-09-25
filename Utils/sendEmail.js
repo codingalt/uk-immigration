@@ -1,4 +1,3 @@
-// "use strict";
 const nodemailer = require("nodemailer");
 
 // const transporter = nodemailer.createTransport({
@@ -16,9 +15,15 @@ const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
   secure: true,
+  logger: true,
+  debug: true,
+  secureConnection: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
+  },
+  tls: {
+    rejectUnAuthorized: false,
   },
 });
 
@@ -33,6 +38,7 @@ module.exports = async(email, subject, text)=>{
         });
 
         console.log('Email sent successfully');
+        return info;
         
     } catch (err) {
         console.log(err);

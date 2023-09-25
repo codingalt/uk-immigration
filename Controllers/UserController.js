@@ -101,16 +101,20 @@ const signupUser = async (req, res) => {
                   token: crypto.randomBytes(32).toString("hex"),
                 }).save();
                 const url = `${process.env.BASE_URL}/users/${user._id}/verify/${emailToken.token}`;
-                await sendEmail(user.email, "Verify Email", url);
+                const info = await sendEmail(user.email, "Verify Email", url);
 
-                //  Send 6 digit OTP and save in the database
-                const otpSend = await sendOtp(user.contact);
-                res
-                  .status(200)
-                  .json({
+                if(info){
+                  //  Send 6 digit OTP and save in the database
+                  const otpSend = await sendOtp(user.contact);
+                  res.status(200).json({
                     message: "Please Check your Email to verify your account",
                     success: true,
                   });
+                }else{
+                  return res.status(500).json({message: "Error Sending Email", success: false});
+                }
+
+                
 
       }
 
@@ -155,14 +159,30 @@ const updateMobileVerify = async (req, res) => {
 const updateUserData = async (req, res) => {
   try {
     const userId  = req.userId.toString();
-
-     await UserModel.updateOne(
+    const { name, email, contact } = req.body;
+    const files = req.files;
+    console.log(files);
+    if(files.profilePic){
+      var file = req.files?.profilePic[0]?.filename;
+      var profilePic = `/Uploads/${file}`;
+      await UserModel.findByIdAndUpdate(
       {_id: userId},
-      {...req.body}
-);
+      {$set: {name: name, email: email, contact: contact, profilePic: profilePic}},
+      {new: true, useFindAndModify: false});
+    }else{
+
+      await UserModel.findByIdAndUpdate(
+      {_id: userId},
+      {$set: {name: name, email: email, contact: contact}},
+      {new: true, useFindAndModify: false});
+
+    }
+    
+     
     res.status(200).json({ message: "User Data Updated", success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
+    console.log(err);
   }
 };
 
@@ -213,9 +233,15 @@ const forgotPassword = async (req, res) => {
         token: crypto.randomBytes(32).toString("hex"),
       }).save();
       const url = `${process.env.BASE_URL}/reset-password/${userExist._id}/${emailToken.token}`;
-      await sendEmail(email, "Reset Password", url);
+      const result = await sendEmail(email, "Reset Password", url);
 
-      return res.status(200).json({message: "An Email has been sent to your email to Recover your password.", success: true})
+      console.log(result);
+      if(result){
+        return res.status(200).json({message: "An Email has been sent to your email to Recover your password.", success: true})
+      }else{
+        return res.status(500).json({message: "Error Sending Email.", success: false})
+      }
+
     
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
@@ -231,7 +257,6 @@ const verifyResetPasswordLink = async (req, res) => {
     if (!verifyToken) {
       return res.status(400).json({ message: "Invalid Link", success: false });
     }
-    await EmailTokenModel.deleteOne({ _id: verifyToken._id });
     res.status(200).json({ message: "Email Verified. You can now create a new password.", success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
@@ -241,9 +266,12 @@ const verifyResetPasswordLink = async (req, res) => {
 // Reset Password 
 const createNewPassword = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { password, confirmPassword } = req.body;
-    const user = await UserModel.findOne({ _id: id }); 
+    const userId  = req.userId.toString();
+    const { password, confirmPassword, token } = req.body;
+    const user = await UserModel.findOne({ _id: userId}); 
+    const isEmailToken = await EmailTokenModel.findOne({ userId: userId, token: token }); 
+
+    if(!isEmailToken) return res.status(400).json({ message: "Token Expired", success: false });
 
     if(!user) return res.status(400).json({ message: "User not found", success: false });
       
@@ -252,8 +280,10 @@ const createNewPassword = async (req, res) => {
          .status(422)
          .json({ message: "Password do not match", success: false });
      }
+     const hashedPassword = await bcrypt.hash(password, 12);
+    await UserModel.findByIdAndUpdate(userId, {$set: {password: hashedPassword}}, {new: true,useFindAndModify: false})
 
-    await UserModel.findByIdAndUpdate(id, {$set: {password}}, {new: true,useFindAndModify: false})
+    await EmailTokenModel.deleteOne({ _id: isEmailToken._id });
     
     res.status(200).json({ message: "Password Changed Successfully.", success: true });
   } catch (err) {
@@ -454,4 +484,7 @@ module.exports = {
   updateMobileVerify,
   updateUserData,
   changePassword,
+  forgotPassword,
+  verifyResetPasswordLink,
+  createNewPassword
 };
