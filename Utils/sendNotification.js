@@ -1,7 +1,4 @@
 const PhaseNotificationModel = require("../Models/PhaseNotification");
-const { server } = require("../app");
-// const { initializeSocket } = require("../socket");
-const { io } = require("../socket");
 
 const sendNotification = async(request)=>{
     try {

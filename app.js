@@ -47,9 +47,7 @@ app.use(require("./Routes/PaymentRoute"));
 app.use(require("./Routes/PhaseNotificationRoute"));
 
 const server = app.listen(PORT, () => {});
-const io = initializeSocket(server);
-
-module.exports = {server}
+// const io = initializeSocket(server);
 
 app.get("/", (req, res) => {
   res.send("Api is running successfully");
