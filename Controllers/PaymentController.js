@@ -1,19 +1,13 @@
 const express = require("express");
 const UserModel = require("../Models/UserModel");
+const ApplicationModel = require("../Models/ApplicationModel");
+const PaymentModel = require("../Models/PaymentModel");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const uuid = require("uuid").v4;
 
 const payWithCard = async (req, res) => {
-  const { token } = req.body;
-  const type = req.body.token.card?.object;
-  const cardBrand = req.body.token.card?.brand;
-  const last4 = req.body.token.card?.last4;
-  const email = req.body.token?.email;
-  const expMonth = req.body.token?.card?.exp_month
-  const expYear = req.body.token?.card.exp_year;
-  // const amount = req.body.amount;
+  const { token, applicationId } = req.body;
   let amount = 10;
-  console.log(type, cardBrand, last4, expMonth, expYear, amount, email);
   try {
     const customer = await stripe.customers.create({
       email: token.email,
@@ -34,8 +28,42 @@ const payWithCard = async (req, res) => {
       }
     );
 
-    console.log(charge);
+  const type = charge.payment_method_details.type;
+  const brand = charge.payment_method_details.card.brand;
+  const expMonth = charge.payment_method_details.card.exp_month;
+  const expYear = charge.payment_method_details.card.exp_year;
+  const last4 = charge.payment_method_details.card.last4;
   const currency = charge.currency;
+  const email = charge.receipt_email;
+  const transactionId = charge.id;
+
+  // Save to Payment Model 
+  const payment = await new PaymentModel({
+    userId: req.userId.toString(),
+    applicationId: applicationId,
+    transactionId,
+    amount,
+    currency,
+    type,
+    last4,
+    email,
+    expMonth,
+    expYear,
+    brand
+  }).save();
+  // console.log(type, cardBrand, last4, expMonth, expYear, amount, email,currency);
+
+  const application = await ApplicationModel.findByIdAndUpdate(
+    applicationId,
+    {
+      $set: {
+        "phase3.onlinePaymentEvidence": charge.receipt_url,
+        "phase3.isOnlinePayment": true,
+        phaseSubmittedByClient: 3,
+      },
+    },
+    { new: true, useFindAndModify: false }
+  );
 
     res.status(200).json({
       message: "Congrats! Payment Successfull.",

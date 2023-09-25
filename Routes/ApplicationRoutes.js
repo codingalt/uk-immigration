@@ -1,5 +1,5 @@
 const express = require('express');
-const { getApplicationData, updateApplicationData, rejectApplication, filterApplication, approvePhase1, approvePhase2, approvePhase3, requestAPhase, postApplicationPhase1, postApplicationPhase2, postApplicationPhase3, postApplicationPhase4, approvePhase4, getApplicationDataByUser, addNotes, updatePhaseByAdmin, acceptInitialRequest, getApplicationDataById } = require('../Controllers/ApplicationController');
+const { getApplicationData, updateApplicationData, rejectApplication, filterApplication, approvePhase1, approvePhase2, approvePhase3, requestAPhase, postApplicationPhase1, postApplicationPhase2, postApplicationPhase3, postApplicationPhase4, approvePhase4, getApplicationDataByUser, addNotes, updatePhaseByAdmin, acceptInitialRequest, getApplicationDataById, getApplicationByUserId } = require('../Controllers/ApplicationController');
 const Authenticate = require('../Middlewares/Auth/Auth');
 const { isAdmin } = require('../Middlewares/Auth/role');
 const router = express.Router();
@@ -59,6 +59,7 @@ router.post("/api/application/phase4/:applicationId", Authenticate, postApplicat
 
 router.get("/api/application", Authenticate, getApplicationData);
 router.get("/api/application/:applicationId", Authenticate, getApplicationDataById);
+router.get("/api/user/application", Authenticate, getApplicationByUserId);
 router.get("/api/application/user", Authenticate, getApplicationDataByUser);
 router.put("/api/application", Authenticate, isAdmin,updateApplicationData);
 router.put("/api/application/reject", Authenticate, isAdmin,rejectApplication);

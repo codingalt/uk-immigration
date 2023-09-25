@@ -380,7 +380,7 @@ const loginUser = async (req, res) => {
           .status(404)
           .json({ message: "Invalid login details", success: false });
       }
-
+      
       if (signin) {
         const isMatch = await bcrypt.compare(password, signin.password);
         if (isMatch) {
@@ -392,6 +392,8 @@ const loginUser = async (req, res) => {
             res.cookie("ukImmigrationJwtoken", token, {
               expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
               httpOnly: true,
+              secure: true,
+              sameSite: "none",
             });
              return res.status(200).json({isAdmin: true, success: true});
           }

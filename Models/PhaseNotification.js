@@ -2,6 +2,9 @@ const mongoose = require("mongoose");
 
 const phaseNotificationSchema = mongoose.Schema(
   {
+    title: {
+      type: String,
+    },
     userId: {
       type: String,
       required: true,
@@ -10,7 +13,6 @@ const phaseNotificationSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-
   },
   { timestamps: true }
 );

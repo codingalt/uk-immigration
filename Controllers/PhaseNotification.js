@@ -18,6 +18,11 @@ const getPhaseNotifications = async(req,res)=>{
             },
           },
           {
+            $sort: {
+              createdAt: -1,
+            },
+          },
+          {
             $unwind: "$user",
           },
           {

@@ -6,6 +6,10 @@ const paymentSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    applicationId: {
+      type: String,
+      required: true,
+    },
     userId: {
       type: String,
       required: true,
@@ -18,20 +22,23 @@ const paymentSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    cardType: {
+    type: {
       type: String,
       required: true,
     },
-    cardLastDigits: {
+    brand: {
+      type: String,
+      required: true,
+    },
+    last4: {
       type: Number,
       required: true,
     },
-    tax: {
+    email: {
       type: String,
     },
-    discount: {
-      type: String,
-    },
+    expMonth: Number,
+    expYear: Number,
   },
   { timestamps: true }
 );

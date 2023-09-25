@@ -78,6 +78,8 @@ const applicationSchema = mongoose.Schema(
       otherDocumentNotes: String,
     },
     phase3: {
+      isOnlinePayment: Boolean,
+      onlinePaymentEvidence: String,
       doesCompanyHelp: Boolean,
       companyHelpService: String,
       applicationType: String,
@@ -750,6 +752,7 @@ const applicationSchema = mongoose.Schema(
     userId: {
       type: String,
       required: true,
+      unique: true,
     },
     applicationStatus: {
       type: String,

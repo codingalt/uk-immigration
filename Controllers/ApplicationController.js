@@ -1,5 +1,6 @@
 const ApplicationModel = require("../Models/ApplicationModel");
 const UserModel = require("../Models/UserModel");
+const { sendNotification } = require("../Utils/sendNotification");
 
 const phaseStaus = {
   Pending: "pending",
@@ -17,8 +18,18 @@ const postApplicationPhase1 = async(req,res)=>{
         if(!user) return res.status(400).json({message: "User not found", success: false})
        
         const application = await new ApplicationModel(req.body).save();
-        console.log(application);
-        res.status(200).json({ application, success: true });
+        const {phase1, userId, phaseSubmittedByClient,isInitialRequestAccepted} = application;
+        const result = {
+          phase1,
+          userId,
+          applicationStatus: application.applicationStatus,
+          phase: application.phase,
+          phaseStatus: application.phaseStatus,
+          phaseSubmittedByClient,
+          isInitialRequestAccepted,
+        };
+        console.log(result);
+        res.status(200).json({ result, success: true });
         
     } catch (err) {
     res.status(500).json({ message: err.message, success: false });
@@ -150,6 +161,7 @@ const acceptInitialRequest = async (req, res) => {
         });
     }
     await ApplicationModel.findByIdAndUpdate(applicationId,{ $set: { isInitialRequestAccepted: true } }, {new: true, useFindAndModify: false});
+
     res
       .status(200)
       .json({ message: "Application's Initial Request Accepted.", success: true });
@@ -367,6 +379,15 @@ const getApplicationDataById = async (req, res) => {
   }
 };
 
+const getApplicationByUserId = async (req, res) => {
+  try {
+    const application = await ApplicationModel.findOne({userId: req.userId.toString()});
+    res.status(200).json({ application, success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
 const getApplicationDataByUser = async (req, res) => {
   try {
     const application = await ApplicationModel.find({}).select({"phase1.name": true, "phase1.applicationType": true, "applicationStatus": true});
@@ -497,6 +518,7 @@ module.exports = {
   postApplicationPhase4,
   getApplicationData,
   getApplicationDataById,
+  getApplicationByUserId,
   getApplicationDataByUser,
   updateApplicationData,
   rejectApplication,
