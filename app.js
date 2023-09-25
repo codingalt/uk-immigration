@@ -13,10 +13,10 @@ const PhaseNotificationModel = require("./Models/PhaseNotification");
 const { sendNotification } = require("./Utils/sendNotification");
 const {initializeSocket} = require("./socket")
 
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(bodyParser.json({ limit: "30mb", extended: true }));
 app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
-app.use(express.urlencoded({ extended: true }));
 app.use("/Uploads", express.static("Uploads"));
 
 app.use(
