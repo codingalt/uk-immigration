@@ -1,3 +1,4 @@
+const ApplicationModel = require("../Models/ApplicationModel");
 const PhaseNotificationModel = require("../Models/PhaseNotification");
 
 const getPhaseNotifications = async(req,res)=>{
@@ -63,4 +64,22 @@ const getPhaseNotifications = async(req,res)=>{
     }
 }
 
-module.exports= {getPhaseNotifications}
+const getClientNotifications = async(req, res)=>{
+  try {
+
+    const application = await ApplicationModel.findOne({userId: req.userId.toString()});
+
+    const notifications = await PhaseNotificationModel.find({
+      userId: req.userId.toString(),
+      applicationId: application._id,
+      notificationType: "client",
+    });
+
+    return res.status(200).json({notifications, success: true});
+    
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+}
+
+module.exports = { getPhaseNotifications, getClientNotifications };

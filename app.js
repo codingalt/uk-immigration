@@ -22,7 +22,7 @@ app.use(cookieParser());
 app.use(
   cors({
     // origin: [process.env.BASE_URL, "http://127.0.0.1:5173"],
-    origin: "https://immigrationmatter.netlify.app",
+    origin: [process.env.BASE_URL, "https://immigrationmatter.netlify.app"],
     methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
     credentials: true,
   })
@@ -90,7 +90,8 @@ const server = app.listen(PORT, () => {});
 
       // Send Notification and Store Request In Database
       sendNotification({
-        title: "Phase Data Request",
+        title: "New Phase Request from Client",
+        notificationType: "admin",
         userId: request.userId,
         applicationId: request.applicationId,
       });
@@ -107,6 +108,7 @@ const server = app.listen(PORT, () => {});
       // Send Notification and Store Request In Database
       sendNotification({
         title: request.title,
+        notificationType: "client",
         userId: request.userId,
         applicationId: request.applicationId,
       });

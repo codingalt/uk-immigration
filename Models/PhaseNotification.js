@@ -13,6 +13,10 @@ const phaseNotificationSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    notificationType: {
+      type: String,
+      enum: ["admin", "client"]
+    }
   },
   { timestamps: true }
 );

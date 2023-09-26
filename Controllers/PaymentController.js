@@ -7,8 +7,18 @@ const uuid = require("uuid").v4;
 
 const payWithCard = async (req, res) => {
   const { token, applicationId } = req.body;
-  let amount = 10;
+  let amount = 0;
   try {
+
+    // Check Whether Admin/Case Worker has requested client to submit phase 3 
+  const isRequested = await ApplicationModel.findById(applicationId);
+
+  if(isRequested.requestedPhase < 3){
+    return res.status(400).json({message: "You can't perform this action right now. You can pay only when admin requests you to submit phase 3 data", success: false})
+  }
+
+  amount = parseInt(isRequested.phase3.cost);
+
     const customer = await stripe.customers.create({
       email: token.email,
       source: token?.id,
@@ -51,9 +61,10 @@ const payWithCard = async (req, res) => {
     expYear,
     brand
   }).save();
+
   // console.log(type, cardBrand, last4, expMonth, expYear, amount, email,currency);
 
-  const application = await ApplicationModel.findByIdAndUpdate(
+   await ApplicationModel.findByIdAndUpdate(
     applicationId,
     {
       $set: {

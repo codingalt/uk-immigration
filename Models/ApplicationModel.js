@@ -83,7 +83,7 @@ const applicationSchema = mongoose.Schema(
       doesCompanyHelp: Boolean,
       companyHelpService: String,
       applicationType: String,
-      cost: String,
+      cost: Number,
       paymentEvidence: String,
     },
     phase4: {
@@ -754,6 +754,11 @@ const applicationSchema = mongoose.Schema(
       required: true,
       unique: true,
     },
+    caseId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     applicationStatus: {
       type: String,
       default: "pending",
@@ -780,6 +785,13 @@ const applicationSchema = mongoose.Schema(
     isInitialRequestAccepted: {
       type: Boolean,
       default: false,
+    },
+    isCaseWorkerHandling: {
+      type: Boolean,
+      default: false,
+    },
+    caseWorkerId: {
+      type: String,
     },
     notes: [
       {

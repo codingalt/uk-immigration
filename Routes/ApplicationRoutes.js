@@ -1,7 +1,7 @@
 const express = require('express');
-const { getApplicationData, updateApplicationData, rejectApplication, filterApplication, approvePhase1, approvePhase2, approvePhase3, requestAPhase, postApplicationPhase1, postApplicationPhase2, postApplicationPhase3, postApplicationPhase4, approvePhase4, getApplicationDataByUser, addNotes, updatePhaseByAdmin, acceptInitialRequest, getApplicationDataById, getApplicationByUserId } = require('../Controllers/ApplicationController');
+const { getApplicationData, updateApplicationData, rejectApplication, filterApplication, approvePhase1, approvePhase2, approvePhase3, requestAPhase, postApplicationPhase1, postApplicationPhase2, postApplicationPhase3, postApplicationPhase4, approvePhase4, getApplicationDataByUser, addNotes, updatePhaseByAdmin, acceptInitialRequest, getApplicationDataById, getApplicationByUserId, assignApplicationToCaseWorker } = require('../Controllers/ApplicationController');
 const Authenticate = require('../Middlewares/Auth/Auth');
-const { isAdmin } = require('../Middlewares/Auth/role');
+const { isAdmin, isAdminOrCaseWorker, isAssignedCaseWorker } = require('../Middlewares/Auth/role');
 const router = express.Router();
 const multer = require("multer");
 
@@ -50,7 +50,7 @@ router.post(
     { name: "englishLanguageCertificate", maxCount: 1 },
     { name: "marriageCertificate", maxCount: 1 },
     { name: "bankStatements", maxCount: 1 },
-    { name: "other", maxCount: 3 },
+    { name: "other", maxCount: 5 },
   ]),
   postApplicationPhase2
 );
@@ -61,25 +61,28 @@ router.get("/api/application", Authenticate, getApplicationData);
 router.get("/api/application/:applicationId", Authenticate, getApplicationDataById);
 router.get("/api/user/application", Authenticate, getApplicationByUserId);
 router.get("/api/application/user", Authenticate, getApplicationDataByUser);
-router.put("/api/application", Authenticate, isAdmin,updateApplicationData);
-router.put("/api/application/reject", Authenticate, isAdmin,rejectApplication);
+router.put("/api/application", Authenticate, isAdminOrCaseWorker,isAssignedCaseWorker,updateApplicationData);
+router.put("/api/application/reject", Authenticate, isAdminOrCaseWorker, isAssignedCaseWorker, rejectApplication);
 router.post("/api/application/search", Authenticate, filterApplication);
 
-// Approve Phases By Admin 
-router.post("/api/accept/:applicationId", Authenticate, isAdmin, acceptInitialRequest);
-router.post("/api/phase1/approve/:applicationId", Authenticate, isAdmin, approvePhase1);
-router.post("/api/phase2/approve/:applicationId", Authenticate, isAdmin, approvePhase2);
-router.post("/api/phase3/approve/:applicationId", Authenticate, isAdmin, approvePhase3);
-router.post("/api/phase4/approve/:applicationId", Authenticate, isAdmin, approvePhase4);
+// Approve Phases By Admin/Case Worker 
+router.post("/api/accept/:applicationId", Authenticate, isAdminOrCaseWorker, acceptInitialRequest);
+router.post("/api/phase1/approve/:applicationId", Authenticate, isAdminOrCaseWorker, isAssignedCaseWorker, approvePhase1);
+router.post("/api/phase2/approve/:applicationId", Authenticate, isAdminOrCaseWorker,isAssignedCaseWorker, approvePhase2);
+router.post("/api/phase3/approve/:applicationId", Authenticate, isAdminOrCaseWorker,isAssignedCaseWorker, approvePhase3);
+router.post("/api/phase4/approve/:applicationId", Authenticate, isAdminOrCaseWorker,isAssignedCaseWorker, approvePhase4);
 
-// Request Phase By Admin 
-router.post("/api/phase/request/:applicationId", Authenticate, isAdmin, requestAPhase);
+// Request Phase By Admin/Case Worker 
+router.post("/api/phase/request/:applicationId", Authenticate, isAdminOrCaseWorker,isAssignedCaseWorker, requestAPhase);
 
-// Add Notes to Application By Admin 
-router.post("/api/notes/:applicationId", Authenticate, isAdmin, addNotes);
+// Add Notes to Application By Admin/Case Worker 
+router.post("/api/notes/:applicationId", Authenticate, isAdminOrCaseWorker, isAssignedCaseWorker,addNotes);
 
-// Update Application Phase Data By Admin
-router.put("/api/phase/update/:applicationId", Authenticate, isAdmin, updatePhaseByAdmin);
+// Update Application Phase Data By Admin/Case Worker
+router.put("/api/phase/update/:applicationId", Authenticate, isAdminOrCaseWorker, isAssignedCaseWorker, updatePhaseByAdmin);
+
+// Assign Application to Case Worker By Admin
+router.post("/api/application/assign", Authenticate, isAdmin, assignApplicationToCaseWorker);
 
 
 

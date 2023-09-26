@@ -1,6 +1,7 @@
 const ApplicationModel = require("../Models/ApplicationModel");
 const UserModel = require("../Models/UserModel");
 const { sendNotification } = require("../Utils/sendNotification");
+const otpGenerator = require("otp-generator");
 
 const phaseStaus = {
   Pending: "pending",
@@ -11,26 +12,47 @@ const phaseStaus = {
 const postApplicationPhase1 = async(req,res)=>{
     try {
       const { phaseStatus, phase, applicationStatus } = req.body;
-      if(phaseStatus || phase || applicationStatus){
-        return res.status(400).json({message: "Action Forbidden! You don't have access to change."});
+      if (phaseStatus || phase || applicationStatus) {
+        return res
+          .status(400)
+          .json({
+            message: "Action Forbidden! You don't have access to change.",
+          });
       }
-        const user = await UserModel.findById(req.userId.toString());
-        if(!user) return res.status(400).json({message: "User not found", success: false})
-       
-        const application = await new ApplicationModel(req.body).save();
-        const {phase1, userId, phaseSubmittedByClient,isInitialRequestAccepted} = application;
-        const result = {
-          phase1,
-          userId,
-          applicationStatus: application.applicationStatus,
-          phase: application.phase,
-          phaseStatus: application.phaseStatus,
-          phaseSubmittedByClient,
-          isInitialRequestAccepted,
-        };
-        console.log(result);
-        res.status(200).json({ result, success: true });
-        
+      const user = await UserModel.findById(req.userId.toString());
+      if (!user)
+        return res
+          .status(400)
+          .json({ message: "User not found", success: false });
+
+      // Generating CaseID
+      const caseId = otpGenerator.generate(6, {
+        digits: true,
+        lowerCaseAlphabets: false,
+        upperCaseAlphabets: false,
+        specialChars: false,
+      });
+
+      req.body.caseId = caseId;
+
+      const application = await new ApplicationModel(req.body).save();
+      const {
+        phase1,
+        userId,
+        phaseSubmittedByClient,
+        isInitialRequestAccepted,
+      } = application;
+      const result = {
+        phase1,
+        userId,
+        applicationStatus: application.applicationStatus,
+        phase: application.phase,
+        phaseStatus: application.phaseStatus,
+        phaseSubmittedByClient,
+        isInitialRequestAccepted,
+      };
+      console.log(result);
+      res.status(200).json({ result, success: true });
     } catch (err) {
     res.status(500).json({ message: err.message, success: false });
     console.log(err);
@@ -39,11 +61,13 @@ const postApplicationPhase1 = async(req,res)=>{
 
 const postApplicationPhase2 = async(req,res)=>{
     try {
-      const { phaseStatus, phase, applicationStatus} = req.body;
-      const {applicationId} = req.params;
+      const { phaseStatus, phase, applicationStatus } = req.body;
+      const { applicationId } = req.params;
       const files = req.files;
-      if(phaseStatus || phase || applicationStatus){
-        return res.status(400).json({message: "Action Forbidden! You don't have access to change."});
+      if (phaseStatus || phase || applicationStatus) {
+        return res.status(400).json({
+          message: "Action Forbidden! You don't have access to change.",
+        });
       }
 
       const filesObj = {};
@@ -63,20 +87,55 @@ const postApplicationPhase2 = async(req,res)=>{
         });
       }
 
-        const user = await UserModel.findById(req.userId.toString());
-        if(!user) return res.status(400).json({message: "User not found", success: false})
+      const user = await UserModel.findById(req.userId.toString());
+      if (!user)
+        return res
+          .status(400)
+          .json({ message: "User not found", success: false });
 
-        // Check if admin has requested client for phase 
-        const isRequested = await ApplicationModel.findById(applicationId);
+      // Check if admin has requested client for phase
+      const isRequested = await ApplicationModel.findById(applicationId);
 
-        if(isRequested.requestedPhase < 2){
-          return res.status(400).json({message: "You can't submit phase 2 data right now, Untill admin requests you to submit phase 2 data."})
-        }
+      if (isRequested.requestedPhase < 2) {
+        return res.status(400).json({
+          message:
+            "You can't submit phase 2 data right now, Untill admin requests you to submit phase 2 data.",
+        });
+      }
 
-        // Update Phase 2 
-        const application = await ApplicationModel.findByIdAndUpdate(applicationId, {phase2: filesObj, phaseSubmittedByClient: 2}, { new: true, useFindAndModify: false });
-        res.status(200).json({ application,success: true });
-        
+      // Check which fields/data is required
+      const phase2Data = isRequested.phase2;
+
+      const filteredData = Object.fromEntries(
+        Object.entries(phase2Data).filter(([key, value]) => value !== "notreq")
+      );
+
+      // Exclude "otherDocumentNotes" from validation
+      const filteredDataKeys = Object.keys(filteredData).filter(
+        (key) => key !== "otherDocumentNotes"
+      );
+
+      // Now validate whether required fields are submitted by client
+      const missingProperties = filteredDataKeys.filter(
+        (key) => !filesObj.hasOwnProperty(key)
+      );
+
+      if (missingProperties.length > 0) {
+        return res.status(400).json({
+          message: `Error: The following properties are missing in filesObj: ${missingProperties.join(
+            ", "
+          )}`,
+          success: false,
+        });
+      }
+
+      // Update Phase 2
+      const application = await ApplicationModel.findByIdAndUpdate(
+        applicationId,
+        { $set: { phase2: filesObj, phaseSubmittedByClient: 2 } },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
     } catch (err) {
     res.status(500).json({ message: err.message, success: false });
     console.log(err);
@@ -113,7 +172,11 @@ const postApplicationPhase3 = async (req, res) => {
     const application = await ApplicationModel.findByIdAndUpdate(
       applicationId,
       {
-        $set: { "phase3.paymentEvidence": chalanFile, phaseSubmittedByClient: 3 },
+        $set: {
+          "phase3.paymentEvidence": chalanFile,
+          "phase3.isOnlinePayment": false,
+          phaseSubmittedByClient: 3,
+        },
       },
       { new: true, useFindAndModify: false }
     );
@@ -302,15 +365,15 @@ const requestAPhase = async(req,res)=>{
     const application = await ApplicationModel.findById(applicationId);
     if(application.phase === 1 && application.phaseStatus === phaseStaus.Approved){
        await ApplicationModel.findByIdAndUpdate(
-        applicationId,
-        { ...req.body, requestedPhase: 2},
-        { new: true, useFindAndModify: false }
-      );
+         applicationId,
+         { $set: { ...req.body, requestedPhase: 2 } },
+         { new: true, useFindAndModify: false }
+       );
       return res.status(200).json({ message: "Phase 2 Requested", success: true });
     }else if(application.phase === 2 && application.phaseStatus === phaseStaus.Approved){
       await ApplicationModel.findByIdAndUpdate(
         applicationId,
-        { ...req.body, requestedPhase: 3 },
+        { $set: { ...req.body, requestedPhase: 3 } },
         { new: true, useFindAndModify: false }
       );
       return res
@@ -471,7 +534,16 @@ const filterApplication = async (req, res) => {
     console.log(queryConditions);
 
     const query = queryConditions.length === 1 ? { $or: queryConditions } : queryConditions.length > 1 ? { $and: queryConditions } : {}; 
-    const result = await ApplicationModel.find(query).select({"phase1.name": true, "phase1.applicationType": true, "applicationStatus": true});
+    const result = await ApplicationModel.find(query).select({
+      "phase1.name": true,
+      "phase1.email": true,
+      "phase1.contact": true,
+      "phase1.birthDate": true,
+      "phase1.country": true,
+      "caseId": true,
+      "phase1.applicationType": true,
+      applicationStatus: true,
+    });
     res.status(200).json({ result, success: true });
   } catch (error) {
     res.status(500).json(error);
@@ -510,6 +582,34 @@ const addNotes = async (req, res) => {
   }
 }; 
 
+// Assign Application to CaseWorker By Admin 
+const assignApplicationToCaseWorker = async (req, res) => {
+  try {
+    const { applicationId, caseWorkerId } = req.body;
+    const isApplication = await ApplicationModel.findById(applicationId);
+    if (!isApplication) {
+      return res
+        .status(400)
+        .json({
+          message: "Application not found with this id.",
+          success: false,
+        });
+    }
+    await ApplicationModel.updateOne(
+      { _id: applicationId },
+      {
+        $set: {
+          isCaseWorkerHandling: true,
+          caseWorkerId: caseWorkerId,
+        },
+      }
+    );
+    res.status(200).json({ message: "CaseWorker Assigned", success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
 
 module.exports = {
   postApplicationPhase1,
@@ -531,4 +631,5 @@ module.exports = {
   requestAPhase,
   addNotes,
   updatePhaseByAdmin,
+  assignApplicationToCaseWorker,
 };
