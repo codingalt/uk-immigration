@@ -5,7 +5,7 @@ const MessageModel = require("../Models/MessageModel");
 
 const accessChat = async (req, res) => {
   try {
-    const { receiverId } = req.body;
+    const { receiverId, applicationId } = req.body;
     if (!receiverId) {
       return res
         .status(400)
@@ -26,6 +26,7 @@ const accessChat = async (req, res) => {
       const userData = await UserModel.findOne({ _id: receiverId });
       const newChat = new ChatModel({
         users: [req.userId.toString(), receiverId],
+        applicationId: applicationId,
       });
       const result = await newChat.save();
       res.status(200).json({ chat: result, success: true });
@@ -113,9 +114,17 @@ const sendMessage = async (req, res) => {
 const getAllMessages = async (req, res) => {
   try {
     const { chatId } = req.params;
+    
+    await MessageModel.updateMany(
+      { chatId: chatId },
+      { $set: { isRead: 1 } },
+      { new: true, useFindAndModify: false }
+    );
+
     const result = await MessageModel.find({ chatId });
     // Get Sender Details
     const sender = await UserModel.findOne({ _id: req.userId.toString() });
+
     res.status(200).json({
       result,
     //   senderImage: sender.profileImg,

@@ -8,9 +8,9 @@ admin.initializeApp({
 
 const messaging = admin.messaging();
 
-const sendNotification = async(request)=>{
+const sendNotification = async(req,res)=>{
     try {
-      const { title, userId, applicationId } = request;
+      const { title, image, userId, applicationId,fcmToken } = req.body;
       await new PhaseNotificationModel({
         title: title,
         userId: userId,
@@ -18,7 +18,7 @@ const sendNotification = async(request)=>{
       }).save();
 
       const user = await UserModel.findById(userId);
-      const fcmToken = user.fcmToken;
+      // const fcmToken = user.fcmToken;
       if (!fcmToken) {
         return res.status(422).json({
           data: "Invalid receiverId or token.",
@@ -34,6 +34,7 @@ const sendNotification = async(request)=>{
         notification: {
           title: "New Notification",
           body: title,
+          image: image
         },
         data: {
           data: stringData,

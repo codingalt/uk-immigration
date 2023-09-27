@@ -101,7 +101,8 @@ const signupUser = async (req, res) => {
                   token: crypto.randomBytes(32).toString("hex"),
                 }).save();
                 const url = `${process.env.BASE_URL}/users/${user._id}/verify/${emailToken.token}`;
-                const info = await sendEmail(user.email, "Verify Email", url);
+                const html = `<b>Click on the link below to verify your email.</b> <br> ${url}`;
+                const info = await sendEmail(user.email, "Verify Email", url,html);
 
                 if(info){
                   //  Send 6 digit OTP and save in the database
@@ -111,6 +112,8 @@ const signupUser = async (req, res) => {
                     success: true,
                   });
                 }else{
+                  await UserModel.findByIdAndDelete(user._id);
+                  await EmailTokenModel.findByIdAndDelete(emailToken._id);
                   return res.status(500).json({message: "Error Sending Email", success: false});
                 }
 
@@ -281,7 +284,7 @@ const createNewPassword = async (req, res) => {
          .json({ message: "Password do not match", success: false });
      }
      const hashedPassword = await bcrypt.hash(password, 12);
-    await UserModel.findByIdAndUpdate(userId, {$set: {password: hashedPassword}}, {new: true,useFindAndModify: false})
+     await UserModel.findByIdAndUpdate(userId, {$set: {password: hashedPassword}}, {new: true,useFindAndModify: false})
 
     await EmailTokenModel.deleteOne({ _id: isEmailToken._id });
     

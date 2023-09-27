@@ -3,9 +3,15 @@ const UserModel = require("../../Models/UserModel");
 
 const Authenticate = async (req, res, next) => {
   try {
-    const token = req.cookies.ukImmigrationJwtoken;
+    let token = req.cookies.ukImmigrationJwtoken;
+    
+    if (req.headers["user-agent"].includes("MobileApp")) {
+      token = req.headers["authorization"];
+    }else{
+      token = req.cookies.ukImmigrationJwtoken;
+    }
     console.log('Auth token middlware', token);
-    // const bearerToken = req.headers["authorization"];
+
     if (token) {
 
       const verifyToken = jwt.verify(token, process.env.SECRET_KEY);

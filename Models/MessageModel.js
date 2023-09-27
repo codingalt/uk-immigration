@@ -20,6 +20,10 @@ const messageSchema = mongoose.Schema(
     isApplicationStatusMsg: {
       type: Boolean,
     },
+    isRead: {
+      type: Number,
+      default: 0
+    },
     files: []
   },
   { timestamps: true }

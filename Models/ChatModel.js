@@ -11,6 +11,11 @@ const chatSchema = mongoose.Schema(
     latestMessage: {
       type: String,
     },
+    applicationId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
   },
   { timestamps: true }
 );

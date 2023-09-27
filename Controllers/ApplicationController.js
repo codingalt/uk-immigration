@@ -1,5 +1,6 @@
 const ApplicationModel = require("../Models/ApplicationModel");
 const UserModel = require("../Models/UserModel");
+const sendEmail = require("../Utils/sendEmail");
 const { sendNotification } = require("../Utils/sendNotification");
 const otpGenerator = require("otp-generator");
 
@@ -250,6 +251,12 @@ const approvePhase1 = async (req, res) => {
       { _id: applicationId },
       { phaseStatus: "approved", isInitialRequestAccepted: true }
     );
+
+    const email = isApplication.phase1.email;
+    // const html = `<b>Congratulations! Your application's initial phase has been approved. Please log in to the website to check your application status.</b> <br>`;
+    // const info = await sendEmail(email, "Congratulations! Phase Approved.", '',html);
+    // console.log(info);
+
     res
       .status(200)
       .json({ message: "Application(Phase 1) Approved Successfully.", success: true });

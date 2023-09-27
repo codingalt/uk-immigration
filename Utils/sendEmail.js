@@ -27,14 +27,15 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-module.exports = async(email, subject, text)=>{
+module.exports = async(email, subject, text, html)=>{
     try {
+ 
         const info = await transporter.sendMail({
           from: process.env.EMAIL_USER,
           to: email,
           subject: subject,
           text: text,
-          html: `<b>Click on the link below to verify your email.</b> <br> ${text} `,
+          html: html,
         });
 
         console.log('Email sent successfully');

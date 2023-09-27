@@ -16,6 +16,10 @@ const phaseNotificationSchema = mongoose.Schema(
     notificationType: {
       type: String,
       enum: ["admin", "client"]
+    },
+    status: {
+      type: Number,
+      default: 0
     }
   },
   { timestamps: true }
