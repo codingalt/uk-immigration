@@ -5,11 +5,11 @@ const Authenticate = async (req, res, next) => {
   try {
     let token = req.cookies.ukImmigrationJwtoken;
     
-    if (req.headers["user-agent"].includes("MobileApp")) {
-      token = req.headers["authorization"];
-    }else{
-      token = req.cookies.ukImmigrationJwtoken;
-    }
+    // if (req.headers["user-agent"].includes("MobileApp")) {
+    //   token = req.headers["authorization"];
+    // }else{
+    //   token = req.cookies.ukImmigrationJwtoken;
+    // }
     console.log('Auth token middlware', token);
 
     if (token) {
