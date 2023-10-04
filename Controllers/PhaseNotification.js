@@ -61,6 +61,7 @@ const getPhaseNotifications = async(req,res)=>{
         
     } catch (err) {
     res.status(500).json({ message: err.message, success: false });
+    console.log(err);
     }
 }
 
@@ -68,18 +69,61 @@ const getClientNotifications = async(req, res)=>{
   try {
 
     const application = await ApplicationModel.findOne({userId: req.userId.toString()});
-
+    console.log(application._id.toString());
     const notifications = await PhaseNotificationModel.find({
       userId: req.userId.toString(),
-      applicationId: application._id,
+      applicationId: application._id.toString(),
       notificationType: "client",
     });
 
+    console.log(notifications);
+
     return res.status(200).json({notifications, success: true});
+    
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+    console.log(err);
+  }
+}
+
+const getNotificationCount = async (req, res) => {
+  try {
+    const application = await ApplicationModel.findOne({
+      userId: req.userId.toString(),
+    });
+    const notifications = await PhaseNotificationModel.find({
+      userId: req.userId.toString(),
+      applicationId: application._id.toString(),
+      notificationType: "client",
+      status: 0
+    });
+    console.log(notifications);
+    const count = notifications?.length;
+    return res.status(200).json({ count, success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+const readNotification = async(req,res)=>{
+  try {
+
+    await PhaseNotificationModel.updateMany(
+      { userId: req.userId.toString()},
+      { $set: { status: 1 } },
+      { new: true, useFindAndModify: false }
+    );
+
+    return res.status(200).json({ message: "Notification Seen.", success: true });
     
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
 }
 
-module.exports = { getPhaseNotifications, getClientNotifications };
+module.exports = {
+  getPhaseNotifications,
+  getClientNotifications,
+  readNotification,
+  getNotificationCount,
+};

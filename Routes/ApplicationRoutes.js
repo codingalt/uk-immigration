@@ -1,5 +1,5 @@
 const express = require('express');
-const { getApplicationData, updateApplicationData, rejectApplication, filterApplication, approvePhase1, approvePhase2, approvePhase3, requestAPhase, postApplicationPhase1, postApplicationPhase2, postApplicationPhase3, postApplicationPhase4, approvePhase4, getApplicationDataByUser, addNotes, updatePhaseByAdmin, acceptInitialRequest, getApplicationDataById, getApplicationByUserId, assignApplicationToCaseWorker } = require('../Controllers/ApplicationController');
+const { getApplicationData, updateApplicationData, rejectApplication, filterApplication, approvePhase1, approvePhase2, approvePhase3, requestAPhase, postApplicationPhase1, postApplicationPhase2, postApplicationPhase3, postApplicationPhase4, approvePhase4, getApplicationDataByUser, addNotes, updatePhaseByAdmin, acceptInitialRequest, getApplicationDataById, getApplicationByUserId, assignApplicationToCaseWorker, getInvoiceDetails, filterInvoices, linkCompany, requestCompanyClientPhase1 } = require('../Controllers/ApplicationController');
 const Authenticate = require('../Middlewares/Auth/Auth');
 const { isAdmin, isAdminOrCaseWorker, isAssignedCaseWorker } = require('../Middlewares/Auth/role');
 const router = express.Router();
@@ -84,6 +84,12 @@ router.put("/api/phase/update/:applicationId", Authenticate, isAdminOrCaseWorker
 // Assign Application to Case Worker By Admin
 router.post("/api/application/assign", Authenticate, isAdmin, assignApplicationToCaseWorker);
 
+// Get Invoice Details 
+router.get("/api/invoice",Authenticate, isAdminOrCaseWorker, getInvoiceDetails);
+router.post("/api/invoice/filter",Authenticate, isAdminOrCaseWorker, filterInvoices);
+
+// Link Company with client application 
+router.post("/api/company/link/:applicationId",Authenticate, isAdminOrCaseWorker, isAssignedCaseWorker, linkCompany);
 
 
 module.exports = router;

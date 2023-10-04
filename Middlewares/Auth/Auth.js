@@ -3,14 +3,23 @@ const UserModel = require("../../Models/UserModel");
 
 const Authenticate = async (req, res, next) => {
   try {
-    let token = req.cookies.ukImmigrationJwtoken;
-    
-    // if (req.headers["user-agent"].includes("MobileApp")) {
-    //   token = req.headers["authorization"];
-    // }else{
-    //   token = req.cookies.ukImmigrationJwtoken;
-    // }
-    console.log('Auth token middlware', token);
+    let token;
+    const bearerToken = req.headers['authorization'];
+
+    if (req.cookies.ukImmigrationJwtoken){
+      token = req.cookies.ukImmigrationJwtoken
+    }else if (typeof bearerToken !== "undefined"){
+      const bearer = bearerToken.split(" ");
+      token = bearer[1];
+    }else{
+
+      res.status(401).send({
+        message: "Unotherized User: Please login first",
+        success: false,
+      });
+
+    }
+      console.log("Auth token middlware", token);
 
     if (token) {
 

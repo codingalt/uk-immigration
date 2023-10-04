@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const UserModel = require("../../Models/UserModel");
 const ApplicationModel = require("../../Models/ApplicationModel");
+const CompanyClientModel = require("../../Models/CompanyClientModel");
 
 const isAdmin = async(req,res, next)=>{
     try {
@@ -64,7 +65,15 @@ const isAssignedCaseWorker = async (req, res, next) => {
       if(application.caseWorkerId === req.userId.toString()){
         next();
       }else{
-        throw new Error("Action Forbidden! This Application is handling by another Case Worker");
+ 
+        const isAdmin = await UserModel.findById(req.userId.toString());
+       
+        if(isAdmin.isAdmin) {
+          next();
+        }else{
+          throw new Error("Action Forbidden! This Application is handling by another Case Worker");
+        }
+
       }
     } else{
 
@@ -86,9 +95,49 @@ const isAssignedCaseWorker = async (req, res, next) => {
   }
 };
 
+const isAssignedCompanyCaseWorker = async (req, res, next) => {
+  try {
+    const { applicationId } = req.params;
+    const application = await CompanyClientModel.findById(applicationId);
+
+    if (application.isCaseWorkerHandling) {
+      if (application.caseWorkerId === req.userId.toString()) {
+        next();
+      } else {
+        const isAdmin = await UserModel.findById(req.userId.toString());
+
+        if (isAdmin.isAdmin) {
+          next();
+        } else {
+          throw new Error(
+            "Action Forbidden! This Application is handling by another Case Worker"
+          );
+        }
+      }
+    } else {
+      const isAdmin = await UserModel.findById(req.userId.toString());
+
+      if (isAdmin.isAdmin) {
+        next();
+      } else {
+        throw new Error(
+          "Action Forbidden! This Application hasn't been assigned to any case worker."
+        );
+      }
+    }
+  } catch (err) {
+    res.status(401).send({
+      message: "Action Forbidden.",
+      success: false,
+    });
+    console.log(err);
+  }
+};
+
 module.exports = {
   isAdmin,
   isCaseWorker,
   isAdminOrCaseWorker,
   isAssignedCaseWorker,
+  isAssignedCompanyCaseWorker,
 };

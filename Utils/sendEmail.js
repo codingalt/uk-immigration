@@ -14,34 +14,54 @@ const nodemailer = require("nodemailer");
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
+  type: "SMTP",
   secure: true,
   logger: true,
   debug: true,
-  secureConnection: false,
+  secureConnection: true,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: "faheemmalik640@gmail.com",
+    pass: "paho tctl xadt lnjo",
   },
   tls: {
     rejectUnAuthorized: false,
   },
 });
 
-module.exports = async(email, subject, text, html)=>{
+const sendEmail = async(email, subject, text, html)=>{
     try {
- 
-        const info = await transporter.sendMail({
-          from: process.env.EMAIL_USER,
-          to: email,
-          subject: subject,
-          text: text,
-          html: html,
-        });
+      const info = await transporter.sendMail({
+        from: "faheemmalik640@gmail.com",
+        to: email,
+        subject: subject,
+        text: text,
+        html: html,
+      });
 
-        console.log('Email sent successfully');
-        return info;
-        
+      console.log("Email sent successfully");
+      return info;
     } catch (err) {
-        console.log(err);
+      console.log(err);
     }
 }
+
+// module.exports = async(email, subject, text, html)=>{
+//     try {
+ 
+//         const info = await transporter.sendMail({
+//           // from: "faheemmalik640@gmail.com",
+//           to: email,
+//           subject: subject,
+//           text: text,
+//           html: html,
+//         });
+
+//         console.log('Email sent successfully');
+//         return info;
+        
+//     } catch (err) {
+//         console.log(err);
+//     }
+// }
+
+module.exports = {sendEmail}

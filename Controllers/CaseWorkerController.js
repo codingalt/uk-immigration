@@ -169,6 +169,7 @@ const filterCaseWorker = async (req, res) => {
          lastName: 1,
          country: 1,
          state: 1,
+         workerId: 1,
          languages: 1,
          email: { $arrayElemAt: ["$user.email", 0] },
          contact: { $arrayElemAt: ["$user.contact", 0] },

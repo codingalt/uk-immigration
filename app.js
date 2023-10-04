@@ -29,10 +29,7 @@ app.use(
 );
 
 app.use((req,res,next)=>{
-  res.setHeader(
-    "Access-Control-Allow-Origin",
-    "https://immigrationmatter.netlify.app"
-  );
+  res.setHeader("Access-Control-Allow-Origin", "https://immigrationmatter.netlify.app");
   next();
 })
 
@@ -43,6 +40,8 @@ app.use(require("./Routes/ChatRoute"));
 app.use(require("./Routes/CaseWorkerRoute"));
 app.use(require("./Routes/PaymentRoute"));
 app.use(require("./Routes/PhaseNotificationRoute"));
+app.use(require("./Routes/CompanyRoute"));
+app.use(require("./Routes/CompanyClientApplicationRoute"));
 
 const server = app.listen(PORT, () => {});
 // const io = initializeSocket(server);

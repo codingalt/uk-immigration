@@ -1,8 +1,12 @@
 const ApplicationModel = require("../Models/ApplicationModel");
 const UserModel = require("../Models/UserModel");
-const sendEmail = require("../Utils/sendEmail");
 const { sendNotification } = require("../Utils/sendNotification");
 const otpGenerator = require("otp-generator");
+const { createChat } = require("./ChatController");
+const ChatModel = require("../Models/ChatModel");
+const MessageModel = require("../Models/MessageModel");
+const nodemailer = require("nodemailer");
+const { sendEmail } = require("../Utils/sendEmail");
 
 const phaseStaus = {
   Pending: "pending",
@@ -37,23 +41,34 @@ const postApplicationPhase1 = async(req,res)=>{
       req.body.caseId = caseId;
 
       const application = await new ApplicationModel(req.body).save();
-      const {
-        phase1,
-        userId,
-        phaseSubmittedByClient,
-        isInitialRequestAccepted,
-      } = application;
-      const result = {
-        phase1,
-        userId,
-        applicationStatus: application.applicationStatus,
-        phase: application.phase,
-        phaseStatus: application.phaseStatus,
-        phaseSubmittedByClient,
-        isInitialRequestAccepted,
-      };
-      console.log(result);
-      res.status(200).json({ result, success: true });
+
+      // Create Chat with this Application 
+      const chat = await createChat({userId: req.userId.toString(),applicationId: application._id})
+      if(chat.success) {
+
+        const {
+          phase1,
+          userId,
+          phaseSubmittedByClient,
+          isInitialRequestAccepted,
+        } = application;
+        const result = {
+          phase1,
+          userId,
+          applicationStatus: application.applicationStatus,
+          phase: application.phase,
+          phaseStatus: application.phaseStatus,
+          phaseSubmittedByClient,
+          isInitialRequestAccepted,
+        };
+        console.log(result);
+        res.status(200).json({ result, success: true });
+
+      }else{
+        return res.status(500).json({message: "Error Creating Chat", success: false});
+      }
+
+      
     } catch (err) {
     res.status(500).json({ message: err.message, success: false });
     console.log(err);
@@ -96,13 +111,15 @@ const postApplicationPhase2 = async(req,res)=>{
 
       // Check if admin has requested client for phase
       const isRequested = await ApplicationModel.findById(applicationId);
+        if(!user.isAdmin){
+        if (isRequested.requestedPhase < 2) {
+          return res.status(400).json({
+            message:
+              "You can't submit phase 2 data right now, Untill admin requests you to submit phase 2 data.",
+          });
+        }
+       }
 
-      if (isRequested.requestedPhase < 2) {
-        return res.status(400).json({
-          message:
-            "You can't submit phase 2 data right now, Untill admin requests you to submit phase 2 data.",
-        });
-      }
 
       // Check which fields/data is required
       const phase2Data = isRequested.phase2;
@@ -130,13 +147,27 @@ const postApplicationPhase2 = async(req,res)=>{
         });
       }
 
-      // Update Phase 2
-      const application = await ApplicationModel.findByIdAndUpdate(
-        applicationId,
-        { $set: { phase2: filesObj, phaseSubmittedByClient: 2 } },
-        { new: true, useFindAndModify: false }
-      );
-      res.status(200).json({ application, success: true });
+      if(user.isAdmin){
+
+        // Update Phase 2
+        const application = await ApplicationModel.findByIdAndUpdate(
+          applicationId,
+          { $set: { phase2: filesObj, phaseSubmittedByClient: 2, phase: 2, phaseStatus: phaseStatus.Approved } },
+          { new: true, useFindAndModify: false }
+        );
+        res.status(200).json({ application, success: true });
+
+      }else{
+        // Update Phase 2
+        const application = await ApplicationModel.findByIdAndUpdate(
+          applicationId,
+          { $set: { phase2: filesObj, phaseSubmittedByClient: 2 } },
+          { new: true, useFindAndModify: false }
+        );
+        res.status(200).json({ application, success: true });
+      }
+
+      
     } catch (err) {
     res.status(500).json({ message: err.message, success: false });
     console.log(err);
@@ -165,23 +196,46 @@ const postApplicationPhase3 = async (req, res) => {
         // Check if admin has requested client for phase 
         const isRequested = await ApplicationModel.findById(applicationId);
 
-        if(isRequested.requestedPhase < 3){
+        if(!user.isAdmin) {
+          if(isRequested.requestedPhase < 3){
           return res.status(400).json({message: "You can't submit phase 3 data right now, Untill admin requests you to submit phase 3 data."})
         }
-
-     // Update Phase 3 
-    const application = await ApplicationModel.findByIdAndUpdate(
-      applicationId,
-      {
-        $set: {
-          "phase3.paymentEvidence": chalanFile,
-          "phase3.isOnlinePayment": false,
-          phaseSubmittedByClient: 3,
-        },
-      },
-      { new: true, useFindAndModify: false }
-    );
-    res.status(200).json({ application, success: true });
+        }
+        
+        if(user.isAdmin){
+          // Update Phase 3
+          const application = await ApplicationModel.findByIdAndUpdate(
+            applicationId,
+            {
+              $set: {
+                "phase3.paymentEvidence": chalanFile,
+                "phase3.isOnlinePayment": false,
+                "phase3.isPaid": true,
+                phaseSubmittedByClient: 3,
+                phase: 3,
+                phaseStatus: phaseStatus.Approved
+              },
+            },
+            { new: true, useFindAndModify: false }
+          );
+          res.status(200).json({ application, success: true });
+        }else{
+          // Update Phase 3
+          const application = await ApplicationModel.findByIdAndUpdate(
+            applicationId,
+            {
+              $set: {
+                "phase3.paymentEvidence": chalanFile,
+                "phase3.isOnlinePayment": false,
+                "phase3.isPaid": true,
+                phaseSubmittedByClient: 3,
+              },
+            },
+            { new: true, useFindAndModify: false }
+          );
+          res.status(200).json({ application, success: true });
+        }
+     
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -189,7 +243,18 @@ const postApplicationPhase3 = async (req, res) => {
 
 const postApplicationPhase4 = async (req, res) => {
   try {
-    const { phaseStatus, phase, applicationStatus, general,accommodation,family,languageProficiency,education,employment,membership,maintenance,travel,character } = req.body;
+    const { phaseStatus, phase, applicationStatus} = req.body;
+    const {general,accommodation,family,languageProficiency,education,employment,membership,maintenance,travel,character} = req.body.phase4;
+    const general1 = general;
+    const accommodation1 = accommodation;
+    const family1 = family;
+    const languageProficiency1 = languageProficiency;
+    const education1 = education;
+    const employment1 = employment;
+    const membership1 = membership;
+    const maintenance1 = maintenance;
+    const travel1 = travel;
+    const character1 = character;
       const { applicationId } = req.params;
     if (phaseStatus || phase || applicationStatus) {
       return res
@@ -200,13 +265,33 @@ const postApplicationPhase4 = async (req, res) => {
     }
     const user = await UserModel.findById(req.userId.toString());
     if (!user) return res.status(400).json({ message: "User not found", success: false });
-
-        if(!general || !accommodation || !family || !languageProficiency || !education || !employment || !membership || !maintenance || !travel || !character){
+    console.log(
+      general1,
+      accommodation1,
+      family1,
+      languageProficiency1,
+      education1,
+      employment1,
+      membership1,
+      maintenance1,
+      travel1,
+      character1
+    );
+        if(!general1 || !accommodation1 || !family1 || !languageProficiency1 || !education1 || !employment1 || !membership1 || !maintenance1 || !travel1 || !character1){
           return res.status(400).json({message:"Please Provide all the information Properly.", success: false});
         }
 
-    const application = await ApplicationModel.findByIdAndUpdate(applicationId, {phase4: req.body, phaseSubmittedByClient: 4},{new: true, useFindAndModify: false});
-    res.status(200).json({ application, success: true });
+        if(user.isAdmin){
+
+          const application = await ApplicationModel.findByIdAndUpdate(applicationId, {...req.body, phaseSubmittedByClient: 4, phase: 4, phaseStatus: phaseStatus.Approved},{new: true, useFindAndModify: false});
+          res.status(200).json({ application, success: true });
+
+        }else{
+          const application = await ApplicationModel.findByIdAndUpdate(applicationId, {...req.body, phaseSubmittedByClient: 4},{new: true, useFindAndModify: false});
+          res.status(200).json({ application, success: true });
+        }
+
+    
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -253,9 +338,29 @@ const approvePhase1 = async (req, res) => {
     );
 
     const email = isApplication.phase1.email;
-    // const html = `<b>Congratulations! Your application's initial phase has been approved. Please log in to the website to check your application status.</b> <br>`;
-    // const info = await sendEmail(email, "Congratulations! Phase Approved.", '',html);
-    // console.log(info);
+    const html = `<b>Congratulations! Your application's initial phase has been approved. Please log in to the website to check your application status.</b> <br>`;
+    
+    const info = await sendEmail(email, "Congratulations! Phase Approved.", '',html);
+    let content = "Congratulations, Phase Approved Successfully. Click here to continue"
+
+    // Find Chat 
+    const chat = await ChatModel.findOne({ applicationId: applicationId });
+    if(chat){
+      // Append Approved Phase Message
+      const newMessage = new MessageModel({
+        sender: req.userId.toString(),
+        content: content,
+        chatId: chat?._id,
+        isPhaseMessage: true,
+      });
+      await newMessage.save();
+
+      // Update Latest Message
+      await ChatModel.findByIdAndUpdate(chat?._id, {
+        latestMessage: content,
+      });
+    }
+    
 
     res
       .status(200)
@@ -281,6 +386,28 @@ const approvePhase2 = async (req, res) => {
         { _id: applicationId },
         { phase: 2, phaseStaus: phaseStaus.Approved }
       );
+      
+      let content =
+        "Congratulations, Phase Approved Successfully. Click here to continue";
+
+      // Find Chat
+      const chat = await ChatModel.findOne({ applicationId: applicationId });
+      if (chat) {
+        // Append Approved Phase Message
+        const newMessage = new MessageModel({
+          sender: req.userId.toString(),
+          content: content,
+          chatId: chat?._id,
+          isPhaseMessage: true,
+        });
+        await newMessage.save();
+
+        // Update Latest Message
+        await ChatModel.findByIdAndUpdate(chat?._id, {
+          latestMessage: content,
+        });
+      }
+
       res.status(200).json({message: "Application(Phase 2) Approved Successfully.", success: true})
     }else{
       return res.status(400).json({message: "Action Forbidden! To approve phase 2, Application's phase 1 must be approved.", success: false})
@@ -310,6 +437,28 @@ const approvePhase3 = async (req, res) => {
         { _id: applicationId },
         { phase: 3, phaseStaus: phaseStaus.Approved }
       );
+
+      let content =
+        "Congratulations, Phase Approved Successfully. Click here to continue";
+
+      // Find Chat
+      const chat = await ChatModel.findOne({ applicationId: applicationId });
+      if (chat) {
+        // Append Approved Phase Message
+        const newMessage = new MessageModel({
+          sender: req.userId.toString(),
+          content: content,
+          chatId: chat?._id,
+          isPhaseMessage: true,
+        });
+        await newMessage.save();
+
+        // Update Latest Message
+        await ChatModel.findByIdAndUpdate(chat?._id, {
+          latestMessage: content,
+        });
+        }
+
       res
         .status(200)
         .json({
@@ -350,6 +499,28 @@ const approvePhase4 = async (req, res) => {
         { _id: applicationId },
         { phase: 4, phaseStaus: phaseStaus.Approved, applicationStatus: "approved" }
       );
+
+      let content =
+        "Congratulations, Phase Approved Successfully. Click here to continue";
+
+      // Find Chat
+      const chat = await ChatModel.findOne({ applicationId: applicationId });
+      if (chat) {
+        // Append Approved Phase Message
+        const newMessage = new MessageModel({
+          sender: req.userId.toString(),
+          content: content,
+          chatId: chat?._id,
+          isPhaseMessage: true,
+        });
+        await newMessage.save();
+
+        // Update Latest Message
+        await ChatModel.findByIdAndUpdate(chat?._id, {
+          latestMessage: content,
+        });
+      }
+
       res.status(200).json({
         message: "Application (Phase 4) Approved Successfully.",
         success: true,
@@ -503,6 +674,28 @@ const rejectApplication = async (req, res) => {
          },
        }
      );
+      
+     let content =
+       "Apologies, form rejected. Incomplete documentation. Please resubmit with all details.";
+
+     // Find Chat
+     const chat = await ChatModel.findOne({ applicationId: applicationId });
+     if (chat) {
+       // Append Approved Phase Message
+       const newMessage = new MessageModel({
+         sender: req.userId.toString(),
+         content: content,
+         chatId: chat?._id,
+         isPhaseMessage: true,
+       });
+       await newMessage.save();
+
+       // Update Latest Message
+       await ChatModel.findByIdAndUpdate(chat?._id, {
+         latestMessage: content,
+       });
+     }
+
     res
       .status(200)
       .json({ message: "Application Rejected", success: true });
@@ -592,7 +785,7 @@ const addNotes = async (req, res) => {
 // Assign Application to CaseWorker By Admin 
 const assignApplicationToCaseWorker = async (req, res) => {
   try {
-    const { applicationId, caseWorkerId } = req.body;
+    const { applicationId, caseWorkerId,caseWorkerName } = req.body;
     const isApplication = await ApplicationModel.findById(applicationId);
     if (!isApplication) {
       return res
@@ -608,14 +801,196 @@ const assignApplicationToCaseWorker = async (req, res) => {
         $set: {
           isCaseWorkerHandling: true,
           caseWorkerId: caseWorkerId,
+          caseWorkerName: caseWorkerName,
         },
       }
     );
+
+    // Add This CaseWorker ID to Chat 
+    const chat = await ChatModel.updateOne(
+      { applicationId: applicationId },
+      { $addToSet: { users: caseWorkerId } },
+      { new: true, useFindAndModify: false }
+    );
+   
     res.status(200).json({ message: "CaseWorker Assigned", success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
 };
+
+// Get Invoice Details
+const getInvoiceDetails = async(req,res)=>{
+  try {
+    const invoices = await ApplicationModel.aggregate([
+      {
+        $addFields: {
+          convertedId: { $toObjectId: "$userId" },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "convertedId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      {
+        $unwind: "$user",
+      },
+      {
+        $project: {
+          _id: 0,
+          userId: 1,
+          phase3: 1,
+          name: "$user.name",
+          email: "$user.email",
+          profilePic: "$user.profilePic",
+        },
+      },
+    ]);
+    return res.status(200).json({ invoices: invoices, success: true });
+    
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+}
+
+// Search Filter Invoices of Application 
+const filterInvoices = async (req, res) => {
+  try {
+    const queryConditions = [];
+    const {filters} = req.body;
+    if (filters.name) {
+      queryConditions.push({ "phase1.name": { $regex: new RegExp(filters.name, "i") } });
+    }
+
+    if (filters.applicationType) {
+      queryConditions.push({
+        "phase1.applicationType": {
+          $regex: new RegExp(filters.applicationType, "i"),
+        },
+      });
+    }
+
+    if (filters.caseWorkerId) {
+      queryConditions.push({
+        caseWorkerId: { $regex: new RegExp(filters.caseWorkerId, "i") },
+      });
+    }
+
+    if (filters.from && filters.to) {
+      // Filter by date range using $gte and $lte operators
+      queryConditions.push({
+        "phase3.dateTime": {
+          $gte: new Date(filters.from),
+          $lte: new Date(filters.to),
+        },
+      });
+    } else if (filters.from) {
+      // Filter by "from" date using $gte operator
+      queryConditions.push({
+        "phase3.dateTime": {
+          $gte: new Date(filters.from),
+        },
+      });
+    } else if (filters.to) {
+      // Filter by "to" date using $lte operator
+      queryConditions.push({
+        "phase3.dateTime": {
+          $lte: new Date(filters.to),
+        },
+      });
+    }
+
+    const query = queryConditions.length === 1 ? { $or: queryConditions } : queryConditions.length > 1 ? { $and: queryConditions } : {}; 
+    const result = await ApplicationModel.find(query).select({
+      caseId: true,
+      "phase1.name": true,
+      "phase1.applicationType": true,
+      caseWorkerId: true,
+      caseWorkerName: true,
+      "phase3.dateTime": true,
+      "phase3.cost": true,
+      "phase3.isPaid": true,
+    });
+
+    // const query =
+    //   queryConditions.length === 1
+    //     ? { $or: queryConditions }
+    //     : queryConditions.length > 1
+    //     ? { $and: queryConditions }
+    //     : {};
+    // console.log(query);
+    // const result = await ApplicationModel.aggregate([
+    //   {
+    //     $addFields: {
+    //       convertedId: { $toObjectId: "$caseWorkerId" },
+    //     },
+    //   },
+    //   {
+    //     $match: query,
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "users",
+    //       localField: "convertedId",
+    //       foreignField: "_id",
+    //       as: "caseWorker",
+    //     },
+    //   },
+    //   {
+    //     $unwind: "$caseWorker",
+    //   },
+    //   {
+    //     $project: {
+    //       caseId: true,
+    //       "phase1.name": true,
+    //       "phase1.applicationType": true,
+    //       caseWorkerId: true,
+    //       "phase3.dateTime": true,
+    //       "phase3.cost": true,
+    //       "phase3.isPaid": true,
+    //       caseWorkerName: "$caseWorker.name",
+    //     },
+    //   },
+    // ]);
+
+    res.status(200).json({ result, success: true });
+  } catch (error) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+// Link Company With Client Application 
+const linkCompany = async(req,res)=>{
+  try {
+    const {applicationId} = req.params;
+    const { companyId, name, email, fullNameCompanyContact } = req.body;
+
+    if(!companyId || !name || !email || !fullNameCompanyContact || !applicationId){
+      return res.status(400).json({message: "Please fill out all required fields", success: false});
+    }
+
+    const application = await ApplicationModel.findByIdAndUpdate(
+      { _id: applicationId },
+      { linkedCompany: {companyId,name, email, fullNameCompanyContact} },
+      {new: true, useFindAndModify: false}
+    );
+
+    res.status(200).json({application, success: true});
+    
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+}
+
 
 
 module.exports = {
@@ -639,4 +1014,7 @@ module.exports = {
   addNotes,
   updatePhaseByAdmin,
   assignApplicationToCaseWorker,
+  getInvoiceDetails,
+  filterInvoices,
+  linkCompany
 };

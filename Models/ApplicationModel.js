@@ -85,6 +85,11 @@ const applicationSchema = mongoose.Schema(
       applicationType: String,
       cost: Number,
       paymentEvidence: String,
+      isPaid: {
+        type: Boolean,
+        default: false,
+      },
+      dateTime: Date,
     },
     phase4: {
       general: {
@@ -793,12 +798,21 @@ const applicationSchema = mongoose.Schema(
     caseWorkerId: {
       type: String,
     },
+    caseWorkerName: {
+      type: String,
+    },
     notes: [
       {
         name: String,
         content: String,
       },
     ],
+    linkedCompany: {
+      companyId: String,
+      name: String,
+      email: String,
+      fullNameCompanyContact: String,
+    }
   },
   { timestamps: true }
 );

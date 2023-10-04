@@ -2,10 +2,11 @@ const EmailTokenModel = require("../Models/EmailToken");
 const UserModel = require("../Models/UserModel");
 const OtpModel = require("../Models/OtpModel");
 const crypto = require("crypto");
-const sendEmail = require("../Utils/sendEmail");
 const { sendOtp } = require("../Utils/sendOtp");
 const bcrypt = require("bcryptjs");
 const axios = require("axios");
+const nodemailer = require("nodemailer");
+const { sendEmail } = require("../Utils/sendEmail");
 
 // Access token 
 //ya29.a0AfB_byCsYw38A280fX5pdQwbBPPvk-iuq6_WACqK1NjT5bmue2z8VFI65Xe7-nx6wQudhTXz9G8BdrL2mvYUidfDFoho-l0RGh7pQyvQaLqz_SRVCEloY20aJ4oD9_2FC0CxcF35mHLffEa6wBq3FjU2ONamgrGjBgaCgYKAdcSARESFQGOcNnCz1dJVxmGlKEhglmocdXIhQ0169
@@ -17,6 +18,8 @@ const signupUser = async (req, res) => {
   try {
     const { name, email, password, confirmPassword, contact, referringAgent} =
       req.body;
+
+      if(req.body.isAdmin) return res.status(400).json({message: "Action Forbidden!", success: false});
       
       if (googleAccessToken){
         // Signup with google OAuth
@@ -103,8 +106,9 @@ const signupUser = async (req, res) => {
                 const url = `${process.env.BASE_URL}/users/${user._id}/verify/${emailToken.token}`;
                 const html = `<b>Click on the link below to verify your email.</b> <br> ${url}`;
                 const info = await sendEmail(user.email, "Verify Email", url,html);
-
+                
                 if(info){
+                  console.log("Email sent successfully");
                   //  Send 6 digit OTP and save in the database
                   const otpSend = await sendOtp(user.contact);
                   res.status(200).json({
@@ -390,17 +394,21 @@ const loginUser = async (req, res) => {
         const isMatch = await bcrypt.compare(password, signin.password);
         if (isMatch) {
 
+          const { _id, email, isCaseWorker, isAdmin, isEmailVerified, tokens} = signin;
+          const userToken = tokens[tokens.length - 1];
+          const result = {_id, email, isCaseWorker, isEmailVerified, token: userToken.token}
+
           // Check If he is Admin
           if (signin.isAdmin) {
             //Generating JSON web token
             token = await signin.generateAuthToken();
             res.cookie("ukImmigrationJwtoken", token, {
-              expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+              expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
               httpOnly: true,
               secure: true,
               sameSite: "none",
             });
-             return res.status(200).json({isAdmin: true, success: true});
+             return res.status(200).json({success: true, user: result, redirect: "/admin/home"});
           }
 
           // Check if he is case worker
@@ -408,12 +416,12 @@ const loginUser = async (req, res) => {
             //Generating JSON web token
             token = await signin.generateAuthToken();
             res.cookie("ukImmigrationJwtoken", token, {
-              expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+              expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
               httpOnly: true,
               sameSite: "none",
               secure: true,
             });
-            return res.status(200).json({isCaseWorker: true, success: true});
+            return res.status(200).json({success: true, user: result, redirect: "/admin/home"});
 
           }
 
@@ -440,9 +448,12 @@ const loginUser = async (req, res) => {
             sameSite: "none",
             secure: true,
           });
+          
           return res.status(200).json({
             message: "Login Successfully",
             success: true,
+            user: result,
+            redirect: "/client/home",
           });
         } else {
           res

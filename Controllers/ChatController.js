@@ -36,6 +36,36 @@ const accessChat = async (req, res) => {
   }
 };
 
+const createChat = async (req) => {
+  try {
+    const { applicationId, userId } = req;
+    const admin = await UserModel.findOne({isAdmin: true});
+    const adminId = admin._id.toString();
+
+    if (userId === adminId) {
+      return { message: "UserId and admin id is same.", success: false };
+    }
+
+    // check if chat is already present
+    const chat = await ChatModel.findOne({
+      users: { $all: [userId, adminId] },
+    });
+    
+    if (chat) {
+      return {message: "Chat with this person already exists", success: true}
+    } else {
+      const newChat = new ChatModel({
+        users: [userId, adminId],
+        applicationId: applicationId,
+      });
+      await newChat.save();
+      return {message: "Chat Created", success: true}
+    }
+  } catch (err) {
+    res.status(500).json({ data: err.message, success: false });
+  }
+};
+
 const getUserChats = async (req, res) => {
   try {
      const chats = await ChatModel.find({
@@ -136,4 +166,10 @@ const getAllMessages = async (req, res) => {
   }
 };
 
-module.exports = { accessChat, getUserChats, sendMessage, getAllMessages };
+module.exports = {
+  accessChat,
+  getUserChats,
+  sendMessage,
+  getAllMessages,
+  createChat,
+};

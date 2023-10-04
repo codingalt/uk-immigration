@@ -10,11 +10,19 @@ const messaging = admin.messaging();
 
 const sendNotification = async(req,res)=>{
     try {
-      const { title, image, userId, applicationId,fcmToken } = req.body;
+      const {
+        title,
+        image,
+        userId,
+        applicationId,
+        fcmToken,
+        notificationType,
+      } = req.body;
       await new PhaseNotificationModel({
         title: title,
         userId: userId,
         applicationId: applicationId,
+        notificationType,
       }).save();
 
       const user = await UserModel.findById(userId);

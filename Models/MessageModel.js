@@ -24,6 +24,7 @@ const messageSchema = mongoose.Schema(
       type: Number,
       default: 0
     },
+    isPhaseMessage: Boolean,
     files: []
   },
   { timestamps: true }
