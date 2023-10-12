@@ -6,22 +6,44 @@ const { sendOtp } = require("../Utils/sendOtp");
 const bcrypt = require("bcryptjs");
 const axios = require("axios");
 const nodemailer = require("nodemailer");
+const jwt = require("jsonwebtoken");
 const { sendEmail } = require("../Utils/sendEmail");
+// const {SMTPClient} = require("emailjs")
+var postmark = require("postmark");
+const ApplicationModel = require("../Models/ApplicationModel");
+var client = new postmark.Client("<server key>");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
-// Access token 
-//ya29.a0AfB_byCsYw38A280fX5pdQwbBPPvk-iuq6_WACqK1NjT5bmue2z8VFI65Xe7-nx6wQudhTXz9G8BdrL2mvYUidfDFoho-l0RGh7pQyvQaLqz_SRVCEloY20aJ4oD9_2FC0CxcF35mHLffEa6wBq3FjU2ONamgrGjBgaCgYKAdcSARESFQGOcNnCz1dJVxmGlKEhglmocdXIhQ0169
-// const googleAccessToken =
-//   "ya29.a0AfB_byCsYw38A280fX5pdQwbBPPvk-iuq6_WACqK1NjT5bmue2z8VFI65Xe7-nx6wQudhTXz9G8BdrL2mvYUidfDFoho-l0RGh7pQyvQaLqz_SRVCEloY20aJ4oD9_2FC0CxcF35mHLffEa6wBq3FjU2ONamgrGjBgaCgYKAdcSARESFQGOcNnCz1dJVxmGlKEhglmocdXIhQ0169";
-const googleAccessToken = undefined;
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  type: "SMTP",
+  secure: true,
+  logger: true,
+  debug: true,
+  secureConnection: false,
+  auth: {
+    user: "faheemmalik640@gmail.com",
+    pass: "paho tctl xadt lnjo",
+  },
+  tls: {
+    rejectUnAuthorized: false,
+  },
+});
+
 
 const signupUser = async (req, res) => {
   try {
-    const { name, email, password, confirmPassword, contact, referringAgent} =
+    const { name, email, password, confirmPassword, contact, referringAgent,fcmToken} =
       req.body;
+      console.log(req.body);
 
       if(req.body.isAdmin) return res.status(400).json({message: "Action Forbidden!", success: false});
+
+      if(req.body.isCaseWorker) return res.status(400).json({message: "Action Forbidden!", success: false});
       
-      if (googleAccessToken){
+      if (req.body.googleAccessToken){
+        const googleAccessToken = req.body.googleAccessToken;
         // Signup with google OAuth
         try {
           const { data } = await axios.get(
@@ -42,17 +64,41 @@ const signupUser = async (req, res) => {
           }
 
           const user = new UserModel({
-            name: data?.given_name,
+            name: data?.name,
             email: data?.email,
             isEmailVerified: data?.email_verified,
+            profilePic: data?.picture,
+            fcmToken,
+            googleId: data?.sub
           });
+
           const token = await user.generateAuthToken();
-          await user.save();
+         const userData = await user.save();
           res.cookie("ukImmigrationJwtoken", token, {
-            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
             httpOnly: true,
+            sameSite: "none",
+            secure: true,
           });
-          return res.status(200).json({message:"Signup successful", success: true});
+
+          const {
+            _id,
+            email,
+            isCaseWorker,
+            isEmailVerified,
+            tokens,
+            googleId,
+          } = userData;
+          const userToken = tokens[tokens.length - 1];
+          const result = {
+            _id,
+            email,
+            isCaseWorker,
+            isEmailVerified,
+            googleId,
+            token: userToken.token,
+          };
+          return res.status(200).json({ user: result, success: true });
         } catch (err) {
           res
             .status(500)
@@ -94,24 +140,50 @@ const signupUser = async (req, res) => {
                   password,
                   contact,
                   referringAgent,
+                  fcmToken,
                 });
                 const token = await user.generateAuthToken();
-                await user.save();
+                const userData = await user.save();
 
                 //  Saving token to emailToken model
                 const emailToken = await new EmailTokenModel({
                   userId: user._id,
                   token: crypto.randomBytes(32).toString("hex"),
                 }).save();
-                const url = `${process.env.BASE_URL}/users/${user._id}/verify/${emailToken.token}`;
+                const url = `${process.env.BASE_URL}/${user._id}/verify/${emailToken.token}`;
                 const html = `<b>Click on the link below to verify your email.</b> <br> ${url}`;
-                const info = await sendEmail(user.email, "Verify Email", url,html);
+                const info = await sendEmail(user.email, "Verify Email", "",html);
+                console.log(info);
                 
                 if(info){
                   console.log("Email sent successfully");
-                  //  Send 6 digit OTP and save in the database
-                  const otpSend = await sendOtp(user.contact);
+                   res.cookie("ukImmigrationJwtoken", token, {
+                     expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                     httpOnly: true,
+                     sameSite: "none",
+                     secure: true,
+                   });
+
+                   const {
+                     _id,
+                     email,
+                     isCaseWorker,
+                     isEmailVerified,
+                     tokens,
+                     googleId,
+                   } = userData;
+                   const userToken = tokens[tokens.length - 1];
+                   const result = {
+                     _id,
+                     email,
+                     isCaseWorker,
+                     isEmailVerified,
+                     googleId,
+                     token: userToken.token,
+                   };
+
                   res.status(200).json({
+                    user: result,
                     message: "Please Check your Email to verify your account",
                     success: true,
                   });
@@ -120,8 +192,6 @@ const signupUser = async (req, res) => {
                   await EmailTokenModel.findByIdAndDelete(emailToken._id);
                   return res.status(500).json({message: "Error Sending Email", success: false});
                 }
-
-                
 
       }
 
@@ -135,6 +205,8 @@ const verifyEmail = async(req,res)=>{
     try {
 
         const {id,token} = req.params;
+        console.log(id);
+        console.log("token",token);
         const user = await UserModel.findOne({_id: id});
         const verifyToken = await EmailTokenModel.findOne({userId: id, token});
         if(!verifyToken){
@@ -166,10 +238,11 @@ const updateMobileVerify = async (req, res) => {
 const updateUserData = async (req, res) => {
   try {
     const userId  = req.userId.toString();
+    console.log(req.body);
     const { name, email, contact } = req.body;
     const files = req.files;
     console.log(files);
-    if(files.profilePic){
+    if(files?.profilePic){
       var file = req.files?.profilePic[0]?.filename;
       var profilePic = `/Uploads/${file}`;
       await UserModel.findByIdAndUpdate(
@@ -198,7 +271,7 @@ const changePassword = async (req, res) => {
   try {
     const userId = req.userId.toString();
     const {password, confirmPassword, currentPassword} = req.body;
-    if(!password || !confirmPassword || !currentPassword) return res.status(400).json({message: "Please fill out all the fields properly.", success: false});
+    if(!password || !confirmPassword) return res.status(400).json({message: "Please fill out all the fields properly.", success: false});
 
     if(password != confirmPassword) return res.status(400).json({message: "New Password do not match.", success: false});
 
@@ -209,15 +282,25 @@ const changePassword = async (req, res) => {
     });
 
     console.log(user);
-    // If password does not exist | User signed up with google account 
-    if(!user.password) return res.status(400).json({message: "Password does not exist. You are signed in with google.", success: false});
+
+    // If password does not exist | User signed up with google account | Add New Password with google
+    if(!user.password){
+      // Otherwise Change Password
+      const hashedPassword = await bcrypt.hash(password, 12);
+      await UserModel.updateOne({ _id: userId }, { password: hashedPassword });
+      return res
+        .status(200)
+        .json({ message: "Password Updated Successfully.", success: true });
+    }
+      
 
     const isPasswordMatch = await bcrypt.compare(currentPassword, user.password);
     
-    if(!isPasswordMatch) return res.status(400).json({message: "Your current password is wrong. Click forgot password to change.", success: false});
+    if(!isPasswordMatch) return res.status(400).json({message: "Your Last password is wrong.", success: false});
     
     // Otherwise Change Password 
-    await UserModel.updateOne({ _id: userId }, { password: password });
+    const hashedPassword = await bcrypt.hash(password, 12);
+    await UserModel.updateOne({ _id: userId }, { password: hashedPassword });
     res.status(200).json({ message: "Password Updated Successfully.", success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
@@ -264,6 +347,7 @@ const verifyResetPasswordLink = async (req, res) => {
     if (!verifyToken) {
       return res.status(400).json({ message: "Invalid Link", success: false });
     }
+      
     res.status(200).json({ message: "Email Verified. You can now create a new password.", success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
@@ -328,7 +412,7 @@ const createNewPassword = async (req, res) => {
   //Login Route
 const loginUser = async (req, res) => {
   try {
-
+    const {googleAccessToken} = req.body;
     if(googleAccessToken){
       // Login With Google OAuth 
       try {
@@ -349,16 +433,33 @@ const loginUser = async (req, res) => {
             .json({ message: "User does not exist", success: false });
         }
 
+        if (!signin.googleId) {
+          return res
+            .status(404)
+            .json({ message: "Invalid Login Details.", success: false });
+        }
+
         //Generating JSON web token
        const token = await signin.generateAuthToken();
         res.cookie("ukImmigrationJwtoken", token, {
-          expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
           httpOnly: true,
           sameSite: "none",
           secure: true,
         });
 
-        return res.status(200).json({message:'Login Successfully', success: true});
+        const { _id, email, isCaseWorker, isEmailVerified, tokens,googleId } = signin;
+        const userToken = tokens[tokens.length - 1];
+        const result = {
+          _id,
+          email,
+          isCaseWorker,
+          isEmailVerified,
+          googleId,
+          token: userToken.token,
+        };
+
+        return res.status(200).json({user: result, success: true});
       } catch (err) {
         res.status(500).json({message: "Something went wrong", success: false});
       }
@@ -389,12 +490,18 @@ const loginUser = async (req, res) => {
           .status(404)
           .json({ message: "Invalid login details", success: false });
       }
+
+      if (!signin.password) {
+        return res
+          .status(404)
+          .json({ message: "Invalid login details", success: false });
+      }
       
       if (signin) {
         const isMatch = await bcrypt.compare(password, signin.password);
         if (isMatch) {
 
-          const { _id, email, isCaseWorker, isAdmin, isEmailVerified, tokens} = signin;
+          const { _id, email, isCaseWorker, isEmailVerified, tokens} = signin;
           const userToken = tokens[tokens.length - 1];
           const result = {_id, email, isCaseWorker, isEmailVerified, token: userToken.token}
 
@@ -403,7 +510,7 @@ const loginUser = async (req, res) => {
             //Generating JSON web token
             token = await signin.generateAuthToken();
             res.cookie("ukImmigrationJwtoken", token, {
-              expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+              expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
               httpOnly: true,
               secure: true,
               sameSite: "none",
@@ -416,7 +523,7 @@ const loginUser = async (req, res) => {
             //Generating JSON web token
             token = await signin.generateAuthToken();
             res.cookie("ukImmigrationJwtoken", token, {
-              expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+              expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
               httpOnly: true,
               sameSite: "none",
               secure: true,
@@ -432,8 +539,9 @@ const loginUser = async (req, res) => {
               userId: signin._id,
               token: crypto.randomBytes(32).toString("hex"),
             }).save();
-            const url = `${process.env.BASE_URL}/users/${signin._id}/verify/${emailToken.token}`;
-            await sendEmail(signin.email, "Verify Email", url);
+            const url = `${process.env.BASE_URL}/${signin._id}/verify/${emailToken.token}`;
+            const info = await sendEmail(signin.email, "Verify Email", url);
+            
             return res.status(400).json({
               message:
                 "To continue login, Please verify your email. A Verification link has been sent to your email.",
@@ -443,7 +551,7 @@ const loginUser = async (req, res) => {
           //Generating JSON web token
           token = await signin.generateAuthToken();
           res.cookie("ukImmigrationJwtoken", token, {
-            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
             httpOnly: true,
             sameSite: "none",
             secure: true,
@@ -490,11 +598,101 @@ const getAllUsers = async (req, res) => {
 const logoutUser = async (req, res) => {
   try {
     res.clearCookie("ukImmigrationJwtoken");
+    res.cookie("ukImmigrationJwtoken", "", {
+      expires: new Date(0),
+      httpOnly: true,
+      sameSite: "none",
+    });
     res.status(200).json({ message:"Logout Successfully", success: true });
   } catch (err) {
        res.status(500).json({ message: err.message, success: false });
   }
 };
+
+const AuthRoute = async (req, res) => {
+  try {
+    let token;
+    const bearerToken = req.headers["authorization"];
+    if (req.cookies.ukImmigrationJwtoken) {
+      token = req.cookies.ukImmigrationJwtoken;
+    } else if (typeof bearerToken !== "undefined") {
+      const bearer = bearerToken.split(" ");
+      token = bearer[1];
+    } else {
+      return res.status(401).json({
+        message: "Unotherized User: Please login first",
+        success: false,
+      });
+    }
+
+      const verifyToken = jwt.verify(token, process.env.SECRET_KEY);
+      const rootUser = await UserModel.findOne({
+        _id: verifyToken._id,
+        "tokens.token": token,
+      });
+      if (!rootUser) {
+        throw new Error("User not found..");
+      } 
+      console.log(token);
+      const { ...others } = rootUser._doc;
+      req.token = token;
+      req.rootUser = { data: others, success: true };
+      req.userId = rootUser._id;
+      const data = {
+        _id: others._id,
+        name: others.name,
+        email: others.email,
+        contact: others.contact,
+        isEmailVerified: others.isEmailVerified,
+        profilePic: others.profilePic,
+        isMobileVerified: others.isMobileVerified,
+        googleId: others.googleId,
+      };
+
+      if(rootUser){
+        return res.status(200).json({data, success: true });
+      }
+
+    //  end of bearer token if
+  } catch (error) {
+    res.status(401).json({
+      message: "Unotherized User: Please login first",
+      success: false,
+    });
+    console.log(error);
+  }
+};
+
+const createPaymentIntent = async(req,res)=>{
+  try {
+    let amount = 0;
+    const {applicationId} = req.body;
+    const application = await ApplicationModel.findById(applicationId);
+
+    if (application.requestedPhase < 3) {
+      return res
+        .status(400)
+        .json({
+          message:
+            "You can't perform this action right now. You can pay only when admin requests you to submit phase 3 data",
+          success: false,
+        });
+    }
+
+    amount = parseInt(application.phase3.cost);
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount * 100,
+      currency: "usd",
+      payment_method: "pm_card_visa",
+    });
+
+    res.send({clientSecret: paymentIntent.client_secret})
+    
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+}
+
 
 module.exports = {
   signupUser,
@@ -508,5 +706,7 @@ module.exports = {
   changePassword,
   forgotPassword,
   verifyResetPasswordLink,
-  createNewPassword
+  createNewPassword,
+  AuthRoute,
+  createPaymentIntent,
 };

@@ -37,7 +37,7 @@ const chalanUpload = multer({
 // Post Application Data By Client Phase by Phase 
 router.post("/api/application/phase1", Authenticate,postApplicationPhase1);
 router.post(
-  "/api/application/phase2/:applicationId",
+  "/api/application/phase2",
   Authenticate,
   applicationUpload.fields([
     { name: "passport", maxCount: 1 },

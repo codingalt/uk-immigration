@@ -39,6 +39,14 @@ const postApplicationPhase1 = async(req,res)=>{
       });
 
       req.body.caseId = caseId;
+      req.body.phaseSubmittedByClient = 1;
+
+      // Check if application is already exist 
+      const isApplicationAlready = await ApplicationModel.findOne({
+        userId: req.userId.toString(),
+      });
+
+      if(isApplicationAlready) return res.status(400).json({message: 'Your Application already exists',success: false})
 
       const application = await new ApplicationModel(req.body).save();
 
@@ -77,8 +85,8 @@ const postApplicationPhase1 = async(req,res)=>{
 
 const postApplicationPhase2 = async(req,res)=>{
     try {
-      const { phaseStatus, phase, applicationStatus } = req.body;
-      const { applicationId } = req.params;
+      const { phaseStatus, phase, applicationStatus, applicationId } = req.body;
+      // const { applicationId } = req.params;
       const files = req.files;
       if (phaseStatus || phase || applicationStatus) {
         return res.status(400).json({
@@ -108,7 +116,7 @@ const postApplicationPhase2 = async(req,res)=>{
         return res
           .status(400)
           .json({ message: "User not found", success: false });
-
+      console.log(applicationId);
       // Check if admin has requested client for phase
       const isRequested = await ApplicationModel.findById(applicationId);
         if(!user.isAdmin){
@@ -210,7 +218,6 @@ const postApplicationPhase3 = async (req, res) => {
               $set: {
                 "phase3.paymentEvidence": chalanFile,
                 "phase3.isOnlinePayment": false,
-                "phase3.isPaid": true,
                 phaseSubmittedByClient: 3,
                 phase: 3,
                 phaseStatus: phaseStatus.Approved
@@ -435,7 +442,7 @@ const approvePhase3 = async (req, res) => {
     ) {
       await ApplicationModel.updateOne(
         { _id: applicationId },
-        { phase: 3, phaseStaus: phaseStaus.Approved }
+        { phase: 3, phaseStaus: phaseStaus.Approved, "phase3.isPaid": true }
       );
 
       let content =

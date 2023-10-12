@@ -22,14 +22,28 @@ app.use(cookieParser());
 app.use(
   cors({
     // origin: [process.env.BASE_URL, "http://127.0.0.1:5173"],
-    origin: [process.env.BASE_URL, "https://immigrationmatter.netlify.app"],
+    origin: [
+      process.env.BASE_URL,
+      "https://immigrationmatter.netlify.app",
+      "http://localhost:3000",
+    ],
     methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
     credentials: true,
   })
 );
 
+const allowedOrigins = [
+  process.env.BASE_URL,
+  "https://immigrationmatter.netlify.app",
+  "http://localhost:3000",
+];
+
 app.use((req,res,next)=>{
-  res.setHeader("Access-Control-Allow-Origin", "https://immigrationmatter.netlify.app");
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
   next();
 })
 

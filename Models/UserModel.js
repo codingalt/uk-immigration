@@ -48,6 +48,9 @@ const userSchema = mongoose.Schema(
     profilePic: {
       type: String,
     },
+    googleId: {
+      type: String,
+    },
     fcmToken: {
       type: Array,
     },

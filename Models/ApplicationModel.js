@@ -785,7 +785,7 @@ const applicationSchema = mongoose.Schema(
     },
     phaseSubmittedByClient: {
       type: Number,
-      default: 1,
+      default: 0,
     },
     isInitialRequestAccepted: {
       type: Boolean,
