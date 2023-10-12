@@ -26,6 +26,7 @@ app.use(
       process.env.BASE_URL,
       "https://immigrationmatter.netlify.app",
       "http://localhost:3000",
+      "https://immigration-client.netlify.app",
     ],
     methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
     credentials: true,
@@ -36,6 +37,7 @@ const allowedOrigins = [
   process.env.BASE_URL,
   "https://immigrationmatter.netlify.app",
   "http://localhost:3000",
+  "https://immigration-client.netlify.app",
 ];
 
 app.use((req,res,next)=>{
