@@ -87,9 +87,18 @@ const payWithCard = async (req, res) => {
 };
 
 const payWithCardCompanyClient = async (req, res) => {
-  const { token, applicationId } = req.body;
+  const {  applicationId } = req.body;
   let amount = 0;
   try {
+
+    const token = await stripe.tokens.create({
+      card: {
+        number: "4242424242424242",
+        exp_month: 10,
+        exp_year: 2024,
+        cvc: "314",
+      },
+    });
     // Check Whether Admin/Case Worker has requested client to submit phase 3
     const isRequested = await CompanyClientModel.findById(applicationId);
 
@@ -156,6 +165,7 @@ const payWithCardCompanyClient = async (req, res) => {
         $set: {
           "phase3.onlinePaymentEvidence": charge.receipt_url,
           "phase3.isOnlinePayment": true,
+          "phase3.isPaid": true,
           phaseSubmittedByClient: 3,
         },
       },

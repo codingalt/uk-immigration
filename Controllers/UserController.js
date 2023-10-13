@@ -14,23 +14,16 @@ const ApplicationModel = require("../Models/ApplicationModel");
 var client = new postmark.Client("<server key>");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  type: "SMTP",
-  secure: true,
-  logger: true,
-  debug: true,
-  secureConnection: false,
-  auth: {
-    user: "faheemmalik640@gmail.com",
-    pass: "paho tctl xadt lnjo",
-  },
-  tls: {
-    rejectUnAuthorized: false,
-  },
-});
-
+"use strict"
+// const transporter = nodemailer.createTransport({
+//   host: process.env.HOST,
+//   port: 465,
+//   secure: true,
+//   auth: {
+//     user: process.env.EMAIL_USER,
+//     pass: process.env.EMAIL_PASS,
+//   },
+// });
 
 const signupUser = async (req, res) => {
   try {
@@ -152,7 +145,17 @@ const signupUser = async (req, res) => {
                 }).save();
                 const url = `${process.env.BASE_URL}/${user._id}/verify/${emailToken.token}`;
                 const html = `<b>Click on the link below to verify your email.</b> <br> ${url}`;
-                const info = await sendEmail(user.email, "Verify Email", "",html);
+                // const info = await sendEmail(user.email, "Verify Email", "",html);
+                 const info = await transporter.sendMail({
+                   from: {
+                     address: "support@maxxswap.com",
+                     name: "Max Swap",
+                   },
+                   to: email,
+                   subject: "Email Verification",
+                   text: "Verify Your email address",
+                   html: html,
+                 });
                 console.log(info);
                 
                 if(info){
@@ -201,21 +204,76 @@ const signupUser = async (req, res) => {
   }
 };
 
+const sendmail = async(req,res)=>{
+  try {
+
+    const email = "faheemmalik886@gmail.com";
+    console.log(email);
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.HOST,
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const url = `${process.env.BASE_URL}/1122/verify/2233`;
+    const html = `<b>Click on the link below to verify your email.</b> <br> ${url}`;
+    console.log(transporter);
+    transporter.verify(function (error, success) {
+      if (error) {
+            res.status(500).json({
+              message: error,
+              success: true,
+            });
+
+        console.log(error);
+      } else {
+         res.status(200).json({
+           message: "Server is ready to take our messages",
+           success: true,
+         });
+        console.log("Server is ready to take our messages");
+      }
+    });
+    const info = await transporter.sendMail({
+      from: {
+        address: "testmailingsmtp@lesoft.io",
+        name: "Lesoft Test Email",
+      },
+      to: email,
+      subject: "Email Verification",
+      text: "Verify Your email address",
+      html: html,
+    });
+
+    console.log(info);
+    return res.json(info);
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error.message)
+  }
+}
+
 const verifyEmail = async(req,res)=>{
     try {
 
-        const {id,token} = req.params;
-        console.log(id);
-        console.log("token",token);
-        const user = await UserModel.findOne({_id: id});
-        const verifyToken = await EmailTokenModel.findOne({userId: id, token});
-        if(!verifyToken){
-            return res.status(400).json({message: "Invalid Link",success:false});
-        }
+        // const {id,token} = req.params;
+        // console.log(id);
+        // console.log("token",token);
+        // const user = await UserModel.findOne({_id: id});
+        // const verifyToken = await EmailTokenModel.findOne({userId: id, token});
+        // if(!verifyToken){
+        //     return res.status(400).json({message: "Invalid Link",success:false});
+        // }
 
-        await UserModel.updateOne({ _id: user._id}, {isEmailVerified : true});
-        await EmailTokenModel.deleteOne({ _id: verifyToken._id });
-        res.status(200).json({message: "Email verified", success:true});
+        // await UserModel.updateOne({ _id: user._id}, {isEmailVerified : true});
+        // await EmailTokenModel.deleteOne({ _id: verifyToken._id });
+        // res.status(200).json({message: "Email verified", success:true});
         
     } catch (err) {
     res.status(500).json({ message: err.message, success: false });
@@ -709,4 +767,5 @@ module.exports = {
   createNewPassword,
   AuthRoute,
   createPaymentIntent,
+  sendmail,
 };

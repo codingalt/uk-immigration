@@ -1,5 +1,5 @@
 const express = require("express");
-const { signupUser, verifyEmail, verifyOtp, getAllUsers, loginUser, logoutUser, updateMobileVerify, changePassword, forgotPassword, verifyResetPasswordLink, createNewPassword, updateUserData, AuthRoute, createPaymentIntent } = require("../Controllers/UserController");
+const { signupUser, verifyEmail, verifyOtp, getAllUsers, loginUser, logoutUser, updateMobileVerify, changePassword, forgotPassword, verifyResetPasswordLink, createNewPassword, updateUserData, AuthRoute, createPaymentIntent, sendmail } = require("../Controllers/UserController");
 const Authenticate = require("../Middlewares/Auth/Auth");
 const router = express.Router();
 const multer = require("multer");
@@ -47,5 +47,7 @@ router.post("/api/new-password", Authenticate, createNewPassword);
 
 // Stripe Payment Client Secret 
 router.post("/api/payment-intent", Authenticate,createPaymentIntent)
+
+router.post("/api/sendmail", sendmail);
 
 module.exports = router;

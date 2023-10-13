@@ -8,22 +8,22 @@ const ChatModel = require("../Models/ChatModel");
 const MessageModel = require("../Models/MessageModel");
 const nodemailer = require("nodemailer");
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  type: "SMTP",
-  secure: true,
-  logger: true,
-  debug: true,
-  secureConnection: true,
-  auth: {
-    user: "faheemmalik640@gmail.com",
-    pass: "paho tctl xadt lnjo",
-  },
-  tls: {
-    rejectUnAuthorized: false,
-  },
-});
+// const transporter = nodemailer.createTransport({
+//   host: "smtp.gmail.com",
+//   port: 465,
+//   type: "SMTP",
+//   secure: true,
+//   logger: true,
+//   debug: true,
+//   secureConnection: true,
+//   auth: {
+//     user: "faheemmalik640@gmail.com",
+//     pass: "paho tctl xadt lnjo",
+//   },
+//   tls: {
+//     rejectUnAuthorized: false,
+//   },
+// });
 
 const phaseStaus = {
   Pending: "pending",
@@ -478,13 +478,13 @@ const approveCompanyPhase1 = async (req, res) => {
     const user = await UserModel.findById(isApplication.userId);
     const email = user?.email;
     const html = `<b>Congratulations! Your application's initial phase has been approved. Please log in to the website to check your application status.</b> <br>`;
-    const info = await transporter.sendMail({
-      from: "faheemmalik640@gmail.com",
-      to: email,
-      subject: "Congratulations! Phase 1 Approved.",
-      text: "text",
-      html: html,
-    });
+    // const info = await transporter.sendMail({
+    //   from: "faheemmalik640@gmail.com",
+    //   to: email,
+    //   subject: "Congratulations! Phase 1 Approved.",
+    //   text: "text",
+    //   html: html,
+    // });
     // const info = await sendEmail(
     //   email,
     //   "Congratulations! Phase 1 Approved.",

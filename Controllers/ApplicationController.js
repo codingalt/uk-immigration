@@ -218,9 +218,10 @@ const postApplicationPhase3 = async (req, res) => {
               $set: {
                 "phase3.paymentEvidence": chalanFile,
                 "phase3.isOnlinePayment": false,
+                "phase3.isPaid": true,
                 phaseSubmittedByClient: 3,
                 phase: 3,
-                phaseStatus: phaseStatus.Approved
+                phaseStatus: phaseStatus.Approved,
               },
             },
             { new: true, useFindAndModify: false }

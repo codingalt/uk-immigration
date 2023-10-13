@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 
-let testAccount = new nodemailer.createTestAccount();
+// let testAccount = new nodemailer.createTestAccount();
 // const transporter = nodemailer.createTransport({
 //   host: "smtp.ethereal.email",
 //   port: 587,
@@ -10,28 +10,40 @@ let testAccount = new nodemailer.createTestAccount();
 //   },
 // });
 
+// const transporter = nodemailer.createTransport({
+//   host: "maxxswap.com",
+//   port: 465,
+//   type: "SMTP",
+//   secure: true,
+//   logger: true,
+//   debug: true,
+//   // secureConnection: false,
+//   auth: {
+//     user: "support@maxxswap.com",
+//     pass: "max_swap@1234",
+//   },
+//   tls: {
+//     rejectUnAuthorized: false,
+//   },
+// });
+
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  service: "hotmail",
+  host: process.env.HOST,
   port: 465,
-  type: "SMTP",
   secure: true,
-  logger: true,
-  debug: true,
-  secureConnection: false,
   auth: {
-    user: "faheemmalik640@gmail.com",
-    pass: "paho tctl xadt lnjo",
-  },
-  tls: {
-    rejectUnAuthorized: false,
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
 const sendEmail = async(email, subject, text, html)=>{
     try {
       const info = await transporter.sendMail({
-        from: "UK Immigration <clara59@ethereal.email>",
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft Test Email",
+        },
         to: email,
         subject: subject,
         text: text,
@@ -39,7 +51,7 @@ const sendEmail = async(email, subject, text, html)=>{
       });
 
       console.log("Email sent successfully");
-      return info;
+      // return info;
     } catch (err) {
       console.log(err);
     }

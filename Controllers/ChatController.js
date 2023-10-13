@@ -147,7 +147,6 @@ const getAllMessages = async (req, res) => {
     
     await MessageModel.updateMany(
       { chatId: chatId },
-      { $set: { isRead: 1 } },
       { new: true, useFindAndModify: false }
     );
 
