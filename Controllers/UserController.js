@@ -145,17 +145,17 @@ const signupUser = async (req, res) => {
                 }).save();
                 const url = `${process.env.BASE_URL}/${user._id}/verify/${emailToken.token}`;
                 const html = `<b>Click on the link below to verify your email.</b> <br> ${url}`;
-                // const info = await sendEmail(user.email, "Verify Email", "",html);
-                 const info = await transporter.sendMail({
-                   from: {
-                     address: "support@maxxswap.com",
-                     name: "Max Swap",
-                   },
-                   to: email,
-                   subject: "Email Verification",
-                   text: "Verify Your email address",
-                   html: html,
-                 });
+                const info = await sendEmail(user.email, "Verify Email", "",html);
+                //  const info = await transporter.sendMail({
+                //    from: {
+                //      address: "support@maxxswap.com",
+                //      name: "Max Swap",
+                //    },
+                //    to: email,
+                //    subject: "Email Verification",
+                //    text: "Verify Your email address",
+                //    html: html,
+                //  });
                 console.log(info);
                 
                 if(info){
@@ -191,8 +191,8 @@ const signupUser = async (req, res) => {
                     success: true,
                   });
                 }else{
-                  await UserModel.findByIdAndDelete(user._id);
-                  await EmailTokenModel.findByIdAndDelete(emailToken._id);
+                  // await UserModel.findByIdAndDelete(user._id);
+                  // await EmailTokenModel.findByIdAndDelete(emailToken._id);
                   return res.status(500).json({message: "Error Sending Email", success: false});
                 }
 
@@ -225,18 +225,18 @@ const sendmail = async(req,res)=>{
     console.log(transporter);
     transporter.verify(function (error, success) {
       if (error) {
-            res.status(500).json({
+           console.log(error);
+           return res.status(500).json({
               message: error,
               success: true,
             });
 
-        console.log(error);
       } else {
-         res.status(200).json({
+        console.log("Server is ready to take our messages");
+         return res.status(200).json({
            message: "Server is ready to take our messages",
            success: true,
          });
-        console.log("Server is ready to take our messages");
       }
     });
     const info = await transporter.sendMail({
@@ -262,18 +262,18 @@ const sendmail = async(req,res)=>{
 const verifyEmail = async(req,res)=>{
     try {
 
-        // const {id,token} = req.params;
-        // console.log(id);
-        // console.log("token",token);
-        // const user = await UserModel.findOne({_id: id});
-        // const verifyToken = await EmailTokenModel.findOne({userId: id, token});
-        // if(!verifyToken){
-        //     return res.status(400).json({message: "Invalid Link",success:false});
-        // }
+        const {id,token} = req.params;
+        console.log(id);
+        console.log("token",token);
+        const user = await UserModel.findOne({_id: id});
+        const verifyToken = await EmailTokenModel.findOne({userId: id, token});
+        if(!verifyToken){
+            return res.status(400).json({message: "Invalid Link",success:false});
+        }
 
-        // await UserModel.updateOne({ _id: user._id}, {isEmailVerified : true});
-        // await EmailTokenModel.deleteOne({ _id: verifyToken._id });
-        // res.status(200).json({message: "Email verified", success:true});
+        await UserModel.updateOne({ _id: user._id}, {isEmailVerified : true});
+        await EmailTokenModel.deleteOne({ _id: verifyToken._id });
+        res.status(200).json({message: "Email verified", success:true});
         
     } catch (err) {
     res.status(500).json({ message: err.message, success: false });
