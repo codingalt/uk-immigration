@@ -42,7 +42,7 @@ const sendEmail = async(email, subject, text, html)=>{
       const info = await transporter.sendMail({
         from: {
           address: "testmailingsmtp@lesoft.io",
-          name: "Lesoft Test Email",
+          name: "Lesoft",
         },
         to: email,
         subject: subject,
