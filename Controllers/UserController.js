@@ -27,7 +27,7 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const signupUser = async (req, res) => {
   try {
-    const { name, email, password, confirmPassword, contact, referringAgent,fcmToken} =
+    const { name, password, confirmPassword, contact, referringAgent,fcmToken} =
       req.body;
       console.log(req.body);
 
@@ -99,7 +99,7 @@ const signupUser = async (req, res) => {
         }
 
       }else{
-
+        const {email} = req.body;
         // Normal Signup 
                 if (
                   !name ||
@@ -176,7 +176,7 @@ const signupUser = async (req, res) => {
 
                    const {
                      _id,
-                     email,
+                     email: emailUser,
                      isCaseWorker,
                      isEmailVerified,
                      tokens,
@@ -185,7 +185,7 @@ const signupUser = async (req, res) => {
                    const userToken = tokens[tokens.length - 1];
                    const result = {
                      _id,
-                     email,
+                     emailUser,
                      isCaseWorker,
                      isEmailVerified,
                      googleId,
@@ -203,6 +203,7 @@ const signupUser = async (req, res) => {
 
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
+    console.log(err);
   }
 };
 
