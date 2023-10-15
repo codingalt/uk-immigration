@@ -387,12 +387,7 @@ const forgotPassword = async (req, res) => {
       const result = await sendEmail(email, "Reset Password", url);
 
       console.log(result);
-      if(result){
         return res.status(200).json({message: "An Email has been sent to your email to Recover your password.", success: true})
-      }else{
-        return res.status(500).json({message: "Error Sending Email.", success: false})
-      }
-
     
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
