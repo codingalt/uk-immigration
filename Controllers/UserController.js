@@ -663,6 +663,7 @@ const logoutUser = async (req, res) => {
       expires: new Date(0),
       httpOnly: true,
       sameSite: "none",
+      secure: true
     });
     res.status(200).json({ message:"Logout Successfully", success: true });
   } catch (err) {
