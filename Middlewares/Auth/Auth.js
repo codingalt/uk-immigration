@@ -13,7 +13,7 @@ const Authenticate = async (req, res, next) => {
       token = bearer[1];
     }else{
 
-      res.status(401).send({
+      return res.status(401).send({
         message: "Unotherized User: Please login first",
         success: false,
       });
@@ -38,7 +38,7 @@ const Authenticate = async (req, res, next) => {
 
       next();
     } else {
-      res.status(401).send({
+      return res.status(401).send({
         message: "Unotherized User: Please login first",
         success: false,
       });

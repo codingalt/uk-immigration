@@ -14,18 +14,23 @@ const messageSchema = mongoose.Schema(
     },
     content: {
       type: String,
-      required: true,
       trim: true,
     },
-    isApplicationStatusMsg: {
+    isPhaseApprovedMessage: {
       type: Boolean,
+    },
+    isPhaseRejectMessage: {
+      type: Boolean,
+    },
+    redirect: {
+      type: String,
     },
     isRead: {
       type: Number,
-      default: 0
+      default: 0,
     },
     isPhaseMessage: Boolean,
-    files: []
+    files: [],
   },
   { timestamps: true }
 );

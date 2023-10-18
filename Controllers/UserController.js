@@ -8,22 +8,21 @@ const axios = require("axios");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const { sendEmail } = require("../Utils/sendEmail");
-// const {SMTPClient} = require("emailjs")
 var postmark = require("postmark");
 const ApplicationModel = require("../Models/ApplicationModel");
 var client = new postmark.Client("<server key>");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const otpGenerator = require("otp-generator");
 
-"use strict"
-// const transporter = nodemailer.createTransport({
-//   host: process.env.HOST,
-//   port: 465,
-//   secure: true,
-//   auth: {
-//     user: process.env.EMAIL_USER,
-//     pass: process.env.EMAIL_PASS,
-//   },
-// });
+const transporter = nodemailer.createTransport({
+  host: process.env.HOST,
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 const signupUser = async (req, res) => {
   try {
@@ -99,52 +98,54 @@ const signupUser = async (req, res) => {
         }
 
       }else{
-        const {email} = req.body;
-        // Normal Signup 
-                if (
-                  !name ||
-                  !email ||
-                  !password ||
-                  !confirmPassword ||
-                  !contact
-                ) {
-                  return res.status(422).json({
-                    message: "Please fill out all the fields properly",
-                    success: false,
-                  });
-                }
+        const { email } = req.body;
+        // Normal Signup
+        if (!name || !email || !password || !confirmPassword || !contact) {
+          return res.status(422).json({
+            message: "Please fill out all the fields properly",
+            success: false,
+          });
+        }
 
-                if (password != confirmPassword) {
-                  return res
-                    .status(422)
-                    .json({ message: "Password do not match", success: false });
-                }
+        if (password != confirmPassword) {
+          return res
+            .status(422)
+            .json({ message: "Password do not match", success: false });
+        }
 
-                const userExist = await UserModel.findOne({ email: email });
-                if (userExist) {
-                  return res
-                    .status(422)
-                    .json({ message: "Email already exist", success: false });
-                }
+        const userExist = await UserModel.findOne({ email: email });
+        if (userExist) {
+          return res
+            .status(422)
+            .json({ message: "Email already exist", success: false });
+        }
 
-                const user = new UserModel({
-                  name,
-                  email,
-                  password,
-                  contact,
-                  referringAgent,
-                  fcmToken,
-                });
-                const token = await user.generateAuthToken();
-                const userData = await user.save();
+        const user = new UserModel({
+          name,
+          email,
+          password,
+          contact,
+          referringAgent,
+          fcmToken,
+        });
+        const token = await user.generateAuthToken();
+        const userData = await user.save();
 
-                //  Saving token to emailToken model
-                const emailToken = await new EmailTokenModel({
-                  userId: user._id,
-                  token: crypto.randomBytes(32).toString("hex"),
-                }).save();
-                const url = `${process.env.BASE_URL}/${user._id}/verify/${emailToken.token}`;
-                const html = `<!DOCTYPE html>
+        const otp = otpGenerator.generate(6, {
+          digits: true,
+          lowerCaseAlphabets: false,
+          upperCaseAlphabets: false,
+          specialChars: false,
+        });
+
+        //  Saving token to emailToken model
+        const emailToken = await new EmailTokenModel({
+          userId: user._id,
+          otp: otp,
+          token: crypto.randomBytes(32).toString("hex"),
+        }).save();
+        const url = `${process.env.BASE_URL}/${user._id}/verify/${emailToken.token}`;
+        const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -155,7 +156,8 @@ const signupUser = async (req, res) => {
 
     <div class="card" style="width: 60%;height: 50%;background-color: #fff;border-radius: 10px;padding: 30px;margin-top: 2rem;padding-left: 40px;margin: 2rem auto;">
         <h3 style="color: #6772e5;font-weight: 800;font-size: 1.1rem;letter-spacing: .5px;">UK Immigration</h3>
-        <p style="color: #414552!important;font-weight: 400;font-size: 18px;line-height: 24px;margin-top: 2rem;max-width: 80%;">	Thanks for creating a Uk Immigration account. Verify your email so you can get up and running quickly.</p>
+        <h3 style="color: #6772e5;font-weight: 800;font-size: 1.1rem;letter-spacing: .5px;margin-top: .8rem;">Verification Code ${otp}</h3>
+        <p style="color: #414552!important;font-weight: 400;font-size: 18px;line-height: 24px;margin-top: 1rem;max-width: 80%;">	Thanks for creating a Uk Immigration account. Verify your email so you can get up and running quickly.</p>
         <a style="margin-top: 1.5rem;cursor: pointer;" href=${url} target="_blank"><button style="width: 10.4rem;height: 2.8rem;border-radius: 8px;outline: none;border: none;color: #fff;background-color: #625AFA;font-weight: 600;font-size: 1.05rem;cursor: pointer;">Verify Email</button></a>
 
         <p style="color: #414552!important;font-weight: 400;font-size: 16px;line-height: 24px;max-width: 88%;margin-top: 6rem;">	Once your email is verified, we’ll guide you to complete your account application. Visit our support site if you have questions or need help.</p>
@@ -164,40 +166,59 @@ const signupUser = async (req, res) => {
     
 </body>
 </html>`;
-                 await sendEmail(user.email, "Verify your Email - Get started with your new Uk Immigration account", "",html);
-                             
-                  console.log("Email sent successfully");
-                   res.cookie("ukImmigrationJwtoken", token, {
-                     expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-                     httpOnly: true,
-                     sameSite: "none",
-                     secure: true,
-                   });
+        const info = await transporter.sendMail({
+          from: {
+            address: "testmailingsmtp@lesoft.io",
+            name: "Lesoft",
+          },
+          to: email,
+          subject:
+            "Verify your Email - Get started with your new Uk Immigration account",
+          text: "",
+          html: html,
+        });
+        //  await sendEmail(user.email, "Verify your Email - Get started with your new Uk Immigration account", "",html);
 
-                   const {
-                     _id,
-                     email: emailUser,
-                     isCaseWorker,
-                     isEmailVerified,
-                     tokens,
-                     googleId,
-                   } = userData;
-                   const userToken = tokens[tokens.length - 1];
-                   const result = {
-                     _id,
-                     emailUser,
-                     isCaseWorker,
-                     isEmailVerified,
-                     googleId,
-                     token: userToken.token,
-                   };
+        if (info.messageId){
+          console.log("Email sent successfully");
+          res.cookie("ukImmigrationJwtoken", token, {
+            expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+            httpOnly: true,
+            sameSite: "none",
+            secure: true,
+          });
 
-                  res.status(200).json({
-                    user: result,
-                    message: "Please Check your Email to verify your account",
-                    success: true,
-                  });
-                
+           const {
+             _id,
+             email: emailUser,
+             isCaseWorker,
+             isEmailVerified,
+             tokens,
+             googleId,
+           } = userData;
+           const userToken = tokens[tokens.length - 1];
+           const result = {
+             _id,
+             emailUser,
+             isCaseWorker,
+             isEmailVerified,
+             googleId,
+             token: userToken.token,
+           };
+
+           res.status(200).json({
+             user: result,
+             message: "Please Check your Email to verify your account",
+             success: true,
+           });
+
+        } else{
+          await UserModel.findByIdAndDelete(user._id);
+          await EmailTokenModel.deleteOne({userId: user._id})
+          return res.status(500).json({message:"Error Sending Email", success: false})
+        }
+
+       
       }
 
 
@@ -266,6 +287,7 @@ const verifyEmail = async(req,res)=>{
     try {
 
         const {id,token} = req.params;
+        const {otp} = req.params;
         console.log(id);
         console.log("token",token);
         const user = await UserModel.findOne({_id: id});
@@ -596,7 +618,32 @@ const loginUser = async (req, res) => {
               token: crypto.randomBytes(32).toString("hex"),
             }).save();
             const url = `${process.env.BASE_URL}/${signin._id}/verify/${emailToken.token}`;
-            const info = await sendEmail(signin.email, "Verify Email", url);
+            const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email</title>
+</head>
+<body style="width: 100%;height: 90vh;background-color: #F6F9FC;display: flex;justify-content: center;align-items: center; font-family: sans-serif;">
+
+    <div class="card" style="width: 60%;height: 50%;background-color: #fff;border-radius: 10px;padding: 30px;margin-top: 2rem;padding-left: 40px;margin: 2rem auto;">
+        <h3 style="color: #6772e5;font-weight: 800;font-size: 1.1rem;letter-spacing: .5px;">UK Immigration</h3>
+        <p style="color: #414552!important;font-weight: 400;font-size: 18px;line-height: 24px;margin-top: 2rem;max-width: 80%;">	Thanks for creating a Uk Immigration account. Verify your email so you can get up and running quickly.</p>
+        <a style="margin-top: 1.5rem;cursor: pointer;" href=${url} target="_blank"><button style="width: 10.4rem;height: 2.8rem;border-radius: 8px;outline: none;border: none;color: #fff;background-color: #625AFA;font-weight: 600;font-size: 1.05rem;cursor: pointer;">Verify Email</button></a>
+
+        <p style="color: #414552!important;font-weight: 400;font-size: 16px;line-height: 24px;max-width: 88%;margin-top: 6rem;">	Once your email is verified, we’ll guide you to complete your account application. Visit our support site if you have questions or need help.</p>
+    </div>
+
+    
+</body>
+</html>`;
+            await sendEmail(
+              signin.email,
+              "Verify your Email - Get started with your new Uk Immigration account",
+              "",
+              html
+            );
             
             return res.status(400).json({
               message:
@@ -750,6 +797,29 @@ const createPaymentIntent = async(req,res)=>{
   }
 }
 
+const verifyCaptcha = async(req,res)=>{
+    const { recaptchaToken } = req.body;
+
+    const secretKey = process.env.CAPTCHA_SECRET_KEY; 
+
+    try {
+      const { data } = await axios.post(
+        `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${recaptchaToken}`
+      );
+      console.log(data);
+
+      if (data.success) {
+        res.json({ success: true });
+      } else {
+        res.json({ success: false });
+      }
+    } catch (error) {
+      console.error("Error verifying reCAPTCHA:", error);
+      res.status(500).json({ success: false });
+    }
+}
+
+
 
 module.exports = {
   signupUser,
@@ -767,4 +837,5 @@ module.exports = {
   AuthRoute,
   createPaymentIntent,
   sendmail,
+  verifyCaptcha,
 };

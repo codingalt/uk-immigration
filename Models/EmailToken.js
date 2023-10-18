@@ -7,6 +7,10 @@ const emailTokenSchema = mongoose.Schema(
         required: true,
         ref: "User",
     },
+    otp: {
+      type: String,
+      required: true,
+    },
     token: {
         type: String,
         required: true,

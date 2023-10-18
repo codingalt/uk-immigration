@@ -90,7 +90,8 @@ const sendMessage = async (req, res) => {
   try {
     const { content, chatId } = req.body;
     const files = req.files;
-    if (!content || !chatId) {
+    console.log(files);
+    if (!chatId) {
       return res
         .status(422)
         .json({
@@ -119,7 +120,7 @@ const sendMessage = async (req, res) => {
 
     // Update Latest Message
     const chat = await ChatModel.findByIdAndUpdate(chatId, {
-      latestMessage: content,
+      latestMessage: content ? content : "Files",
     });
 
     // Get Sender data

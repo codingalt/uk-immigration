@@ -252,17 +252,6 @@ const postApplicationPhase3 = async (req, res) => {
 const postApplicationPhase4 = async (req, res) => {
   try {
     const { phaseStatus, phase, applicationStatus} = req.body;
-    const {general,accommodation,family,languageProficiency,education,employment,membership,maintenance,travel,character} = req.body.phase4;
-    const general1 = general;
-    const accommodation1 = accommodation;
-    const family1 = family;
-    const languageProficiency1 = languageProficiency;
-    const education1 = education;
-    const employment1 = employment;
-    const membership1 = membership;
-    const maintenance1 = maintenance;
-    const travel1 = travel;
-    const character1 = character;
       const { applicationId } = req.params;
     if (phaseStatus || phase || applicationStatus) {
       return res
@@ -273,22 +262,11 @@ const postApplicationPhase4 = async (req, res) => {
     }
     const user = await UserModel.findById(req.userId.toString());
     if (!user) return res.status(400).json({ message: "User not found", success: false });
-    console.log(
-      general1,
-      accommodation1,
-      family1,
-      languageProficiency1,
-      education1,
-      employment1,
-      membership1,
-      maintenance1,
-      travel1,
-      character1
-    );
-        if(!general1 || !accommodation1 || !family1 || !languageProficiency1 || !education1 || !employment1 || !membership1 || !maintenance1 || !travel1 || !character1){
-          return res.status(400).json({message:"Please Provide all the information Properly.", success: false});
-        }
 
+        // if(!general1 || !accommodation1 || !family1 || !languageProficiency1 || !education1 || !employment1 || !membership1 || !maintenance1 || !travel1 || !character1){
+        //   return res.status(400).json({message:"Please Provide all the information Properly.", success: false});
+        // }
+    console.log(req.body);
         if(user.isAdmin){
 
           const application = await ApplicationModel.findByIdAndUpdate(applicationId, {...req.body, phaseSubmittedByClient: 4, phase: 4, phaseStatus: phaseStatus.Approved},{new: true, useFindAndModify: false});
@@ -359,9 +337,11 @@ const approvePhase1 = async (req, res) => {
         sender: req.userId.toString(),
         content: content,
         chatId: chat?._id,
-        isPhaseMessage: true,
+        isPhaseApprovedMessage: true,
+        redirect: "/phase2"
       });
-      await newMessage.save();
+      const approveMsg = await newMessage.save();
+      console.log(approveMsg);
 
       // Update Latest Message
       await ChatModel.findByIdAndUpdate(chat?._id, {
@@ -406,9 +386,11 @@ const approvePhase2 = async (req, res) => {
           sender: req.userId.toString(),
           content: content,
           chatId: chat?._id,
-          isPhaseMessage: true,
+          isPhaseApprovedMessage: true,
+          redirect: "/phase3",
         });
-        await newMessage.save();
+        const approveMsg = await newMessage.save();
+        console.log(approveMsg);
 
         // Update Latest Message
         await ChatModel.findByIdAndUpdate(chat?._id, {
@@ -457,9 +439,11 @@ const approvePhase3 = async (req, res) => {
           sender: req.userId.toString(),
           content: content,
           chatId: chat?._id,
-          isPhaseMessage: true,
+          isPhaseApprovedMessage: true,
+          redirect: "/phase3",
         });
-        await newMessage.save();
+        const approveMsg = await newMessage.save();
+        console.log(approveMsg);
 
         // Update Latest Message
         await ChatModel.findByIdAndUpdate(chat?._id, {
@@ -519,7 +503,7 @@ const approvePhase4 = async (req, res) => {
           sender: req.userId.toString(),
           content: content,
           chatId: chat?._id,
-          isPhaseMessage: true,
+          isPhaseApprovedMessage: true,
         });
         await newMessage.save();
 

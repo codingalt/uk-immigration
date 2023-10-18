@@ -27,28 +27,28 @@ const nodemailer = require("nodemailer");
 //   },
 // });
 
-const transporter = nodemailer.createTransport({
-  host: process.env.HOST,
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+// const transporter = nodemailer.createTransport({
+//   host: process.env.HOST,
+//   port: 465,
+//   secure: true,
+//   auth: {
+//     user: process.env.EMAIL_USER,
+//     pass: process.env.EMAIL_PASS,
+//   },
+// });
 
 const sendEmail = async(email, subject, text, html)=>{
     try {
-      const info = await transporter.sendMail({
-        from: {
-          address: "testmailingsmtp@lesoft.io",
-          name: "Lesoft",
-        },
-        to: email,
-        subject: subject,
-        text: text,
-        html: html,
-      });
+      // const info = await transporter.sendMail({
+      //   from: {
+      //     address: "testmailingsmtp@lesoft.io",
+      //     name: "Lesoft",
+      //   },
+      //   to: email,
+      //   subject: subject,
+      //   text: text,
+      //   html: html,
+      // });
 
       console.log("Email sent successfully");
       // return info;

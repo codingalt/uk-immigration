@@ -297,7 +297,9 @@ const applicationSchema = mongoose.Schema(
         },
         homeType: {
           type: String,
-          required: false,
+        },
+        otherHomeDetails: {
+          type: String,
         },
         landLordName: {
           type: String,
@@ -318,6 +320,9 @@ const applicationSchema = mongoose.Schema(
           type: String,
         },
         landLordLocationCode: {
+          type: String,
+        },
+        landLordTown: {
           type: String,
         },
         landLordCounty: {
@@ -812,7 +817,7 @@ const applicationSchema = mongoose.Schema(
       name: String,
       email: String,
       fullNameCompanyContact: String,
-    }
+    },
   },
   { timestamps: true }
 );
