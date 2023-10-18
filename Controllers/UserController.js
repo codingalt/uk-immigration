@@ -804,18 +804,18 @@ const verifyCaptcha = async(req,res)=>{
 
     try {
       const { data } = await axios.post(
-        `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${recaptchaToken}`
+        `https://www.google.com/recaptcha/api/siteverify?secret=6Lc8ILAoAAAAAI275Ad5p60fdZ1u6Y4qOXNdyw8y&response=${recaptchaToken}`
       );
       console.log(data);
 
       if (data.success) {
-        res.json({ success: true });
+        res.status(200).json({ success: true });
       } else {
-        res.json({ success: false });
+        res.status(500).json({ success: false });
       }
     } catch (error) {
       console.error("Error verifying reCAPTCHA:", error);
-      res.status(500).json({ success: false });
+      res.status(500).json({ success: false, message: error.message });
     }
 }
 
