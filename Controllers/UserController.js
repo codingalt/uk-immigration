@@ -190,19 +190,21 @@ const signupUser = async (req, res) => {
 
            const {
              _id,
-             email: emailUser,
+             email,
              isCaseWorker,
              isEmailVerified,
              tokens,
+             contact,
              googleId,
            } = userData;
            const userToken = tokens[tokens.length - 1];
            const result = {
              _id,
-             emailUser,
+             email,
              isCaseWorker,
              isEmailVerified,
              googleId,
+             contact,
              token: userToken.token,
            };
 
