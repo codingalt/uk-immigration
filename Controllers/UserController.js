@@ -321,28 +321,49 @@ const updateMobileVerify = async (req, res) => {
 const updateUserData = async (req, res) => {
   try {
     const userId  = req.userId.toString();
-    console.log(req.body);
     const { name, email, contact } = req.body;
     const files = req.files;
     console.log(files);
+    var updatedData;
     if(files?.profilePic){
       var file = req.files?.profilePic[0]?.filename;
       var profilePic = `/Uploads/${file}`;
-      await UserModel.findByIdAndUpdate(
+     updatedData = await UserModel.findByIdAndUpdate(
       {_id: userId},
       {$set: {name: name, email: email, contact: contact, profilePic: profilePic}},
       {new: true, useFindAndModify: false});
     }else{
 
-      await UserModel.findByIdAndUpdate(
+     updatedData = await UserModel.findByIdAndUpdate(
       {_id: userId},
       {$set: {name: name, email: email, contact: contact}},
       {new: true, useFindAndModify: false});
 
     }
-    
+
+    const {
+      _id,
+      name: userName,
+      email: userEmail,
+      contact: userContact,
+      profilePic: userProfilePic,
+      isEmailVerified,
+      isMobileVerified,
+    } = updatedData;
      
-    res.status(200).json({ message: "User Data Updated", success: true });
+    res.status(200).json({
+      message: "User Data Updated",
+      success: true,
+      data: {
+        _id: _id,
+        name: userName,
+        email: userEmail,
+        contact: userContact,
+        profilePic: userProfilePic,
+        isEmailVerified: isEmailVerified,
+        isMobileVerified: isMobileVerified,
+      },
+    });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
     console.log(err);
@@ -612,9 +633,16 @@ const loginUser = async (req, res) => {
 
           // Else Login as a normal user 
           if (!signin.isEmailVerified) {
+            const otp = otpGenerator.generate(6, {
+              digits: true,
+              lowerCaseAlphabets: false,
+              upperCaseAlphabets: false,
+              specialChars: false,
+            });
             //  Saving token to emailToken model
             const emailToken = await new EmailTokenModel({
               userId: signin._id,
+              otp: otp,
               token: crypto.randomBytes(32).toString("hex"),
             }).save();
             const url = `${process.env.BASE_URL}/${signin._id}/verify/${emailToken.token}`;
@@ -664,7 +692,7 @@ const loginUser = async (req, res) => {
             message: "Login Successfully",
             success: true,
             user: result,
-            redirect: "/client/home",
+            redirect: "/companyscreen",
           });
         } else {
           res
