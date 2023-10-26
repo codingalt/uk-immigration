@@ -19,15 +19,17 @@ app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
 app.use("/Uploads", express.static("Uploads"));
 app.use(cookieParser());
 
+// [
+//       process.env.BASE_URL,
+//       "https://immigrationmatter.netlify.app",
+//       "http://localhost:3000",
+//       "https://immigration-client.netlify.app",
+// ]
+
 app.use(
   cors({
     // origin: [process.env.BASE_URL, "http://127.0.0.1:5173"],
-    origin: [
-      process.env.BASE_URL,
-      "https://immigrationmatter.netlify.app",
-      "http://localhost:3000",
-      "https://immigration-client.netlify.app",
-    ],
+    origin: "*",
     methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
     credentials: true,
   })
