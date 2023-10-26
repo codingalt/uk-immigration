@@ -40,14 +40,14 @@ const allowedOrigins = [
   "https://immigration-client.netlify.app",
 ];
 
-app.use((req,res,next)=>{
+// app.use((req,res,next)=>{
   
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
-  next();
-})
+//   const origin = req.headers.origin;
+//   if (allowedOrigins.includes(origin)) {
+//     res.setHeader("Access-Control-Allow-Origin", origin);
+//   }
+//   next();
+// })
 
 // Linking Routes
 app.use(require("./Routes/UserRoute"));
