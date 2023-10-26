@@ -5,6 +5,21 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
 const cors = require("cors");
+const allowedOrigins = [
+  process.env.BASE_URL,
+  "https://immigrationmatter.netlify.app",
+  "http://localhost:3000",
+  "https://immigration-client.netlify.app",
+];
+app.use((req, res, next) => {
+  console.log("origin", req.headers.origin);
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", true);
+  }
+  next();
+});
 require("./conn");
 const PORT = process.env.PORT || 5000;
 const path = require("path");
@@ -19,20 +34,6 @@ app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
 app.use("/Uploads", express.static("Uploads"));
 app.use(cookieParser());
 
-// [
-//       process.env.BASE_URL,
-//       "https://immigrationmatter.netlify.app",
-//       "http://localhost:3000",
-//       "https://immigration-client.netlify.app",
-// ]
-
-const allowedOrigins = [
-  process.env.BASE_URL,
-  "https://immigrationmatter.netlify.app",
-  "http://localhost:3000",
-  "https://immigration-client.netlify.app",
-];
-
 app.use(
   cors({
     origin: allowedOrigins,
@@ -42,23 +43,7 @@ app.use(
   })
 );
 
-app.use((req,res,next)=>{
-  console.log("origin", req.headers.origin);
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Credentials", true);
-    res.setHeader("Access-Control-Allow-Methods", [
-      "GET",
-      "POST",
-      "DELETE",
-      "PUT",
-      "PATCH",
-    ]);
 
-  }
-  next();
-})
 
 // Linking Routes
 app.use(require("./Routes/UserRoute"));
