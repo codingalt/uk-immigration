@@ -26,15 +26,6 @@ app.use(cookieParser());
 //       "https://immigration-client.netlify.app",
 // ]
 
-app.use(
-  cors({
-    // origin: [process.env.BASE_URL, "http://127.0.0.1:5173"],
-    origin: "https://immigration-client.netlify.app",
-    methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
-    credentials: true,
-  })
-);
-
 const allowedOrigins = [
   process.env.BASE_URL,
   "https://immigrationmatter.netlify.app",
@@ -42,14 +33,32 @@ const allowedOrigins = [
   "https://immigration-client.netlify.app",
 ];
 
-// app.use((req,res,next)=>{
-  
-//   const origin = req.headers.origin;
-//   if (allowedOrigins.includes(origin)) {
-//     res.setHeader("Access-Control-Allow-Origin", origin);
-//   }
-//   next();
-// })
+app.use(
+  cors({
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
+    credentials: true,
+    optionsSuccessStatus: 200,
+  })
+);
+
+app.use((req,res,next)=>{
+  console.log("origin", req.headers.origin);
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", true);
+    res.setHeader("Access-Control-Allow-Methods", [
+      "GET",
+      "POST",
+      "DELETE",
+      "PUT",
+      "PATCH",
+    ]);
+
+  }
+  next();
+})
 
 // Linking Routes
 app.use(require("./Routes/UserRoute"));
