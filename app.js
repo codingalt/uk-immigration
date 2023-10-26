@@ -29,7 +29,7 @@ app.use(cookieParser());
 app.use(
   cors({
     // origin: [process.env.BASE_URL, "http://127.0.0.1:5173"],
-    origin: "*",
+    origin: "https://immigration-client.netlify.app",
     methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
     credentials: true,
   })
