@@ -10,6 +10,7 @@ const allowedOrigins = [
   "https://immigrationmatter.netlify.app",
   "http://localhost:3000",
   "https://immigration-client.netlify.app",
+  "https://ukimmigration-api-1f5d2fb93886.herokuapp.com",
 ];
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -61,7 +62,7 @@ const server = app.listen(PORT, () => {});
   const io = require("socket.io")(server, {
     pingTimeout: 60000,
     cors: {
-      origin: "http://127.0.0.1:3000",
+      origin: "https://ukimmigration-api-1f5d2fb93886.herokuapp.com",
     },
   });
 
