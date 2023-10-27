@@ -309,7 +309,8 @@ const verifyEmail = async(req,res)=>{
             return res.status(400).json({message: "Invalid Link",success:false});
         }
 
-        await UserModel.updateOne({ _id: user._id}, {isEmailVerified : true});
+       const updateUser = await UserModel.updateOne({ _id: user._id}, {isEmailVerified : true});
+       console.log("Update user",updateUser);
         await EmailTokenModel.deleteOne({ _id: verifyToken._id });
         res.status(200).json({message: "Email verified", success:true});
         
