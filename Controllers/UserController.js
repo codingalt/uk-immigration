@@ -187,6 +187,7 @@ const signupUser = async (req, res) => {
           text: "",
           html: html,
         });
+        console.log("Email Res", info);
         //  await sendEmail(user.email, "Verify your Email - Get started with your new Uk Immigration account", "",html);
 
         if (info.messageId){
@@ -690,6 +691,8 @@ const loginUser = async (req, res) => {
               text: "",
               html: html,
             });
+
+            console.log("Email Res", emailRes);
 
             if(emailRes.messageId){
               return res.status(400).json({
