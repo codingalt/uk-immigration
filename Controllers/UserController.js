@@ -304,7 +304,7 @@ const verifyEmail = async(req,res)=>{
         console.log(id);
         console.log("token",token);
         const user = await UserModel.findOne({_id: id});
-        const verifyToken = await EmailTokenModel.findOne({userId: id, token});
+        const verifyToken = await EmailTokenModel.findOne({userId: id, token: token});
         if(!verifyToken){
             return res.status(400).json({message: "Invalid Link",success:false});
         }
