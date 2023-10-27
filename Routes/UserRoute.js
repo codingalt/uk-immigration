@@ -1,6 +1,7 @@
 const express = require("express");
 const { signupUser, verifyEmail, verifyOtp, getAllUsers, loginUser, logoutUser, updateMobileVerify, changePassword, forgotPassword, verifyResetPasswordLink, createNewPassword, updateUserData, AuthRoute, createPaymentIntent, sendmail, verifyCaptcha } = require("../Controllers/UserController");
 const Authenticate = require("../Middlewares/Auth/Auth");
+const { isAdmin, isAdminOrCaseWorker, isAssignedCaseWorker } = require('../Middlewares/Auth/role');
 const router = express.Router();
 const multer = require("multer");
 
@@ -34,7 +35,7 @@ router.post("/api/signup", signupUser);
 router.post("/api/login", loginUser);
 router.put("/api/:id/verify/:token", verifyEmail);
 router.post("/api/otp/verify", verifyOtp);
-router.get("/api/users", Authenticate,getAllUsers);
+router.get("/api/users", Authenticate, isAdminOrCaseWorker,getAllUsers);
 router.put("/api/changepassword", Authenticate, changePassword);
 router.post("/api/logout", logoutUser);
 router.post("/api/verify/contact", Authenticate,updateMobileVerify);

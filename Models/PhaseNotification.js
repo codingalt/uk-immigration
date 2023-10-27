@@ -9,6 +9,15 @@ const phaseNotificationSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    phase: {
+      type: Number
+    },
+    phaseStatus: {
+      type: String
+    },
+    redirect: {
+      type: String
+    },
     applicationId: {
       type: String,
       required: true,

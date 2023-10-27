@@ -13,6 +13,7 @@ const ApplicationModel = require("../Models/ApplicationModel");
 var client = new postmark.Client("<server key>");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const otpGenerator = require("otp-generator");
+const CaseWorkerModel = require("../Models/CaseWorker");
 
 const transporter = nodemailer.createTransport({
   host: process.env.HOST,
@@ -118,6 +119,15 @@ const signupUser = async (req, res) => {
           return res
             .status(422)
             .json({ message: "Email already exist", success: false });
+        }
+
+        if(referringAgent){
+          const isCaseWorker = await UserModel.findOne({
+            email: referringAgent,
+            isCaseWorker: true,
+          });
+          console.log(isCaseWorker);
+          if(!isCaseWorker) return res.status(400).json({ message: "Case worker not found with this email", success: false});
         }
 
         const user = new UserModel({
@@ -668,18 +678,34 @@ const loginUser = async (req, res) => {
     
 </body>
 </html>`;
-            await sendEmail(
-              signin.email,
-              "Verify your Email - Get started with your new Uk Immigration account",
-              "",
-              html
-            );
-            
-            return res.status(400).json({
-              message:
-                "To continue login, Please verify your email. A Verification link has been sent to your email.",
-              success: false,
+
+            const emailRes = await transporter.sendMail({
+              from: {
+                address: "testmailingsmtp@lesoft.io",
+                name: "Lesoft",
+              },
+              to: signin.email,
+              subject:
+                "Verify your Email - Get started with your new Uk Immigration account",
+              text: "",
+              html: html,
             });
+
+            if(emailRes.messageId){
+              return res.status(400).json({
+                message:
+                  "To continue login, Please verify your email. A Verification link has been sent to your email.",
+                success: false,
+              });
+            }else{
+              return res.status(400).json({
+                message:
+                  "Error Sending Email",
+                success: false,
+              });
+            }
+            
+            
           }
           //Generating JSON web token
           token = await signin.generateAuthToken();
@@ -710,7 +736,7 @@ const loginUser = async (req, res) => {
     res
       .status(500)
       .json({
-        message: "Something went wrong Please try again",
+        message: error.message,
         success: false,
       });
       console.log(error);

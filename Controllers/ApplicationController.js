@@ -7,6 +7,7 @@ const ChatModel = require("../Models/ChatModel");
 const MessageModel = require("../Models/MessageModel");
 const nodemailer = require("nodemailer");
 const { sendEmail } = require("../Utils/sendEmail");
+const CaseWorkerModel = require("../Models/CaseWorker");
 
 const phaseStaus = {
   Pending: "pending",
@@ -37,6 +38,21 @@ const postApplicationPhase1 = async(req,res)=>{
         upperCaseAlphabets: false,
         specialChars: false,
       });
+
+      // Assign case to case worker 
+      if (user.referringAgent){
+        // Find Case Worker 
+        const caseWorker = await UserModel.findOne({
+          email: user.referringAgent,
+        });
+        
+        if(caseWorker){
+          req.body.isCaseWorkerHandling = true;
+          req.body.caseWorkerId = caseWorker?._id;
+          req.body.caseWorkerName = caseWorker?.name; 
+        }
+        
+      }
 
       req.body.caseId = caseId;
       req.body.phaseSubmittedByClient = 1;

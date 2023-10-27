@@ -91,5 +91,4 @@ router.post("/api/invoice/filter",Authenticate, isAdminOrCaseWorker, filterInvoi
 // Link Company with client application 
 router.post("/api/company/link/:applicationId",Authenticate, isAdminOrCaseWorker, isAssignedCaseWorker, linkCompany);
 
-
 module.exports = router;

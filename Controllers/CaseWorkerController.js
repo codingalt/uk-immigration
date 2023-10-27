@@ -188,4 +188,31 @@ const filterCaseWorker = async (req, res) => {
   }
 };
 
-module.exports = { createCaseWorker, getCaseWorker, filterCaseWorker };
+const updateCaseWorker = async (req, res) => {
+  try {
+    const { caseWorkerId } = req.body;
+    const isCaseWorker = await CaseWorkerModel.findById(caseWorkerId);
+    if (!isCaseWorker) {
+      return res.status(400).json({
+        message: "Case Worker not found with this id",
+        success: false,
+      });
+    }
+    await CaseWorkerModel.updateOne({
+      _id: caseWorkerId,
+      ...req.body,
+    });
+    res
+      .status(200)
+      .json({ message: "Case Worker Updated Successfully", success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+module.exports = {
+  createCaseWorker,
+  getCaseWorker,
+  filterCaseWorker,
+  updateCaseWorker,
+};

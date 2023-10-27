@@ -12,7 +12,6 @@ const allowedOrigins = [
   "https://immigration-client.netlify.app",
 ];
 app.use((req, res, next) => {
-  console.log("origin", req.headers.origin);
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
@@ -122,6 +121,8 @@ const server = app.listen(PORT, () => {});
         notificationType: "client",
         userId: request.userId,
         applicationId: request.applicationId,
+        phase: request.phase,
+        phaseStatus: request.phaseStatus
       });
         socket.in(request.userId).emit("phase notification received", request);
       
