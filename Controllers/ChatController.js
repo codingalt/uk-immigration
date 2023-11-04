@@ -74,7 +74,7 @@ const getUserChats = async (req, res) => {
        .sort({ updatedAt: -1 })
        .populate({
          path: "users",
-         select: "name email",
+         select: "name email profilePic _id",
          match: { _id: { $ne: req.userId.toString() } }, // Exclude the current user
          model: UserModel, 
        })
@@ -125,8 +125,11 @@ const sendMessage = async (req, res) => {
 
     // Get Sender data
     const sender = await UserModel.findOne({ _id: req.userId.toString() });
+   
+    const data = { ...result._doc, name: sender.name, profilePic: sender.profilePic};
+    console.log(data);
     var newResult = {
-      ...result._doc,
+      result: data,
       users: chat?.users,
     //   senderImage: sender.profileImg,
       senderName: sender.name,
@@ -154,11 +157,10 @@ const getAllMessages = async (req, res) => {
     const result = await MessageModel.find({ chatId });
     // Get Sender Details
     const sender = await UserModel.findOne({ _id: req.userId.toString() });
-
     res.status(200).json({
       result,
-    //   senderImage: sender.profileImg,
-      senderName: sender.name,
+      profilePic: sender.profilePic,
+      name: sender.name,
       success: true,
     });
   } catch (err) {
@@ -166,10 +168,42 @@ const getAllMessages = async (req, res) => {
   }
 };
 
+const getChatByApplicationId = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+
+    const userId = req.userId.toString(); // Assuming req.userId contains the user's ID
+
+    const result = await ChatModel.find({ applicationId: applicationId })
+      .populate({
+        path: "users", 
+        model: "Users", 
+        match: { _id: { $ne: userId } }, 
+        select: "name email profilePic _id", 
+      })
+      .exec();
+
+    const chatData = result.map((chat) => ({
+      ...chat._doc,
+      users: chat.users.filter((user) => user !== null),
+    }));
+
+    res.status(200).json({
+      result: chatData,
+      success: true,
+    });
+  } catch (err) {
+    res.status(500).json({ data: err.message, success: false });
+  }
+};
+
+
+
 module.exports = {
   accessChat,
   getUserChats,
   sendMessage,
   getAllMessages,
   createChat,
+  getChatByApplicationId,
 };

@@ -89,6 +89,7 @@ const applicationSchema = mongoose.Schema(
         type: Boolean,
         default: false,
       },
+      reason: String,
       dateTime: Date,
     },
     phase4: {

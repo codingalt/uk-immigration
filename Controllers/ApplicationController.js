@@ -69,16 +69,17 @@ const postApplicationPhase1 = async(req,res)=>{
       // Create Chat with this Application 
       const chat = await createChat({userId: req.userId.toString(),applicationId: application._id})
       if(chat.success) {
-
         const {
           phase1,
           userId,
+          _id,
           phaseSubmittedByClient,
           isInitialRequestAccepted,
         } = application;
         const result = {
           phase1,
           userId,
+          _id,
           applicationStatus: application.applicationStatus,
           phase: application.phase,
           phaseStatus: application.phaseStatus,
@@ -282,10 +283,10 @@ const postApplicationPhase4 = async (req, res) => {
         // if(!general1 || !accommodation1 || !family1 || !languageProficiency1 || !education1 || !employment1 || !membership1 || !maintenance1 || !travel1 || !character1){
         //   return res.status(400).json({message:"Please Provide all the information Properly.", success: false});
         // }
-    console.log(req.body);
+ 
         if(user.isAdmin){
-
-          const application = await ApplicationModel.findByIdAndUpdate(applicationId, {...req.body, phaseSubmittedByClient: 4, phase: 4, phaseStatus: phaseStatus.Approved},{new: true, useFindAndModify: false});
+          console.log("Admin condition");
+          const application = await ApplicationModel.findByIdAndUpdate(applicationId, {...req.body, phaseSubmittedByClient: 4, phase: 4, phaseStatus: "approved"},{new: true, useFindAndModify: false});
           res.status(200).json({ application, success: true });
 
         }else{
@@ -294,6 +295,46 @@ const postApplicationPhase4 = async (req, res) => {
         }
 
     
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+const postCharacter = async (req, res) => {
+  try {
+    const { phaseStatus, phase, applicationStatus } = req.body;
+    const { applicationId } = req.params;
+    if (phaseStatus || phase || applicationStatus) {
+      return res.status(400).json({
+        message: "Action Forbidden! You don't have access to change.",
+      });
+    }
+    const user = await UserModel.findById(req.userId.toString());
+    if (!user)
+      return res
+        .status(400)
+        .json({ message: "User not found", success: false });
+    console.log(req.body);
+    if (user.isAdmin) {
+      const application = await ApplicationModel.findByIdAndUpdate(
+        applicationId,
+        {
+          ...req.body,
+          phaseSubmittedByClient: 4,
+          phase: 4,
+          phaseStatus: phaseStatus.Approved,
+        },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    } else {
+      const application = await ApplicationModel.findByIdAndUpdate(
+        applicationId,
+        { "phase4.character": req.body, phaseSubmittedByClient: 4 },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    }
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -311,7 +352,15 @@ const acceptInitialRequest = async (req, res) => {
           success: false,
         });
     }
-    await ApplicationModel.findByIdAndUpdate(applicationId,{ $set: { isInitialRequestAccepted: true } }, {new: true, useFindAndModify: false});
+
+    if (isApplication.isInitialRequestAccepted){
+      return res.status(200).json({message: "Request Already Accepted.", success: false});
+    }
+      await ApplicationModel.findByIdAndUpdate(
+        applicationId,
+        { $set: { isInitialRequestAccepted: true } },
+        { new: true, useFindAndModify: false }
+      );
 
     res
       .status(200)
@@ -332,6 +381,10 @@ const approvePhase1 = async (req, res) => {
           message: "Application not found with this id",
           success: false,
         });
+    }
+
+    if(isApplication.phase >= 1 && isApplication.phaseStatus === phaseStaus.Approved){
+      return res.status(400).json({message: "This Phase is Already Approved", success: false})
     }
 
     await ApplicationModel.updateOne(
@@ -385,6 +438,15 @@ const approvePhase2 = async (req, res) => {
       });
     }
 
+    if (
+      isApplication.phase >= 2 &&
+      isApplication.phaseStatus === phaseStaus.Approved
+    ) {
+      return res
+        .status(400)
+        .json({ message: "This Phase is Already Approved", success: false });
+    }
+
     if (isApplication.phase === 1 && isApplication.phaseStatus === phaseStaus.Approved){
       await ApplicationModel.updateOne(
         { _id: applicationId },
@@ -433,6 +495,15 @@ const approvePhase3 = async (req, res) => {
         message: "Application not found with this id",
         success: false,
       });
+    }
+
+    if (
+      isApplication.phase >= 3 &&
+      isApplication.phaseStatus === phaseStaus.Approved
+    ) {
+      return res
+        .status(400)
+        .json({ message: "This Phase is Already Approved", success: false });
     }
 
     if (
@@ -500,6 +571,15 @@ const approvePhase4 = async (req, res) => {
     }
 
     if (
+      isApplication.phase >= 4 &&
+      isApplication.phaseStatus === phaseStaus.Approved
+    ) {
+      return res
+        .status(400)
+        .json({ message: "This Phase is Already Approved", success: false });
+    }
+
+    if (
       isApplication.phase === 3 &&
       isApplication.phaseStatus === phaseStaus.Approved
     ) {
@@ -550,13 +630,24 @@ const requestAPhase = async(req,res)=>{
     const {applicationId} = req.params;
     const application = await ApplicationModel.findById(applicationId);
     if(application.phase === 1 && application.phaseStatus === phaseStaus.Approved){
-       await ApplicationModel.findByIdAndUpdate(
-         applicationId,
-         { $set: { ...req.body, requestedPhase: 2 } },
-         { new: true, useFindAndModify: false }
-       );
+      if (application.requestedPhase >= 2){
+        return res.status(400).json({message: "You have already requested this phase.", success: false});
+      }
+        await ApplicationModel.findByIdAndUpdate(
+          applicationId,
+          { $set: { ...req.body, requestedPhase: 2 } },
+          { new: true, useFindAndModify: false }
+        );
       return res.status(200).json({ message: "Phase 2 Requested", success: true });
     }else if(application.phase === 2 && application.phaseStatus === phaseStaus.Approved){
+      if (application.requestedPhase >= 3) {
+        return res
+          .status(400)
+          .json({
+            message: "You have already requested this phase.",
+            success: false,
+          });
+      }
       await ApplicationModel.findByIdAndUpdate(
         applicationId,
         { $set: { ...req.body, requestedPhase: 3 } },
@@ -609,14 +700,101 @@ const updatePhaseByAdmin = async (req, res) => {
   }
 };
 
+// const getApplicationData = async (req, res) => {
+//   try {
+//     const application = await ApplicationModel.find({});
+//     res.status(200).json({ application, success: true });
+//   } catch (err) {
+//     res.status(500).json({ message: err.message, success: false });
+//   }
+// };
+
 const getApplicationData = async (req, res) => {
   try {
-    const application = await ApplicationModel.find({});
-    res.status(200).json({ application, success: true });
+    const applications = await ApplicationModel.find({});
+
+    const applicationsWithUserData = [];
+
+    for (const application of applications) {
+      const userId = application.userId;
+      const user = await UserModel.findById(userId);
+
+      // If a user is found, add user information to the application
+      if (user) {
+        const applicationDataWithUser = {
+          ...application.toObject(), // Convert application to a plain JavaScript object
+          user: {
+            name: user.name,
+            email: user.email,
+            profilePic: user.profilePic,
+          },
+        };
+        applicationsWithUserData.push(applicationDataWithUser);
+      }
+    }
+
+    console.log(applicationsWithUserData);
+
+    const extractData = {
+      _id: applicationsWithUserData._id,
+      user: applicationsWithUserData.user,
+      phase: applicationsWithUserData.phase,
+      phaseStatus: applicationsWithUserData.phaseStatus,
+      userId: applicationsWithUserData.userId
+    };
+
+    res
+      .status(200)
+      .json({ applications: applicationsWithUserData, success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
 };
+
+const getApplicationNotification = async (req, res) => {
+ try {
+   const applications = await ApplicationModel.find({}).select({
+     _id: true,
+     phase: true,
+     phaseStatus: true,
+     userId: true,
+     applicationStatus: true,
+     phaseSubmittedByClient: true,
+   });
+
+   // Create an array to store the application data with user information
+   const applicationsWithUserData = [];
+
+   // Iterate through each application
+   for (const application of applications) {
+     const userId = application.userId;
+     const user = await UserModel.findById(userId); // Assuming you have a UserModel
+
+     // Check if a user with the given userId exists
+     if (user) {
+       const applicationDataWithUser = {
+         ...application.toObject(), // Convert application to a plain JavaScript object
+         user: {
+           name: user.name,
+           email: user.email,
+           profilePic: user.profilePic,
+         },
+       };
+       applicationsWithUserData.push(applicationDataWithUser);
+     } else {
+       // Handle the case where no matching user is found
+       applicationsWithUserData.push(application.toObject()); // Add application data without user information
+     }
+   }
+
+   res
+     .status(200)
+     .json({ applications: applicationsWithUserData, success: true });
+ } catch (err) {
+   res.status(500).json({ message: err.message, success: false });
+ }
+};
+
 
 const getApplicationDataById = async (req, res) => {
   try {
@@ -716,14 +894,19 @@ const rejectApplication = async (req, res) => {
 const filterApplication = async (req, res) => {
   try {
     const queryConditions = [];
-    const {filters} = req.body;
+    const { filters } = req.body;
+
+    console.log(filters.birthDate);
+
     if (filters.name) {
-      queryConditions.push({ "phase1.name": { $regex: new RegExp(filters.name, "i") } });
+      queryConditions.push({
+        "phase1.name": { $regex: new RegExp(filters.name, "i") },
+      });
     }
 
     if (filters.caseId) {
       queryConditions.push({
-        _id: { $regex: new RegExp(filters.caseId, "i") },
+        caseId: { $regex: new RegExp(filters.caseId, "i") },
       });
     }
 
@@ -734,35 +917,52 @@ const filterApplication = async (req, res) => {
     }
 
     if (filters.birthDate) {
+      // Convert the string date to a JavaScript Date object
+      const birthDate = new Date(filters.birthDate);
+
+      // Create a range for birthDate filtering (e.g., matching on the exact date)
+      const startDate = new Date(birthDate);
+      const endDate = new Date(birthDate);
+      endDate.setDate(endDate.getDate() + 1); // Add one day to include the whole day
+
       queryConditions.push({
-        "phase1.birthDate": { $regex: new RegExp(filters.birthDate, "i") },
+        "phase1.birthDate": { $gte: startDate, $lt: endDate },
       });
     }
 
     console.log(queryConditions);
 
-    const query = queryConditions.length === 1 ? { $or: queryConditions } : queryConditions.length > 1 ? { $and: queryConditions } : {}; 
+    const query =
+      queryConditions.length === 1
+        ? { $or: queryConditions }
+        : queryConditions.length > 1
+        ? { $and: queryConditions }
+        : {};
+
     const result = await ApplicationModel.find(query).select({
       "phase1.name": true,
       "phase1.email": true,
       "phase1.contact": true,
       "phase1.birthDate": true,
       "phase1.country": true,
-      "caseId": true,
+      caseId: true,
       "phase1.applicationType": true,
       applicationStatus: true,
     });
+
     res.status(200).json({ result, success: true });
   } catch (error) {
     res.status(500).json(error);
   }
 };
 
+
 // Add Note to Application By Admin
 const addNotes = async (req, res) => {
   try {
     const { applicationId } = req.params;
-    const {notes} = req.body;
+    const {name,content} = req.body;
+    const notes = {name: name, content: content}
     const isApplication = await ApplicationModel.findById(applicationId);
     if (!isApplication) {
       return res
@@ -1024,5 +1224,7 @@ module.exports = {
   assignApplicationToCaseWorker,
   getInvoiceDetails,
   filterInvoices,
-  linkCompany
+  linkCompany,
+  postCharacter,
+  getApplicationNotification,
 };

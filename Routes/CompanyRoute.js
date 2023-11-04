@@ -1,7 +1,7 @@
 const express = require('express');
 const Authenticate = require('../Middlewares/Auth/Auth');
 const { isAdmin, isAdminOrCaseWorker } = require('../Middlewares/Auth/role');
-const { createCompany, getCompanyDetailsByID } = require('../Controllers/Company');
+const { createCompany, getCompanyDetailsByID, getAllCompanies } = require('../Controllers/Company');
 const router = express.Router();
 const multer = require("multer");
 
@@ -39,5 +39,6 @@ router.post(
 );
 
 router.get("/api/company/:companyId", Authenticate, isAdminOrCaseWorker, getCompanyDetailsByID);
+router.get("/api/companies", Authenticate, isAdminOrCaseWorker, getAllCompanies);
 
 module.exports = router;

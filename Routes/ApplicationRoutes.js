@@ -1,5 +1,5 @@
 const express = require('express');
-const { getApplicationData, updateApplicationData, rejectApplication, filterApplication, approvePhase1, approvePhase2, approvePhase3, requestAPhase, postApplicationPhase1, postApplicationPhase2, postApplicationPhase3, postApplicationPhase4, approvePhase4, getApplicationDataByUser, addNotes, updatePhaseByAdmin, acceptInitialRequest, getApplicationDataById, getApplicationByUserId, assignApplicationToCaseWorker, getInvoiceDetails, filterInvoices, linkCompany, requestCompanyClientPhase1 } = require('../Controllers/ApplicationController');
+const { getApplicationData, updateApplicationData, rejectApplication, filterApplication, approvePhase1, approvePhase2, approvePhase3, requestAPhase, postApplicationPhase1, postApplicationPhase2, postApplicationPhase3, postApplicationPhase4, approvePhase4, getApplicationDataByUser, addNotes, updatePhaseByAdmin, acceptInitialRequest, getApplicationDataById, getApplicationByUserId, assignApplicationToCaseWorker, getInvoiceDetails, filterInvoices, linkCompany, requestCompanyClientPhase1, postCharacter, getApplicationNotification } = require('../Controllers/ApplicationController');
 const Authenticate = require('../Middlewares/Auth/Auth');
 const { isAdmin, isAdminOrCaseWorker, isAssignedCaseWorker } = require('../Middlewares/Auth/role');
 const router = express.Router();
@@ -56,6 +56,7 @@ router.post(
 );
 router.post("/api/application/phase3/:applicationId", Authenticate,chalanUpload.fields([{name: "chalan", maxCount: 1}]) ,postApplicationPhase3);
 router.post("/api/application/phase4/:applicationId", Authenticate, postApplicationPhase4);
+router.post("/api/application/character/:applicationId", Authenticate, postCharacter);
 
 router.get("/api/application", Authenticate, getApplicationData);
 router.get("/api/application/:applicationId", Authenticate, getApplicationDataById);
@@ -90,5 +91,8 @@ router.post("/api/invoice/filter",Authenticate, isAdminOrCaseWorker, filterInvoi
 
 // Link Company with client application 
 router.post("/api/company/link/:applicationId",Authenticate, isAdminOrCaseWorker, isAssignedCaseWorker, linkCompany);
+
+// Get Application Notification 
+router.get("/api/application/notification", Authenticate, getApplicationNotification);
 
 module.exports = router;

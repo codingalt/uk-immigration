@@ -19,7 +19,7 @@ const Authenticate = async (req, res, next) => {
       });
 
     }
-      console.log("Auth token middlware", token);
+      // console.log("Auth token middlware", token);
 
     if (token) {
 

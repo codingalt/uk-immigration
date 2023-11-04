@@ -14,6 +14,7 @@ var client = new postmark.Client("<server key>");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const otpGenerator = require("otp-generator");
 const CaseWorkerModel = require("../Models/CaseWorker");
+const cheerio = require("cheerio");
 
 const transporter = nodemailer.createTransport({
   host: process.env.HOST,
@@ -614,9 +615,18 @@ const loginUser = async (req, res) => {
         const isMatch = await bcrypt.compare(password, signin.password);
         if (isMatch) {
 
-          const { _id, email, isCaseWorker, isEmailVerified, tokens} = signin;
+          const { _id, email, isCaseWorker, name,contact, profilePic, isEmailVerified, tokens} = signin;
           const userToken = tokens[tokens.length - 1];
-          const result = {_id, email, isCaseWorker, isEmailVerified, token: userToken.token}
+          const result = {
+            _id,
+            name,
+            email,
+            contact,
+            profilePic,
+            isCaseWorker,
+            isEmailVerified,
+            token: userToken.token,
+          };
 
           // Check If he is Admin
           if (signin.isAdmin) {
@@ -628,7 +638,7 @@ const loginUser = async (req, res) => {
               secure: true,
               sameSite: "none",
             });
-             return res.status(200).json({success: true, user: result, redirect: "/admin/home"});
+             return res.status(200).json({success: true, user: result, redirect: "/admin/dashboard"});
           }
 
           // Check if he is case worker
@@ -641,9 +651,9 @@ const loginUser = async (req, res) => {
               sameSite: "none",
               secure: true,
             });
-            return res.status(200).json({success: true, user: result, redirect: "/admin/home"});
+            return res.status(200).json({success: true, user: result, redirect: "/admin/dashboard"});
 
-          }
+          } 
 
           // Else Login as a normal user 
           if (!signin.isEmailVerified) {
@@ -797,7 +807,6 @@ const AuthRoute = async (req, res) => {
       if (!rootUser) {
         throw new Error("User not found..");
       } 
-      console.log(token);
       const { ...others } = rootUser._doc;
       req.token = token;
       req.rootUser = { data: others, success: true };
@@ -879,6 +888,58 @@ const verifyCaptcha = async(req,res)=>{
     }
 }
 
+const getTrackingData = async(req,res)=>{
+  try {
+
+    const instance = axios.create({
+      maxRedirects: 10, 
+    });
+
+    const headers = {
+      "User-Agent":
+        "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Mobile Safari/537.36",
+      Accept:
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+      "Accept-Encoding": "gzip, deflate, br",
+      "Accept-Language": "en-US,en;q=0.9",
+      "Cache-Control": "max-age=0",
+      "Content-Type": "application/x-www-form-urlencoded",
+      Origin: "https://umactrack.com",
+      Referer: "https://umactrack.com",
+      "Sec-Ch-Ua":
+        '"Chromium";v="118", "Google Chrome";v="118", "Not=A?Brand";v="99"',
+      "Sec-Ch-Ua-Mobile": "?1",
+      "Sec-Ch-Ua-Platform": '"Android"',
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-Fetch-Site": "same-origin",
+      "Sec-Fetch-User": "?1",
+      "Upgrade-Insecure-Requests": "1",
+    };
+    
+    const { data } = await instance.post(`https://umactrack.com/`, {
+      boxnumber: "UMTC350514",
+      submit: "Track Now",
+    },
+    {
+      headers: headers
+    }
+    );
+
+    const $ = cheerio.load(data);
+    const dataToDisplay = $("div.container").html();
+
+     if (dataToDisplay) {
+       res.status(200).json(dataToDisplay); // Send the HTML response to the frontend
+     } else {
+       res.status(404).json({ success: false, message: "Data not found" });
+     }
+    
+  } catch (err) {
+    console.error("Error Tracking Data", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
 
 
 module.exports = {
@@ -898,4 +959,5 @@ module.exports = {
   createPaymentIntent,
   sendmail,
   verifyCaptcha,
+  getTrackingData,
 };

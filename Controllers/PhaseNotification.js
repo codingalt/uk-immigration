@@ -44,7 +44,7 @@ const getPhaseNotifications = async(req,res)=>{
           },
           {
             $project: {
-              _id: 0,
+              _id: 1,
               userId: 1,
               applicationId: 1,
               createdAt: 1,

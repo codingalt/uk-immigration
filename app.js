@@ -7,8 +7,8 @@ const app = express();
 const cors = require("cors");
 const allowedOrigins = [
   process.env.BASE_URL,
-  "https://immigrationmatter.netlify.app",
   "http://localhost:3000",
+  "http://127.0.0.1:3001",
   "https://immigration-client.netlify.app",
 ];
 app.use((req, res, next) => {
@@ -61,7 +61,7 @@ const server = app.listen(PORT, () => {});
   const io = require("socket.io")(server, {
     pingTimeout: 60000,
     cors: {
-      origin: "http://127.0.0.1:3000",
+      origin: allowedOrigins,
     },
   });
 
@@ -69,7 +69,7 @@ const server = app.listen(PORT, () => {});
     console.log("Connected to socket.io");
 
     socket.on("setup", (user) => {
-      socket.join(user?.userId);
+      socket.join(user?._id);
       socket.emit("connected");
     });
 
@@ -80,7 +80,7 @@ const server = app.listen(PORT, () => {});
 
     socket.on("new message", (chat) => {
       if (!chat?.users) return console.log("chat.users is undefined");
-
+      console.log("chat users", chat.users);
       chat.users.forEach((user) => {
         if (user == chat.sender) return;
         socket.in(user).emit("message received", chat);
@@ -98,15 +98,16 @@ const server = app.listen(PORT, () => {});
       if (!request) return console.log("Phase Data Request is undefined");
       const admins = await UserModel.find({ isAdmin: true });
 
+      admins.forEach((admin) => {
+        socket.in(admin._id.toString()).emit("phase data received", request);
+      });
+
       // Send Notification and Store Request In Database
-      sendNotification({
+      await sendNotification({
         title: "New Phase Request from Client",
         notificationType: "admin",
         userId: request.userId,
         applicationId: request.applicationId,
-      });
-      admins.forEach((admin) => {
-        socket.in(admin._id.toString()).emit("phase data received", request);
       });
     });
 
@@ -117,15 +118,21 @@ const server = app.listen(PORT, () => {});
 
       // Send Notification and Store Request In Database
       sendNotification({
-        title: request.title,
+        title: "Admin respond to your Application",
         notificationType: "client",
         userId: request.userId,
         applicationId: request.applicationId,
         phase: request.phase,
-        phaseStatus: request.phaseStatus
+        phaseStatus: request.phaseStatus,
       });
-        socket.in(request.userId).emit("phase notification received", request);
-      
+      socket.in(request.userId).emit("phase notification received", request);
+    });
+
+    // Request for phase from Admin
+    socket.on("phase request", async (request) => {
+      if (!request) return console.log("Phase Request from admin is undefined");
+
+      socket.in(request.userId).emit("phase request received", request);
     });
 
   });

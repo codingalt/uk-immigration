@@ -56,4 +56,16 @@ const getCompanyDetailsByID =async(req,res)=>{
     }
 }
 
-module.exports = { createCompany, getCompanyDetailsByID };
+// Get All Company Details 
+const getAllCompanies =async(req,res)=>{
+    try {
+
+        const company = await CompanyModel.find({});
+        res.status(200).json({company, success: true});
+        
+    } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+    }
+}
+
+module.exports = { createCompany, getCompanyDetailsByID, getAllCompanies };

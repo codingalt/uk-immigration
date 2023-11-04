@@ -10,6 +10,7 @@ const createCaseWorker = async (req, res) => {
       email,
       contact,
       country,
+      birthDate,
       state,
       languages,
       password,
@@ -22,6 +23,7 @@ const createCaseWorker = async (req, res) => {
       !email ||
       !contact ||
       !country ||
+      !birthDate ||
       !state ||
       !languages ||
       !password ||
@@ -76,6 +78,7 @@ const createCaseWorker = async (req, res) => {
       country,
       state,
       languages,
+      birthDate,
     }).save();
     const caseWorkerProfile = { ...caseWorker._doc, isCaseWorker: true };
     res.status(200).json({ caseWorkerProfile, success: true });
@@ -105,7 +108,7 @@ const getCaseWorker = async (req, res) => {
       },
       {
         $project: {
-          _id: 0,
+          _id: 1,
           country: 1,
           state: 1,
           workerId: 1,

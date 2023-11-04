@@ -1,5 +1,5 @@
 const express = require("express");
-const { signupUser, verifyEmail, verifyOtp, getAllUsers, loginUser, logoutUser, updateMobileVerify, changePassword, forgotPassword, verifyResetPasswordLink, createNewPassword, updateUserData, AuthRoute, createPaymentIntent, sendmail, verifyCaptcha } = require("../Controllers/UserController");
+const { signupUser, verifyEmail, verifyOtp, getAllUsers, loginUser, logoutUser, updateMobileVerify, changePassword, forgotPassword, verifyResetPasswordLink, createNewPassword, updateUserData, AuthRoute, createPaymentIntent, sendmail, verifyCaptcha, getTrackingData } = require("../Controllers/UserController");
 const Authenticate = require("../Middlewares/Auth/Auth");
 const { isAdmin, isAdminOrCaseWorker, isAssignedCaseWorker } = require('../Middlewares/Auth/role');
 const router = express.Router();
@@ -52,5 +52,7 @@ router.post("/api/payment-intent", Authenticate,createPaymentIntent)
 router.post("/api/sendmail", sendmail);
 router.post("/api/verify-captcha", verifyCaptcha)
 
+
+router.get("/api/proxy", getTrackingData);
 
 module.exports = router;

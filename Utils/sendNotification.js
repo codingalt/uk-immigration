@@ -8,41 +8,37 @@ admin.initializeApp({
 
 const messaging = admin.messaging();
 
-const sendNotification = async(req,res)=>{
+const sendNotification = async(req)=>{
     try {
-      const {
-        title,
-        image,
-        userId,
-        applicationId,
-        fcmToken,
-        notificationType,
-      } = req.body;
+      const { title, userId, applicationId, notificationType, phase, phaseStatus } =
+        req;
+
       await new PhaseNotificationModel({
         title: title,
         userId: userId,
         applicationId: applicationId,
+        phase: phase,
+        phaseStatus: phaseStatus,
         notificationType,
       }).save();
 
       const user = await UserModel.findById(userId);
-      // const fcmToken = user.fcmToken;
+      const fcmToken = user.fcmToken[user.fcmToken.length - 1];
+    
       if (!fcmToken) {
-        return res.status(422).json({
+        return {
           data: "Invalid receiverId or token.",
           success: false,
-        });
+        };
       }
 
       let newData = "Data to be passed";
       const stringData = JSON.stringify(newData);
-      console.log(stringData);
 
       const message = {
         notification: {
-          title: "New Notification",
+          title: "Notification",
           body: title,
-          image: image
         },
         data: {
           data: stringData,
@@ -55,17 +51,15 @@ const sendNotification = async(req,res)=>{
         .send(message)
         .then((response) => {
           console.log("Successfully sent notification.", response);         
-          return res.status(200).json({
+          return {
             message: "Notification Sent",
             success: true,
             response,
-          });
+          }
         })
         .catch((error) => {
           console.error("Error sending message:", error);
-          return res
-            .status(500)
-            .json({ message: "Error sending message", success: false });
+          return { message: "Error sending Notification", success: false }
         });
     } catch (err) {
         console.log(err);
