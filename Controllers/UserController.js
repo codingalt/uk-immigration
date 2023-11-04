@@ -220,7 +220,7 @@ const signupUser = async (req, res) => {
              token: userToken.token,
            };
 
-           res.status(200).json({
+           return res.status(200).json({
              user: result,
              message: "Please Check your Email to verify your account",
              success: true,
@@ -313,6 +313,12 @@ const verifyEmail = async(req,res)=>{
        const updateUser = await UserModel.updateOne({ _id: user._id}, {isEmailVerified : true});
        console.log("Update user",updateUser);
         await EmailTokenModel.deleteOne({ _id: verifyToken._id });
+        res.cookie("ukImmigrationJwtoken", token, {
+          expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+          httpOnly: true,
+          sameSite: "none",
+          secure: true,
+        });
         res.status(200).json({message: "Email verified", success:true});
         
     } catch (err) {
