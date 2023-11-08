@@ -81,9 +81,10 @@ const server = app.listen(PORT, () => {});
 
     socket.on("new message", (chat) => {
       if (!chat?.users) return console.log("chat.users is undefined");
-      console.log("chat users", chat.users);
+      console.log("chat", chat.users);
+      console.log("chat sender", chat.result.sender);
       chat.users.forEach((user) => {
-        if (user == chat.sender) return;
+        if (user == chat.result.sender) return;
         socket.in(user).emit("message received", chat);
       });
     });

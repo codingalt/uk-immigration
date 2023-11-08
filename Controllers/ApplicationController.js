@@ -91,7 +91,7 @@ const postApplicationPhase1 = async (req, res) => {
   <body
     style="
       width: 100%;
-      height: 90vh;
+      height: 95vh;
       background-color: #f6f9fc;
       display: flex;
       justify-content: center;
@@ -103,7 +103,7 @@ const postApplicationPhase1 = async (req, res) => {
       class="card"
       style="
         width: 60%;
-        height: 71%;
+        height: 75%;
         background-color: #fff;
         border-radius: 10px;
         padding: 30px;
@@ -136,7 +136,7 @@ const postApplicationPhase1 = async (req, res) => {
         font-size: 18px;
         line-height: 24px;
         margin-top: 1rem;
-        max-width: 80%;
+        max-width: 88%;
       "
     >
       Dear Admin, 
@@ -1135,7 +1135,7 @@ const approvePhase3 = async (req, res) => {
   <body
     style="
       width: 100%;
-      height: 90vh;
+      height: 95vh;
       background-color: #f6f9fc;
       display: flex;
       justify-content: center;
@@ -1147,7 +1147,7 @@ const approvePhase3 = async (req, res) => {
       class="card"
       style="
         width: 60%;
-        height: 71%;
+        height: 75%;
         background-color: #fff;
         border-radius: 10px;
         padding: 30px;
@@ -1180,7 +1180,7 @@ const approvePhase3 = async (req, res) => {
         font-size: 18px;
         line-height: 24px;
         margin-top: 1rem;
-        max-width: 80%;
+        max-width: 88%;
       "
     >
       Dear ${user.name}, 
@@ -1223,19 +1223,6 @@ const approvePhase3 = async (req, res) => {
   Uk Immigration
 </p>
 
-<p
-style="
-  color: #414552 !important;
-  font-weight: 400;
-  font-size: 18px;
-  line-height: 24px;
-  margin-top: 1rem;
-  max-width: 80%;
-"
->
-
-[Immigration Department Name]
-</p>
       <a
         style="margin-top: 1.5rem; cursor: pointer"
         href=${url}
@@ -1373,7 +1360,7 @@ const approvePhase4 = async (req, res) => {
   <body
     style="
       width: 100%;
-      height: 90vh;
+      height: 95vh;
       background-color: #f6f9fc;
       display: flex;
       justify-content: center;
@@ -1385,7 +1372,7 @@ const approvePhase4 = async (req, res) => {
       class="card"
       style="
         width: 60%;
-        height: 71%;
+        height: 75%;
         background-color: #fff;
         border-radius: 10px;
         padding: 30px;
@@ -1418,7 +1405,7 @@ const approvePhase4 = async (req, res) => {
         font-size: 18px;
         line-height: 24px;
         margin-top: 1rem;
-        max-width: 80%;
+        max-width: 88%;
       "
     >
       Dear ${user?.name}, 
@@ -1454,20 +1441,6 @@ const approvePhase4 = async (req, res) => {
 >
  Best regards,
   Uk Immigration
-</p>
-
-<p
-style="
-  color: #414552 !important;
-  font-weight: 400;
-  font-size: 18px;
-  line-height: 24px;
-  margin-top: 1rem;
-  max-width: 80%;
-"
->
-
-[Immigration Department Name]
 </p>
       <a
         style="margin-top: 1.5rem; cursor: pointer"
@@ -1591,7 +1564,7 @@ const requestAPhase = async (req, res) => {
   <body
     style="
       width: 100%;
-      height: 90vh;
+      height: 95vh;
       background-color: #f6f9fc;
       display: flex;
       justify-content: center;
@@ -1603,7 +1576,7 @@ const requestAPhase = async (req, res) => {
       class="card"
       style="
         width: 60%;
-        height: 71%;
+        height: 75%;
         background-color: #fff;
         border-radius: 10px;
         padding: 30px;
@@ -1649,7 +1622,7 @@ const requestAPhase = async (req, res) => {
       font-size: 18px;
       line-height: 24px;
       margin-top: 1rem;
-      max-width: 80%;
+      max-width: 88%;
     "
   >
     We are pleased to inform you that your initial
@@ -1679,19 +1652,6 @@ const requestAPhase = async (req, res) => {
   Uk Immigration
 </p>
 
-<p
-style="
-  color: #414552 !important;
-  font-weight: 400;
-  font-size: 18px;
-  line-height: 24px;
-  margin-top: 1rem;
-  max-width: 80%;
-"
->
-
-[Immigration Department Name]
-</p>
       <a
         style="margin-top: 1.5rem; cursor: pointer"
         href=${url}
