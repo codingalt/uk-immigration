@@ -281,7 +281,7 @@ const postApplicationPhase2 = async (req, res) => {
     console.log(applicationId);
     // Check if admin has requested client for phase
     const isRequested = await ApplicationModel.findById(applicationId);
-    if (!user.isAdmin) {
+    if (!user.isAdmin || !user.isCaseWorker) {
       if (isRequested.requestedPhase < 2) {
         return res.status(400).json({
           message:
@@ -316,7 +316,7 @@ const postApplicationPhase2 = async (req, res) => {
       });
     }
 
-    if (user.isAdmin || user.isCaseWorkerHandling) {
+    if (user.isAdmin || user.isCaseWorker) {
       // Update Phase 2
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
@@ -366,7 +366,7 @@ const postApplicationPhase3 = async (req, res) => {
     // Check if admin has requested client for phase
     const isRequested = await ApplicationModel.findById(applicationId);
 
-    if (!user.isAdmin || user.isCaseWorkerHandling) {
+    if (!user.isAdmin || !user.isCaseWorker) {
       if (isRequested.requestedPhase < 3) {
         return res.status(400).json({
           message:
@@ -375,7 +375,7 @@ const postApplicationPhase3 = async (req, res) => {
       }
     }
 
-    if (user.isAdmin || user.isCaseWorkerHandling) {
+    if (user.isAdmin || user.isCaseWorker) {
       // Update Phase 3
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
@@ -434,7 +434,7 @@ const postApplicationPhase4 = async (req, res) => {
     //   return res.status(400).json({message:"Please Provide all the information Properly.", success: false});
     // }
 
-    if (user.isAdmin || user.isCaseWorkerHandling) {
+    if (user.isAdmin || user.isCaseWorker) {
       console.log("Admin condition");
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
@@ -599,7 +599,7 @@ const postGeneral = async (req, res) => {
         .status(400)
         .json({ message: "User not found", success: false });
     console.log(req.body);
-    if (user.isAdmin || user.isCaseWorkerHandling) {
+    if (user.isAdmin || user.isCaseWorker) {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
         {
@@ -636,7 +636,7 @@ const postAccomodation = async (req, res) => {
         .status(400)
         .json({ message: "User not found", success: false });
     console.log(req.body);
-    if (user.isAdmin || user.isCaseWorkerHandling) {
+    if (user.isAdmin || user.isCaseWorker) {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
         {
@@ -673,7 +673,7 @@ const postFamily = async (req, res) => {
         .status(400)
         .json({ message: "User not found", success: false });
     console.log(req.body);
-    if (user.isAdmin || user.isCaseWorkerHandling) {
+    if (user.isAdmin || user.isCaseWorker) {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
         {
@@ -710,7 +710,7 @@ const postLanguage = async (req, res) => {
         .status(400)
         .json({ message: "User not found", success: false });
     console.log(req.body);
-    if (user.isAdmin || user.isCaseWorkerHandling) {
+    if (user.isAdmin || user.isCaseWorker) {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
         {
@@ -747,7 +747,7 @@ const postEducation = async (req, res) => {
         .status(400)
         .json({ message: "User not found", success: false });
     console.log(req.body);
-    if (user.isAdmin || user.isCaseWorkerHandling) {
+    if (user.isAdmin || user.isCaseWorker) {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
         {
@@ -784,7 +784,7 @@ const postEmployment = async (req, res) => {
         .status(400)
         .json({ message: "User not found", success: false });
     console.log(req.body);
-    if (user.isAdmin || user.isCaseWorkerHandling) {
+    if (user.isAdmin || user.isCaseWorker) {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
         {
@@ -821,7 +821,7 @@ const postMaintenance = async (req, res) => {
         .status(400)
         .json({ message: "User not found", success: false });
     console.log(req.body);
-    if (user.isAdmin || user.isCaseWorkerHandling) {
+    if (user.isAdmin || user.isCaseWorker) {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
         {
@@ -858,7 +858,7 @@ const postTravel = async (req, res) => {
         .status(400)
         .json({ message: "User not found", success: false });
     console.log(req.body);
-    if (user.isAdmin || user.isCaseWorkerHandling) {
+    if (user.isAdmin || user.isCaseWorker) {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
         {
@@ -895,7 +895,7 @@ const postCharacter = async (req, res) => {
         .status(400)
         .json({ message: "User not found", success: false });
     console.log(req.body);
-    if (user.isAdmin || user.isCaseWorkerHandling) {
+    if (user.isAdmin || user.isCaseWorker) {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
         {
