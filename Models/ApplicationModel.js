@@ -817,6 +817,9 @@ const applicationSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isManual: {
+      type: Boolean,
+    },
     caseWorkerId: {
       type: String,
     },

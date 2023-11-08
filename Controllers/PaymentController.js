@@ -73,6 +73,7 @@ const payWithCard = async (req, res) => {
          "phase3.isOnlinePayment": true,
          phaseSubmittedByClient: 3,
          phase: 3,
+         "phase3.dateTime": new Date()
        },
      },
      { new: true, useFindAndModify: false }
@@ -169,6 +170,7 @@ const payWithCardCompanyClient = async (req, res) => {
           "phase3.isPaid": true,
           phaseSubmittedByClient: 3,
           phase: 3,
+          "phase3.dateTime": new Date(),
         },
       },
       { new: true, useFindAndModify: false }

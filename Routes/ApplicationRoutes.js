@@ -1,5 +1,5 @@
 const express = require('express');
-const { getApplicationData, updateApplicationData, rejectApplication, filterApplication, approvePhase1, approvePhase2, approvePhase3, requestAPhase, postApplicationPhase1, postApplicationPhase2, postApplicationPhase3, postApplicationPhase4, approvePhase4, getApplicationDataByUser, addNotes, updatePhaseByAdmin, acceptInitialRequest, getApplicationDataById, getApplicationByUserId, assignApplicationToCaseWorker, getInvoiceDetails, filterInvoices, linkCompany, requestCompanyClientPhase1, postCharacter, getApplicationNotification } = require('../Controllers/ApplicationController');
+const { getApplicationData, updateApplicationData, rejectApplication, filterApplication, approvePhase1, approvePhase2, approvePhase3, requestAPhase, postApplicationPhase1, postApplicationPhase2, postApplicationPhase3, postApplicationPhase4, approvePhase4, getApplicationDataByUser, addNotes, updatePhaseByAdmin, acceptInitialRequest, getApplicationDataById, getApplicationByUserId, assignApplicationToCaseWorker, getInvoiceDetails, filterInvoices, linkCompany, requestCompanyClientPhase1, postCharacter, getApplicationNotification, postGeneral, postAccomodation, postFamily, postLanguage, postEducation, postEmployment, postMaintenance, postTravel, postPhase1Manual, updatePhase1Manual } = require('../Controllers/ApplicationController');
 const Authenticate = require('../Middlewares/Auth/Auth');
 const { isAdmin, isAdminOrCaseWorker, isAssignedCaseWorker } = require('../Middlewares/Auth/role');
 const router = express.Router();
@@ -56,6 +56,14 @@ router.post(
 );
 router.post("/api/application/phase3/:applicationId", Authenticate,chalanUpload.fields([{name: "chalan", maxCount: 1}]) ,postApplicationPhase3);
 router.post("/api/application/phase4/:applicationId", Authenticate, postApplicationPhase4);
+router.post("/api/application/general/:applicationId", Authenticate, postGeneral);
+router.post("/api/application/accomodation/:applicationId", Authenticate, postAccomodation);
+router.post("/api/application/family/:applicationId", Authenticate, postFamily);
+router.post("/api/application/language/:applicationId", Authenticate, postLanguage);
+router.post("/api/application/education/:applicationId", Authenticate, postEducation);
+router.post("/api/application/employment/:applicationId", Authenticate, postEmployment);
+router.post("/api/application/maintenance/:applicationId", Authenticate, postMaintenance);
+router.post("/api/application/travel/:applicationId", Authenticate, postTravel);
 router.post("/api/application/character/:applicationId", Authenticate, postCharacter);
 
 router.get("/api/application", Authenticate, getApplicationData);
@@ -94,5 +102,9 @@ router.post("/api/company/link/:applicationId",Authenticate, isAdminOrCaseWorker
 
 // Get Application Notification 
 router.get("/api/application/notification", Authenticate, getApplicationNotification);
+
+// Add Application Manual 
+router.post("/api/phase1/manual", Authenticate,isAdminOrCaseWorker, postPhase1Manual);
+router.put("/api/phase1/manual/:applicationId", Authenticate,isAdminOrCaseWorker, updatePhase1Manual);
 
 module.exports = router;

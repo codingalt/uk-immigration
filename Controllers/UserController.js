@@ -15,6 +15,7 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const otpGenerator = require("otp-generator");
 const CaseWorkerModel = require("../Models/CaseWorker");
 const cheerio = require("cheerio");
+const logo = `https://res.cloudinary.com/dncjtzg2i/image/upload/v1699259845/Ukimmigration-logo_dwq9tm.png`;
 
 const transporter = nodemailer.createTransport({
   host: process.env.HOST,
@@ -158,24 +159,114 @@ const signupUser = async (req, res) => {
         const url = `${process.env.BASE_URL}/${user._id}/verify/${emailToken.token}`;
         const html = `<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Verify Email</title>
-</head>
-<body style="width: 100%;height: 90vh;background-color: #F6F9FC;display: flex;justify-content: center;align-items: center; font-family: sans-serif;">
+  </head>
+  <body
+    style="
+      width: 100%;
+      height: 90vh;
+      background-color: #f6f9fc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+    "
+  >
+    <div
+      class="card"
+      style="
+        width: 60%;
+        height: 53%;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 30px;
+        margin-top: 2rem;
+        padding-left: 40px;
+        margin: 2rem auto;
+      "
+    >
+    <img
+    src=${logo}
+    alt=""
+    style="margin-left: auto; margin-right: auto"
+  />
+      <h3
+        style="
+          color: #5D982E;
+          font-weight: 800;
+          font-size: 1.1rem;
+          letter-spacing: 0.5px;
+          margin-top: 0.8rem;
+        "
+      >
+        Verification Code ${otp}
+      </h3>
+      <p
+        style="
+          color: #414552 !important;
+          font-weight: 400;
+          font-size: 18px;
+          line-height: 24px;
+          margin-top: 1rem;
+          max-width: 80%;
+        "
+      >
+        Thanks for creating a Uk Immigration account. Verify your email so you
+        can get up and running quickly.
+      </p>
+      <a
+        style="margin-top: 1.5rem; cursor: pointer"
+        href="${url}"
+        target="_blank"
+        ><button
+          style="
+            width: 10.4rem;
+            height: 2.8rem;
+            border-radius: 8px;
+            outline: none;
+            border: none;
+            color: #fff;
+            background-color: #5D982E;
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+          "
+        >
+          Verify Email
+        </button></a
+      >
 
-    <div class="card" style="width: 60%;height: 50%;background-color: #fff;border-radius: 10px;padding: 30px;margin-top: 2rem;padding-left: 40px;margin: 2rem auto;">
-        <h3 style="color: #6772e5;font-weight: 800;font-size: 1.1rem;letter-spacing: .5px;">UK Immigration</h3>
-        <h3 style="color: #6772e5;font-weight: 800;font-size: 1.1rem;letter-spacing: .5px;margin-top: .8rem;">Verification Code ${otp}</h3>
-        <p style="color: #414552!important;font-weight: 400;font-size: 18px;line-height: 24px;margin-top: 1rem;max-width: 80%;">	Thanks for creating a Uk Immigration account. Verify your email so you can get up and running quickly.</p>
-        <a style="margin-top: 1.5rem;cursor: pointer;" href=${url} target="_blank"><button style="width: 10.4rem;height: 2.8rem;border-radius: 8px;outline: none;border: none;color: #fff;background-color: #625AFA;font-weight: 600;font-size: 1.05rem;cursor: pointer;">Verify Email</button></a>
+      <p
+        style="
+          color: #414552 !important;
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 24px;
+          max-width: 88%;
+          margin-top: 6rem;
+        "
+      >
+        Once your email is verified, we'll guide you to complete your account
+        application. Visit our support site if you have questions or need help.
+      </p>
 
-        <p style="color: #414552!important;font-weight: 400;font-size: 16px;line-height: 24px;max-width: 88%;margin-top: 6rem;">	Once your email is verified, we’ll guide you to complete your account application. Visit our support site if you have questions or need help.</p>
+      <p
+      style="
+        color: #414552 !important;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 24px;
+        max-width: 88%;
+        margin-top: 6rem;
+      "
+    >
+    All rights reserved by UK Immigration © 2023.
+    </p>
     </div>
-
-    
-</body>
+  </body>
 </html>`;
         const info = await transporter.sendMail({
           from: {
@@ -311,7 +402,6 @@ const verifyEmail = async(req,res)=>{
         }
 
        const updateUser = await UserModel.updateOne({ _id: user._id}, {isEmailVerified : true});
-       console.log("Update user",updateUser);
         await EmailTokenModel.deleteOne({ _id: verifyToken._id });
         res.cookie("ukImmigrationJwtoken", token, {
           expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
@@ -678,23 +768,114 @@ const loginUser = async (req, res) => {
             const url = `${process.env.BASE_URL}/${signin._id}/verify/${emailToken.token}`;
             const html = `<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Verify Email</title>
-</head>
-<body style="width: 100%;height: 90vh;background-color: #F6F9FC;display: flex;justify-content: center;align-items: center; font-family: sans-serif;">
+  </head>
+  <body
+    style="
+      width: 100%;
+      height: 90vh;
+      background-color: #f6f9fc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+    "
+  >
+    <div
+      class="card"
+      style="
+        width: 60%;
+        height: 53%;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 30px;
+        margin-top: 2rem;
+        padding-left: 40px;
+        margin: 2rem auto;
+      "
+    >
+    <img
+    src=${logo}
+    alt=""
+    style="margin-left: auto; margin-right: auto"
+  />
+      <h3
+        style="
+          color: #5D982E;
+          font-weight: 800;
+          font-size: 1.1rem;
+          letter-spacing: 0.5px;
+          margin-top: 0.8rem;
+        "
+      >
+        Verification Code ${otp}
+      </h3>
+      <p
+        style="
+          color: #414552 !important;
+          font-weight: 400;
+          font-size: 18px;
+          line-height: 24px;
+          margin-top: 1rem;
+          max-width: 80%;
+        "
+      >
+        Thanks for creating a Uk Immigration account. Verify your email so you
+        can get up and running quickly.
+      </p>
+      <a
+        style="margin-top: 1.5rem; cursor: pointer"
+        href="${url}"
+        target="_blank"
+        ><button
+          style="
+            width: 10.4rem;
+            height: 2.8rem;
+            border-radius: 8px;
+            outline: none;
+            border: none;
+            color: #fff;
+            background-color: #5D982E;
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+          "
+        >
+          Verify Email
+        </button></a
+      >
 
-    <div class="card" style="width: 60%;height: 50%;background-color: #fff;border-radius: 10px;padding: 30px;margin-top: 2rem;padding-left: 40px;margin: 2rem auto;">
-        <h3 style="color: #6772e5;font-weight: 800;font-size: 1.1rem;letter-spacing: .5px;">UK Immigration</h3>
-        <p style="color: #414552!important;font-weight: 400;font-size: 18px;line-height: 24px;margin-top: 2rem;max-width: 80%;">	Thanks for creating a Uk Immigration account. Verify your email so you can get up and running quickly.</p>
-        <a style="margin-top: 1.5rem;cursor: pointer;" href=${url} target="_blank"><button style="width: 10.4rem;height: 2.8rem;border-radius: 8px;outline: none;border: none;color: #fff;background-color: #625AFA;font-weight: 600;font-size: 1.05rem;cursor: pointer;">Verify Email</button></a>
+      <p
+        style="
+          color: #414552 !important;
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 24px;
+          max-width: 88%;
+          margin-top: 6rem;
+        "
+      >
+        Once your email is verified, we'll guide you to complete your account
+        application. Visit our support site if you have questions or need help.
+      </p>
 
-        <p style="color: #414552!important;font-weight: 400;font-size: 16px;line-height: 24px;max-width: 88%;margin-top: 6rem;">	Once your email is verified, we’ll guide you to complete your account application. Visit our support site if you have questions or need help.</p>
+      <p
+      style="
+        color: #414552 !important;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 24px;
+        max-width: 88%;
+        margin-top: 6rem;
+      "
+    >
+    All rights reserved by UK Immigration © 2023.
+    </p>
     </div>
-
-    
-</body>
+  </body>
 </html>`;
 
             const emailRes = await transporter.sendMail({
@@ -874,6 +1055,7 @@ const createPaymentIntent = async(req,res)=>{
 
 const verifyCaptcha = async(req,res)=>{
     const { recaptchaToken } = req.body;
+    console.log(recaptchaToken);
 
     const secretKey = process.env.CAPTCHA_SECRET_KEY; 
 
