@@ -110,6 +110,7 @@ const server = app.listen(PORT, () => {});
         notificationType: "admin",
         userId: request.userId,
         applicationId: request.applicationId,
+        phase: request.phase,
       });
     });
 

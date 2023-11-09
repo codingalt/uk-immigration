@@ -10,8 +10,14 @@ const messaging = admin.messaging();
 
 const sendNotification = async(req)=>{
     try {
-      const { title, userId, applicationId, notificationType, phase, phaseStatus } =
-        req;
+      const {
+        title,
+        userId,
+        applicationId,
+        notificationType,
+        phase,
+        phaseStatus,
+      } = req;
 
       await new PhaseNotificationModel({
         title: title,

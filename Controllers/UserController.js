@@ -153,6 +153,7 @@ const signupUser = async (req, res) => {
         //  Saving token to emailToken model
         const emailToken = await new EmailTokenModel({
           userId: user._id,
+          email: user.email,
           otp: otp,
           token: crypto.randomBytes(32).toString("hex"),
         }).save();
@@ -531,10 +532,17 @@ const forgotPassword = async (req, res) => {
 
       const userExist = await UserModel.findOne({ email: email });
       if (!userExist) return res.status(422).json({ message: "Email does not exist.", success: false });
-
+      const otp = otpGenerator.generate(6, {
+        digits: true,
+        lowerCaseAlphabets: false,
+        upperCaseAlphabets: false,
+        specialChars: false,
+      });
       //  Saving token to emailToken model
       const emailToken = await new EmailTokenModel({
         userId: userExist._id,
+        email: userExist.email,
+        otp: otp,
         token: crypto.randomBytes(32).toString("hex"),
       }).save();
       const url = `${process.env.BASE_URL}/reset-password/${userExist._id}/${emailToken.token}`;
@@ -559,6 +567,21 @@ const verifyResetPasswordLink = async (req, res) => {
     }
       
     res.status(200).json({ message: "Email Verified. You can now create a new password.", success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+// Verify Reset Password Otp | Mobile
+const verifyResetPasswordOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const verifyToken = await EmailTokenModel.findOne({ email: email, otp: otp });
+    if (!verifyToken) {
+      return res.status(400).json({ message: "Invalid OTP", success: false });
+    }
+      
+    res.status(200).json({ message: "OTP Verified. You can now create a new password.", success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -592,31 +615,32 @@ const createNewPassword = async (req, res) => {
   }
 };
 
-// Verify Otp 
-  const verifyOtp = async (req,res) =>{
-    const {contact,otp} = req.body;
-    // First check if email is verified 
-    const user = await UserModel.findOne({contact});
-    if(!user.isEmailVerified) return res.status(400).json({message:"Please Verify your email first", success: false});
-    const otpHolder = await OtpModel.find({contact});
-    if(otpHolder.length === 0){
-      return res.status(400).json({message: 'You have used an Expired OTP!',success: false});
-    }
-    
-    const rightOtpFind = otpHolder[otpHolder.length - 1];
-    const validUser = await bcrypt.compare(req.body.otp, rightOtpFind.otp);
+// Verify Email Otp for mobile 
+  const verifyEmailOtp = async (req,res) =>{
+            const { email, otp } = req.body;
+            const user = await UserModel.findOne({email: email });
+            const verifyToken = await EmailTokenModel.findOne({
+              email: email,
+              otp: otp,
+            });
+            if (!verifyToken) {
+              return res
+                .status(400)
+                .json({ message: "Invalid OTP", success: false });
+            }
 
-    if(rightOtpFind.contact === contact && validUser){
-        const otpDelete = await OtpModel.deleteMany({
-          contact: rightOtpFind.contact,
-        });
-           return res
-             .status(200)
-             .json({ message: "OTP Authenticated Successfully", success: true });
-        
-    }else{
-      return res.status(400).json({message: 'Your OTP was wrong',success: false});
-    }
+            const updateUser = await UserModel.updateOne(
+              { _id: user._id },
+              { isEmailVerified: true }
+            );
+            await EmailTokenModel.deleteOne({ email: email});
+            res.cookie("ukImmigrationJwtoken", token, {
+              expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+              httpOnly: true,
+              sameSite: "none",
+              secure: true,
+            });
+            res.status(200).json({ message: "OTP verified", success: true });
   }
 
   //Login Route
@@ -762,6 +786,7 @@ const loginUser = async (req, res) => {
             //  Saving token to emailToken model
             const emailToken = await new EmailTokenModel({
               userId: signin._id,
+              email: signin.email,
               otp: otp,
               token: crypto.randomBytes(32).toString("hex"),
             }).save();
@@ -1133,7 +1158,8 @@ const getTrackingData = async(req,res)=>{
 module.exports = {
   signupUser,
   verifyEmail,
-  verifyOtp,
+  verifyEmailOtp,
+  verifyResetPasswordOtp,
   loginUser,
   getAllUsers,
   logoutUser,
