@@ -281,40 +281,6 @@ const postApplicationPhase2 = async (req, res) => {
     console.log(applicationId);
     // Check if admin has requested client for phase
     const isRequested = await ApplicationModel.findById(applicationId);
-    if (!user.isAdmin || !user.isCaseWorker) {
-      if (isRequested.requestedPhase < 2) {
-        return res.status(400).json({
-          message:
-            "You can't submit phase 2 data right now, Untill admin requests you to submit phase 2 data.",
-        });
-      }
-    }
-
-    // Check which fields/data is required
-    const phase2Data = isRequested.phase2;
-
-    const filteredData = Object.fromEntries(
-      Object.entries(phase2Data).filter(([key, value]) => value !== "notreq")
-    );
-
-    // Exclude "otherDocumentNotes" from validation
-    const filteredDataKeys = Object.keys(filteredData).filter(
-      (key) => key !== "otherDocumentNotes"
-    );
-
-    // Now validate whether required fields are submitted by client
-    const missingProperties = filteredDataKeys.filter(
-      (key) => !filesObj.hasOwnProperty(key)
-    );
-
-    if (missingProperties.length > 0) {
-      return res.status(400).json({
-        message: `Error: The following properties are missing in filesObj: ${missingProperties.join(
-          ", "
-        )}`,
-        success: false,
-      });
-    }
 
     if (user.isAdmin || user.isCaseWorker) {
       // Update Phase 2
@@ -325,13 +291,38 @@ const postApplicationPhase2 = async (req, res) => {
             phase2: filesObj,
             phaseSubmittedByClient: 2,
             phase: 2,
-            phaseStatus: phaseStatus.Approved,
+            phaseStatus: "approved",
           },
         },
         { new: true, useFindAndModify: false }
       );
       res.status(200).json({ application, success: true });
     } else {
+      // Check which fields/data is required
+      const phase2Data = isRequested.phase2;
+
+      const filteredData = Object.fromEntries(
+        Object.entries(phase2Data).filter(([key, value]) => value !== "notreq")
+      );
+
+      // Exclude "otherDocumentNotes" from validation
+      const filteredDataKeys = Object.keys(filteredData).filter(
+        (key) => key !== "otherDocumentNotes"
+      );
+
+      // Now validate whether required fields are submitted by client
+      const missingProperties = filteredDataKeys.filter(
+        (key) => !filesObj.hasOwnProperty(key)
+      );
+
+      if (missingProperties.length > 0) {
+        return res.status(400).json({
+          message: `Error: The following properties are missing in filesObj: ${missingProperties.join(
+            ", "
+          )}`,
+          success: false,
+        });
+      }
       // Update Phase 2
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,

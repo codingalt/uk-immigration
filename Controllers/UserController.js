@@ -150,6 +150,8 @@ const signupUser = async (req, res) => {
           specialChars: false,
         });
 
+        console.log(otp);
+
         //  Saving token to emailToken model
         const emailToken = await new EmailTokenModel({
           userId: user._id,
@@ -157,132 +159,134 @@ const signupUser = async (req, res) => {
           otp: otp,
           token: crypto.randomBytes(32).toString("hex"),
         }).save();
-        const url = `${process.env.BASE_URL}/${user._id}/verify/${emailToken.token}`;
-        const html = `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Verify Email</title>
-  </head>
-  <body
-    style="
-      width: 100%;
-      height: 90vh;
-      background-color: #f6f9fc;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: sans-serif;
-    "
-  >
-    <div
-      class="card"
-      style="
-        width: 60%;
-        height: 53%;
-        background-color: #fff;
-        border-radius: 10px;
-        padding: 30px;
-        margin-top: 2rem;
-        padding-left: 40px;
-        margin: 2rem auto;
-      "
-    >
-    <img
-    src=${logo}
-    alt=""
-    style="margin-left: auto; margin-right: auto"
-  />
-      <h3
-        style="
-          color: #5D982E;
-          font-weight: 800;
-          font-size: 1.1rem;
-          letter-spacing: 0.5px;
-          margin-top: 0.8rem;
-        "
-      >
-        Verification Code ${otp}
-      </h3>
-      <p
-        style="
-          color: #414552 !important;
-          font-weight: 400;
-          font-size: 18px;
-          line-height: 24px;
-          margin-top: 1rem;
-          max-width: 80%;
-        "
-      >
-        Thanks for creating a Uk Immigration account. Verify your email so you
-        can get up and running quickly.
-      </p>
-      <a
-        style="margin-top: 1.5rem; cursor: pointer"
-        href="${url}"
-        target="_blank"
-        ><button
-          style="
-            width: 10.4rem;
-            height: 2.8rem;
-            border-radius: 8px;
-            outline: none;
-            border: none;
-            color: #fff;
-            background-color: #5D982E;
-            font-weight: 600;
-            font-size: 1.05rem;
-            cursor: pointer;
-          "
-        >
-          Verify Email
-        </button></a
-      >
+//         const url = `${process.env.BASE_URL}/${user._id}/verify/${emailToken.token}`;
+//         const html = `<!DOCTYPE html>
+// <html lang="en">
+//   <head>
+//     <meta charset="UTF-8" />
+//     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+//     <title>Verify Email</title>
+//   </head>
+//   <body
+//     style="
+//       width: 100%;
+//       height: 90vh;
+//       background-color: #f6f9fc;
+//       display: flex;
+//       justify-content: center;
+//       align-items: center;
+//       font-family: sans-serif;
+//     "
+//   >
+//     <div
+//       class="card"
+//       style="
+//         width: 60%;
+//         height: 53%;
+//         background-color: #fff;
+//         border-radius: 10px;
+//         padding: 30px;
+//         margin-top: 2rem;
+//         padding-left: 40px;
+//         margin: 2rem auto;
+//       "
+//     >
+//     <img
+//     src=${logo}
+//     alt=""
+//     style="margin-left: auto; margin-right: auto"
+//   />
+//       <h3
+//         style="
+//           color: #5D982E;
+//           font-weight: 800;
+//           font-size: 1.1rem;
+//           letter-spacing: 0.5px;
+//           margin-top: 0.8rem;
+//         "
+//       >
+//         Verification Code ${otp}
+//       </h3>
+//       <p
+//         style="
+//           color: #414552 !important;
+//           font-weight: 400;
+//           font-size: 18px;
+//           line-height: 24px;
+//           margin-top: 1rem;
+//           max-width: 80%;
+//         "
+//       >
+//         Thanks for creating a Uk Immigration account. Verify your email so you
+//         can get up and running quickly.
+//       </p>
+//       <a
+//         style="margin-top: 1.5rem; cursor: pointer"
+//         href="${url}"
+//         target="_blank"
+//         ><button
+//           style="
+//             width: 10.4rem;
+//             height: 2.8rem;
+//             border-radius: 8px;
+//             outline: none;
+//             border: none;
+//             color: #fff;
+//             background-color: #5D982E;
+//             font-weight: 600;
+//             font-size: 1.05rem;
+//             cursor: pointer;
+//           "
+//         >
+//           Verify Email
+//         </button></a
+//       >
 
-      <p
-        style="
-          color: #414552 !important;
-          font-weight: 400;
-          font-size: 16px;
-          line-height: 24px;
-          max-width: 88%;
-          margin-top: 6rem;
-        "
-      >
-        Once your email is verified, we'll guide you to complete your account
-        application. Visit our support site if you have questions or need help.
-      </p>
+//       <p
+//         style="
+//           color: #414552 !important;
+//           font-weight: 400;
+//           font-size: 16px;
+//           line-height: 24px;
+//           max-width: 88%;
+//           margin-top: 6rem;
+//         "
+//       >
+//         Once your email is verified, we'll guide you to complete your account
+//         application. Visit our support site if you have questions or need help.
+//       </p>
 
-      <p
-      style="
-        color: #414552 !important;
-        font-weight: 400;
-        font-size: 16px;
-        line-height: 24px;
-        max-width: 88%;
-        margin-top: 6rem;
-      "
-    >
-    All rights reserved by UK Immigration © 2023.
-    </p>
-    </div>
-  </body>
-</html>`;
-        const info = await transporter.sendMail({
-          from: {
-            address: "testmailingsmtp@lesoft.io",
-            name: "Lesoft",
-          },
-          to: email,
-          subject:
-            "Verify your Email - Get started with your new Uk Immigration account",
-          text: "",
-          html: html,
-        });
-        console.log("Email Res", info);
+//       <p
+//       style="
+//         color: #414552 !important;
+//         font-weight: 400;
+//         font-size: 16px;
+//         line-height: 24px;
+//         max-width: 88%;
+//         margin-top: 6rem;
+//       "
+//     >
+//     All rights reserved by UK Immigration © 2023.
+//     </p>
+//     </div>
+//   </body>
+// </html>`;
+//         const info = await transporter.sendMail({
+//           from: {
+//             address: "testmailingsmtp@lesoft.io",
+//             name: "Lesoft",
+//           },
+//           to: email,
+//           subject:
+//             "Verify your Email - Get started with your new Uk Immigration account",
+//           text: "",
+//           html: html,
+//         });
+        // console.log("Email Res", info);
         //  await sendEmail(user.email, "Verify your Email - Get started with your new Uk Immigration account", "",html);
-
+        const info = {
+          messageId: "111"
+        };
         if (info.messageId){
           console.log("Email sent successfully");
           res.cookie("ukImmigrationJwtoken", token, {
@@ -617,30 +621,30 @@ const createNewPassword = async (req, res) => {
 
 // Verify Email Otp for mobile 
   const verifyEmailOtp = async (req,res) =>{
-            const { email, otp } = req.body;
-            const user = await UserModel.findOne({email: email });
-            const verifyToken = await EmailTokenModel.findOne({
-              email: email,
-              otp: otp,
-            });
-            if (!verifyToken) {
-              return res
-                .status(400)
-                .json({ message: "Invalid OTP", success: false });
-            }
+    try {
+      const { email, otp } = req.body;
+      console.log(req.body);
+      const user = await UserModel.findOne({ email: email });
+      const verifyToken = await EmailTokenModel.findOne({
+        email: email,
+        otp: otp,
+      });
+      console.log(verifyToken);
+      if (!verifyToken) {
+        return res.status(400).json({ message: "Invalid OTP", success: false });
+      }
 
-            const updateUser = await UserModel.updateOne(
-              { _id: user._id },
-              { isEmailVerified: true }
-            );
-            await EmailTokenModel.deleteOne({ email: email});
-            res.cookie("ukImmigrationJwtoken", token, {
-              expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-              httpOnly: true,
-              sameSite: "none",
-              secure: true,
-            });
-            res.status(200).json({ message: "OTP verified", success: true });
+      const updateUser = await UserModel.updateOne(
+        { _id: user._id },
+        { isEmailVerified: true }
+      );
+      await EmailTokenModel.deleteOne({ email: email });
+      res.status(200).json({ message: "OTP verified", success: true });
+      
+    } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+    }
+            
   }
 
   //Login Route
