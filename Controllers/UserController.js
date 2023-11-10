@@ -23,7 +23,7 @@ const transporter = nodemailer.createTransport({
   secure: true,
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    pass: "eNWS~K7T#~^!",
   },
 });
 
