@@ -44,7 +44,6 @@ const userSchema = mongoose.Schema(
     },
     isMobileVerified: {
       type: Boolean,
-      default: false,
     },
     profilePic: {
       type: String,

@@ -72,7 +72,6 @@ const payWithCard = async (req, res) => {
          "phase3.onlinePaymentEvidence": charge.receipt_url,
          "phase3.isOnlinePayment": true,
          phaseSubmittedByClient: 3,
-         phase: 3,
          "phase3.dateTime": new Date()
        },
      },
@@ -169,7 +168,6 @@ const payWithCardCompanyClient = async (req, res) => {
           "phase3.isOnlinePayment": true,
           "phase3.isPaid": true,
           phaseSubmittedByClient: 3,
-          phase: 3,
           "phase3.dateTime": new Date(),
         },
       },

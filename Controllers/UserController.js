@@ -859,6 +859,8 @@ const loginUser = async (req, res) => {
         tokens: true
       });
 
+      console.log("Signin",signin);
+
       if (!signin) {
         return res
           .status(404)

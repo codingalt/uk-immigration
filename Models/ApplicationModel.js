@@ -826,6 +826,11 @@ const applicationSchema = mongoose.Schema(
     caseWorkerName: {
       type: String,
     },
+    report: [{
+      phase: Number,
+      status: String,
+      dateTime: Date,
+    }],
     notes: [
       {
         name: String,
