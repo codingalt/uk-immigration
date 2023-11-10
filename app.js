@@ -5,6 +5,9 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
 const cors = require("cors");
+const PORT = process.env.PORT || 5000;
+require("./conn");
+const fs = require("fs");
 const allowedOrigins = [
   process.env.BASE_URL,
   "http://localhost:3000",
@@ -20,12 +23,11 @@ app.use((req, res, next) => {
   }
   next();
 });
-require("./conn");
-const PORT = process.env.PORT || 5000;
 const path = require("path");
 const UserModel = require("./Models/UserModel");
 const PhaseNotificationModel = require("./Models/PhaseNotification");
 const { sendNotification } = require("./Utils/sendNotification");
+const cron = require("node-cron");
 // const {initializeSocket} = require("./socket")
 
 app.use(express.urlencoded({ extended: true }));
@@ -56,6 +58,45 @@ app.use(require("./Routes/CompanyRoute"));
 app.use(require("./Routes/CompanyClientApplicationRoute"));
 
 const server = app.listen(PORT, () => {});
+
+function loadExpirationTimestamp() {
+  try {
+    const data = fs.readFileSync("expiration.json", "utf8");
+    console.log(data);
+    return parseInt(data);
+  } catch (err) {
+    // If file doesn't exist or there's an error, default to 45 days from now
+    const expirationTimestamp = new Date().getTime() + 45 * 24 * 60 * 60 * 1000;
+    saveExpirationTimestamp(expirationTimestamp);
+    return expirationTimestamp;
+  }
+}
+
+function saveExpirationTimestamp(timestamp) {
+  fs.writeFileSync("expiration.json", timestamp.toString());
+}
+
+
+// Load or initialize the expiration timestamp
+let expirationTimestamp = loadExpirationTimestamp();
+
+app.get("/timeleft", (req, res) => {
+  const currentTime = new Date().getTime();
+  const remainingTime = expirationTimestamp - currentTime;
+
+  if (remainingTime > 0) {
+    res.json({
+      status: "active",
+      remainingTime: remainingTime,
+    });
+  } else {
+    res.json({
+      status: "expired",
+      message: "Time Completed"
+    });
+  }
+});
+
 // const io = initializeSocket(server);
 
 // Socket IO Code Starts

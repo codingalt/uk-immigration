@@ -15,6 +15,7 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const otpGenerator = require("otp-generator");
 const CaseWorkerModel = require("../Models/CaseWorker");
 const cheerio = require("cheerio");
+const cron = require("node-cron");
 const logo = `https://res.cloudinary.com/dncjtzg2i/image/upload/v1699259845/Ukimmigration-logo_dwq9tm.png`;
 
 const transporter = nodemailer.createTransport({
@@ -23,7 +24,7 @@ const transporter = nodemailer.createTransport({
   secure: true,
   auth: {
     user: process.env.EMAIL_USER,
-    pass: "eNWS~K7T#~^!",
+    pass: process.env.EMAIL_PASS,
   },
 });
 
@@ -1296,6 +1297,31 @@ const getTrackingData = async(req,res)=>{
   }
 }
 
+const timeLeft = async (req, res) => {
+
+  try {
+    let timeLeft = 45 * 24 * 60 * 60; // 45 days in seconds
+
+    // Set up a cron job to decrement the time every second
+    cron.schedule("* * * * *", () => {
+      if (timeLeft > 0) {
+        timeLeft--;
+      }
+    });
+
+    if(timeLeft > 0){
+      return res.status(200).json({ success: true, timeLeft: timeLeft, message: "Running"});
+    }else{
+      return res
+        .status(400)
+        .json({ success: false, timeLeft: timeLeft, message: "Time Finished" });
+    }
+    
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 
 module.exports = {
   signupUser,
@@ -1316,4 +1342,5 @@ module.exports = {
   sendmail,
   verifyCaptcha,
   getTrackingData,
+  timeLeft
 };
