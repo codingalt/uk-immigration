@@ -399,7 +399,7 @@ const verifyEmail = async(req,res)=>{
         const {otp} = req.params;
         console.log(id);
         console.log("token",token);
-        const user = await UserModel.findOne({_id: id});
+        const user = await UserModel.findById(id);
         const verifyToken = await EmailTokenModel.findOne({userId: id, token: token});
         if(!verifyToken){
             return res.status(400).json({message: "Invalid Link",success:false});
@@ -944,7 +944,7 @@ const loginUser = async (req, res) => {
   <body
     style="
       width: 100%;
-      height: 90vh;
+      height: 95vh;
       background-color: #f6f9fc;
       display: flex;
       justify-content: center;
@@ -956,7 +956,7 @@ const loginUser = async (req, res) => {
       class="card"
       style="
         width: 60%;
-        height: 53%;
+        height: 84%;
         background-color: #fff;
         border-radius: 10px;
         padding: 30px;
@@ -1034,10 +1034,10 @@ const loginUser = async (req, res) => {
       style="
         color: #414552 !important;
         font-weight: 400;
-        font-size: 16px;
+        font-size: 15px;
         line-height: 24px;
         max-width: 88%;
-        margin-top: 6rem;
+        margin-top: 5rem;
       "
     >
     All rights reserved by UK Immigration © 2023.
