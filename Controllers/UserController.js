@@ -403,7 +403,7 @@ const verifyEmail = async(req,res)=>{
         const verifyToken = await EmailTokenModel.findOne({userId: id, token: token});
         console.log("verifyToken",verifyToken);
 
-        if(verifyToken){
+        if(verifyToken._id){
           const updateUser = await UserModel.updateOne(
             { _id: user._id },
             { isEmailVerified: true }
