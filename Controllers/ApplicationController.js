@@ -937,6 +937,33 @@ const postCharacter = async (req, res) => {
   }
 };
 
+const updateApplicationService = async (req, res) => {
+  try {
+    const { phaseStatus, phase, applicationStatus } = req.body;
+    const { applicationId } = req.params;
+    if (phaseStatus || phase || applicationStatus) {
+      return res.status(400).json({
+        message: "Action Forbidden! You don't have access to change.",
+      });
+    }
+
+      const application = await ApplicationModel.findByIdAndUpdate(
+        applicationId,
+        {
+          "phase1.applicationType": req.body.applicationType,
+          $push: {
+            service: {serviceType: req.body.applicationType, dateTime: new Date()}
+          }
+        },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
 const acceptInitialRequest = async (req, res) => {
   try {
     const { applicationId } = req.params;
@@ -2696,7 +2723,7 @@ module.exports = {
   postMaintenance,
   postTravel,
   postCharacter,
-
+  updateApplicationService,
   postPhase1Manual,
   updatePhase1Manual,
 };

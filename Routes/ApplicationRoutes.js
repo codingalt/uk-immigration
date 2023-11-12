@@ -1,5 +1,5 @@
 const express = require('express');
-const { getApplicationData, updateApplicationData, rejectApplication, filterApplication, approvePhase1, approvePhase2, approvePhase3, requestAPhase, postApplicationPhase1, postApplicationPhase2, postApplicationPhase3, postApplicationPhase4, approvePhase4, getApplicationDataByUser, addNotes, updatePhaseByAdmin, acceptInitialRequest, getApplicationDataById, getApplicationByUserId, assignApplicationToCaseWorker, getInvoiceDetails, filterInvoices, linkCompany, requestCompanyClientPhase1, postCharacter, getApplicationNotification, postGeneral, postAccomodation, postFamily, postLanguage, postEducation, postEmployment, postMaintenance, postTravel, postPhase1Manual, updatePhase1Manual } = require('../Controllers/ApplicationController');
+const { getApplicationData, updateApplicationData, rejectApplication, filterApplication, approvePhase1, approvePhase2, approvePhase3, requestAPhase, postApplicationPhase1, postApplicationPhase2, postApplicationPhase3, postApplicationPhase4, approvePhase4, getApplicationDataByUser, addNotes, updatePhaseByAdmin, acceptInitialRequest, getApplicationDataById, getApplicationByUserId, assignApplicationToCaseWorker, getInvoiceDetails, filterInvoices, linkCompany, requestCompanyClientPhase1, postCharacter, getApplicationNotification, postGeneral, postAccomodation, postFamily, postLanguage, postEducation, postEmployment, postMaintenance, postTravel, postPhase1Manual, updatePhase1Manual, updateApplicationService } = require('../Controllers/ApplicationController');
 const Authenticate = require('../Middlewares/Auth/Auth');
 const { isAdmin, isAdminOrCaseWorker, isAssignedCaseWorker } = require('../Middlewares/Auth/role');
 const router = express.Router();
@@ -106,5 +106,8 @@ router.get("/api/application/notification", Authenticate, getApplicationNotifica
 // Add Application Manual 
 router.post("/api/phase1/manual", Authenticate,isAdminOrCaseWorker, postPhase1Manual);
 router.put("/api/phase1/manual/:applicationId", Authenticate,isAdminOrCaseWorker, updatePhase1Manual);
+
+// Update Application Service 
+router.put("/api/service/:applicationId", Authenticate,isAdminOrCaseWorker, updateApplicationService)
 
 module.exports = router;

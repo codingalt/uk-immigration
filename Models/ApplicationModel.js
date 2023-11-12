@@ -831,6 +831,10 @@ const applicationSchema = mongoose.Schema(
       status: String,
       dateTime: Date,
     }],
+    service: [{
+      serviceType: String,
+      dateTime: Date,
+    }],
     notes: [
       {
         name: String,
