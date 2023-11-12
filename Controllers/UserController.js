@@ -402,21 +402,27 @@ const verifyEmail = async(req,res)=>{
         const user = await UserModel.findById(id);
         const verifyToken = await EmailTokenModel.findOne({userId: id, token: token});
         console.log("verifyToken",verifyToken);
-        if(!verifyToken){
-            return res.status(400).json({message: "Invalid Link",success:false});
+
+        if(verifyToken){
+          const updateUser = await UserModel.updateOne(
+            { _id: user._id },
+            { isEmailVerified: true }
+          );
+          const userToken = user.tokens[user.tokens - 1];
+          console.log("token",userToken.token);
+          await EmailTokenModel.deleteOne({ _id: verifyToken._id });
+          res.cookie("ukImmigrationJwtoken", userToken.token, {
+            expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+            httpOnly: true,
+            sameSite: "none",
+            secure: true,
+          });
+          return res.status(200).json({ message: "Email verified", success: true });
+        }else{
+          return res.status(400).json({message: "Invalid Link",success:false});
         }
 
-       const updateUser = await UserModel.updateOne({ _id: user._id}, {isEmailVerified : true});
-       const userToken = user.tokens[user.tokens - 1];
-        console.log(userToken.token);
-        await EmailTokenModel.deleteOne({ _id: verifyToken._id });
-        res.cookie("ukImmigrationJwtoken", userToken.token, {
-          expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-          httpOnly: true,
-          sameSite: "none",
-          secure: true,
-        });
-        res.status(200).json({message: "Email verified", success:true});
+       
         
     } catch (err) {
     res.status(500).json({ message: err.message, success: false });
