@@ -407,8 +407,10 @@ const verifyEmail = async(req,res)=>{
         }
 
        const updateUser = await UserModel.updateOne({ _id: user._id}, {isEmailVerified : true});
+       const userToken = user.tokens[user.tokens - 1];
+        console.log(userToken.token);
         await EmailTokenModel.deleteOne({ _id: verifyToken._id });
-        res.cookie("ukImmigrationJwtoken", token, {
+        res.cookie("ukImmigrationJwtoken", userToken.token, {
           expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
           httpOnly: true,
           sameSite: "none",
