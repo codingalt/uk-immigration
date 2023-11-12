@@ -558,7 +558,8 @@ const postPhase1Manual = async (req, res) => {
         .json({ message: "Error Creating Chat", success: false });
     }
   } catch (err) {
-    await UserModel.deleteOne({ _id: userData._id });
+    console.log("catch block userId",req.body.userId);
+    await UserModel.deleteOne({ _id: req.body.userId });
     res.status(500).json({ message: err.message, success: false });
     console.log(err);
   }
