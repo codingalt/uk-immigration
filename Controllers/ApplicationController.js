@@ -507,9 +507,15 @@ const postPhase1Manual = async (req, res) => {
     req.body.phaseStatus = "approved";
     req.body.isInitialRequestAccepted = true;
     req.body.isManual = true;
-    req.body.report.phase = 1;
-    req.body.report.status = "approved";
-    req.body.report.dateTime = new Date();
+   if (!req.body.report) {
+     req.body.report = [];
+   }
+
+   req.body.report.push({
+     phase: 1,
+     status: "approved",
+     dateTime: new Date(),
+   });
 
     // Check if application is already exist
     const isApplicationAlready = await ApplicationModel.findOne({
