@@ -62,7 +62,6 @@ const server = app.listen(PORT, () => {});
 function loadExpirationTimestamp() {
   try {
     const data = fs.readFileSync("expiration.json", "utf8");
-    console.log(data);
     return parseInt(data);
   } catch (err) {
     // If file doesn't exist or there's an error, default to 45 days from now

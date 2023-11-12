@@ -78,9 +78,11 @@ const postApplicationPhase1 = async (req, res) => {
     const application = await new ApplicationModel(req.body).save();
 
     const admin = await UserModel.findOne({ isAdmin: true });
-
+    var date = new Date();
+    var options = { year: "numeric", month: "long", day: "numeric" };
+    var formattedDate = date.toLocaleDateString("en-US", options);
     // Send email to the user
-    const url = `${process.env.BASE_URL}`;
+    const url = `https://admin-immigration.netlify.app`;
     const html = `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -128,7 +130,6 @@ const postApplicationPhase1 = async (req, res) => {
         Client Submission - UK Immigration Phase 1
       </h3>
 
-
       <p
       style="
         color: #414552 !important;
@@ -152,13 +153,13 @@ const postApplicationPhase1 = async (req, res) => {
       max-width: 80%;
     "
   >
-    I hope this message finds you well. We are writing to inform you that one of our clients has successfully completed the initial phase of their UK immigration application process. We would like to request your attention to review and manage the application further.
+    I hope this message finds you well. We are writing to inform you that one of your clients has successfully completed the initial phase of their UK immigration application process. We would like to request your attention to review and manage the application further.
+    <br>
+<b>Client Information: </b> <br>
 
-Client Information:
-
-Name: ${user.name}
-Application ID: ${caseId}
-Date of Submission: ${new Date("yyyy-MM-dd")} 
+Name: ${user.name} <br>
+Application ID: ${caseId} <br>
+Date of Submission: ${formattedDate} <br>
   </p>
 
       <a
@@ -473,8 +474,6 @@ const postPhase1Manual = async (req, res) => {
       });
     }
 
-    console.log(req.body);
-
     const { name, email, contact } = req.body.phase1;
 
     const userExist = await UserModel.findOne({ email: email });
@@ -523,6 +522,10 @@ const postPhase1Manual = async (req, res) => {
         .json({ message: "Your Application already exists", success: false });
 
     const application = await new ApplicationModel(req.body).save();
+    console.log("Application phase 1 manual save",application);
+    if(!application){
+      await UserModel.deleteOne({ _id: userData._id });
+    }
 
     // Create Chat with this Application
     const chat = await createChat({
@@ -1001,7 +1004,7 @@ const approvePhase1 = async (req, res) => {
       html
     );
     let content =
-      "Congratulations, Phase Approved Successfully. Click here to continue";
+      "Congratulations, Phase 1 Approved Successfully. Click here to continue";
 
     // Find Chat
     const chat = await ChatModel.findOne({ applicationId: applicationId });
@@ -1070,7 +1073,7 @@ const approvePhase2 = async (req, res) => {
       );
 
       let content =
-        "Congratulations, Phase Approved Successfully. Click here to continue";
+        "Congratulations, Phase 2 Approved Successfully. Click here to continue";
 
       // Find Chat
       const chat = await ChatModel.findOne({ applicationId: applicationId });
@@ -1301,7 +1304,7 @@ const approvePhase3 = async (req, res) => {
       }
 
       let content =
-        "Congratulations, Phase Approved Successfully. Click here to continue";
+        "Congratulations, Phase 3 Approved Successfully. Click here to continue";
 
       // Find Chat
       const chat = await ChatModel.findOne({ applicationId: applicationId });
@@ -1523,7 +1526,7 @@ const approvePhase4 = async (req, res) => {
       }
 
       let content =
-        "Congratulations, Phase Approved Successfully. Click here to continue";
+        "Congratulations, Phase 4 Approved Successfully. Click here to continue";
 
       // Find Chat
       const chat = await ChatModel.findOne({ applicationId: applicationId });
