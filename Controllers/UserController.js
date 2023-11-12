@@ -408,6 +408,8 @@ const verifyEmail = async(req,res)=>{
             { _id: user._id },
             { isEmailVerified: true }
           );
+          console.log("Updated User", updateUser);
+          console.log("user",user);
           const userToken = user.tokens[user.tokens - 1];
           console.log("token",userToken.token);
           await EmailTokenModel.deleteOne({ _id: verifyToken._id });
