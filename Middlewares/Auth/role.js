@@ -7,7 +7,8 @@ const isAdmin = async(req,res, next)=>{
     try {
         const user = await UserModel.findById(req.userId.toString());
         if(!user.isAdmin){
-            throw new Error("Action Forbidden");
+            // throw new Error("Action Forbidden");
+            return res.status(400).json({message:"Action Forbidden",success: false})
         }
 
         next();
@@ -25,7 +26,11 @@ const isCaseWorker = async (req, res, next) => {
   try {
     const user = await UserModel.findById(req.userId.toString());
     if (!user.isCaseWorker) {
-      throw new Error("Action Forbidden");
+      // throw new Error("Action Forbidden");
+            return res
+              .status(400)
+              .json({ message: "Action Forbidden", success: false });
+
     }
 
     next();
@@ -44,7 +49,11 @@ const isAdminOrCaseWorker = async (req, res, next) => {
     if (user.isAdmin || user.isCaseWorker) {
       next();
     }else{
-      throw new Error("Action Forbidden");
+      // throw new Error("Action Forbidden");
+            return res
+              .status(400)
+              .json({ message: "Action Forbidden", success: false });
+
     }
    
   } catch (err) {

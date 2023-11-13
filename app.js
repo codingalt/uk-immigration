@@ -80,8 +80,9 @@ function saveExpirationTimestamp(timestamp) {
 let expirationTimestamp = loadExpirationTimestamp();
 
 app.get("/timeleft", (req, res) => {
-  const currentTime = new Date().getTime();
-  const remainingTime = expirationTimestamp - currentTime;
+  // const currentTime = new Date().getTime();
+  // const remainingTime = expirationTimestamp - currentTime;
+  const remainingTime = 0;
 
   if (remainingTime > 0) {
     res.json({
@@ -89,9 +90,10 @@ app.get("/timeleft", (req, res) => {
       remainingTime: remainingTime,
     });
   } else {
+    console.log("expired");
     res.json({
       status: "expired",
-      message: "Time Completed"
+      message: "Time Completed",
     });
   }
 });
