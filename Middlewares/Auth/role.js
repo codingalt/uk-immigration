@@ -60,6 +60,7 @@ const isAssignedCaseWorker = async (req, res, next) => {
   try {
     const applicationId  =
       req.params.applicationId || req.body.applicationId;
+      console.log(applicationId);
       
       if(!applicationId){
         return res.status(400).json({message:"Application Id cannot be empty", success: false});
@@ -77,7 +78,14 @@ const isAssignedCaseWorker = async (req, res, next) => {
         if(isAdmin.isAdmin) {
           next();
         }else{
-          throw new Error("Action Forbidden! This Application is handling by another Case Worker");
+          // throw new Error("Action Forbidden! This Application is handling by another Case Worker");
+          return res
+            .status(400)
+            .json({
+              message:
+                "Action Forbidden! This Application is handling by another Case Worker",
+              success: false,
+            });
         }
 
       }
@@ -88,7 +96,14 @@ const isAssignedCaseWorker = async (req, res, next) => {
         if(isAdmin.isAdmin) {
           next();
         }else{
-        throw new Error("Action Forbidden! This Application hasn't been assigned to any case worker.");
+          // throw new Error("Action Forbidden! This Application hasn't been assigned to any case worker.");
+          return res
+            .status(400)
+            .json({
+              message:
+                "Action Forbidden! This Application hasn't been assigned to any case worker.",
+              success: false,
+            });
         }
 
     }

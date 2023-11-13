@@ -2,6 +2,7 @@ const express = require("express");
 const ChatModel = require("../Models/ChatModel");
 const UserModel = require("../Models/UserModel");
 const MessageModel = require("../Models/MessageModel");
+const ApplicationModel = require("../Models/ApplicationModel");
 
 const accessChat = async (req, res) => {
   try {
@@ -86,9 +87,27 @@ const getUserChats = async (req, res) => {
   }
 };
 
+const getAllChats = async (req, res) => {
+  try {
+    const chats = await ChatModel.find({})
+      .sort({ updatedAt: -1 })
+      .populate({
+        path: "users",
+        select: "name email profilePic _id",
+        match: { _id: { $ne: req.userId.toString() } }, // Exclude the current user
+        model: UserModel,
+      })
+      .exec();
+
+    res.status(200).json({ chats, success: true });
+  } catch (err) {
+    res.status(500).json({ data: err.message, success: false });
+  }
+};
+
 const sendMessage = async (req, res) => {
   try {
-    const { content, chatId } = req.body;
+    const { content, chatId,applicationId } = req.body;
     const files = req.files;
     console.log(files);
     if (!chatId) {
@@ -98,6 +117,22 @@ const sendMessage = async (req, res) => {
           data: "Please fill out all the fields properly!",
           success: false,
         });
+    }
+
+    const isCaseWorker = await UserModel.findById(req.userId.toString())
+    if(isCaseWorker.isCaseWorker){
+      const application = await ApplicationModel.findById(applicationId);
+      if(application.isCaseWorkerHandling){
+        if(application.caseWorkerId != req.userId.toString()){
+          return res.status(400).json({message:"Action Forbidden! This Case is not assigned to you.",success: false})
+        }
+      }else{
+        return res.status(400).json({
+          message:
+            "Action Forbidden! This Application hasn't been assigned to any case worker.",
+          success: false,
+        });
+      }
     }
 
     const fileUrls = [];
@@ -206,4 +241,5 @@ module.exports = {
   getAllMessages,
   createChat,
   getChatByApplicationId,
+  getAllChats,
 };
