@@ -2,6 +2,7 @@ const express = require("express");
 const Authenticate = require("../Middlewares/Auth/Auth");
 const { accessChat, getUserChats, sendMessage, getAllMessages, getChatByApplicationId } = require("../Controllers/ChatController");
 const multer = require("multer");
+const { isAssignedCaseWorker } = require("../Middlewares/Auth/role");
 
 const router = express.Router();
 

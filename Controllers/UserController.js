@@ -944,6 +944,7 @@ const loginUser = async (req, res) => {
               otp: otp,
               token: crypto.randomBytes(32).toString("hex"),
             }).save();
+            console.log("Saved email token",emailToken);
             const url = `${process.env.BASE_URL}/${signin._id}/verify/${emailToken.token}`;
             const html = `<!DOCTYPE html>
 <html lang="en">
