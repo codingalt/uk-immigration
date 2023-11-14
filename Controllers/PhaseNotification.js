@@ -108,15 +108,28 @@ const getNotificationCount = async (req, res) => {
   }
 };
 
+const getNotificationCountAdmin = async (req, res) => {
+  try {
+    const notifications = await PhaseNotificationModel.find({
+      notificationType: "admin",
+      status: 0,
+    });
+    console.log(notifications);
+    const count = notifications?.length;
+    return res.status(200).json({ count, success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
 const readNotification = async(req,res)=>{
   try {
 
     await PhaseNotificationModel.updateMany(
-      { userId: req.userId.toString()},
+      { userId: req.userId.toString(), notificationType: "client" },
       { $set: { status: 1 } },
       { new: true, useFindAndModify: false }
     );
-
     return res.status(200).json({ message: "Notification Seen.", success: true });
     
   } catch (err) {
@@ -124,9 +137,26 @@ const readNotification = async(req,res)=>{
   }
 }
 
+const readNotificationAdmin = async (req, res) => {
+  try {
+    await PhaseNotificationModel.updateMany(
+      {notificationType: "admin" },
+      { $set: { status: 1 } },
+      { new: true, useFindAndModify: false }
+    );
+    return res
+      .status(200)
+      .json({ message: "Notification Seen.", success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
 module.exports = {
   getPhaseNotifications,
   getClientNotifications,
   readNotification,
   getNotificationCount,
+  getNotificationCountAdmin,
+  readNotificationAdmin,
 };
