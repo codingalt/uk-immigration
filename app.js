@@ -56,6 +56,7 @@ app.use(require("./Routes/PaymentRoute"));
 app.use(require("./Routes/PhaseNotificationRoute"));
 app.use(require("./Routes/CompanyRoute"));
 app.use(require("./Routes/CompanyClientApplicationRoute"));
+app.use(require("./Routes/EventRoute"));
 
 const server = app.listen(PORT, () => {});
 

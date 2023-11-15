@@ -90,6 +90,38 @@ const sendRequestToCompanyClient = async (req, res) => {
   }
 };
 
+const getApplicationsByCompanyId = async(req,res)=>{
+  try {
+    const {companyId} = req.params;
+    const applications = await CompanyClientModel.find({
+      companyId: companyId,
+    }).select({
+      _id: true,
+      caseId: true,
+      "phase1.fullNameAsPassport": true,
+      "phase1.clientContact": true,
+      "phase1.companyContact": true,
+      "phase1.birthDate": true,
+      "phase1.applicationType": true,
+      "phase1.nationality": true,
+    });
+    return res.status(200).json({ applications,success: true });
+    
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+}
+
+const getGroupClientApplicationsById = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const application = await CompanyClientModel.findById(applicationId);
+    return res.status(200).json({ application, success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
 const postCompanyClientPhase1 = async (req, res) => {
   try {
     const { applicationId } = req.params;
@@ -749,4 +781,6 @@ module.exports = {
   approveCompanyPhase2,
   approveCompanyPhase3,
   approveCompanyPhase4,
+  getApplicationsByCompanyId,
+  getGroupClientApplicationsById,
 };

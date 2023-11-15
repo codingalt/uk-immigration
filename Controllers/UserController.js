@@ -1185,7 +1185,7 @@ const AuthRoute = async (req, res) => {
         contact: others.contact,
         isEmailVerified: others.isEmailVerified,
         profilePic: others.profilePic,
-        isMobileVerified: others.isMobileVerified,
+        isCaseWorker: others.isCaseWorker,
         googleId: others.googleId,
       };
 

@@ -1,7 +1,7 @@
 const express = require('express');
 const Authenticate = require('../Middlewares/Auth/Auth');
 const { isAdminOrCaseWorker, isAssignedCaseWorker, isAssignedCompanyCaseWorker } = require('../Middlewares/Auth/role');
-const {postCompanyClientPhase1, postCompanyClientPhase2, requestCompanyClientPhase, sendRequestToCompanyClient, acceptCompanyInitialRequest, approveCompanyPhase1, approveCompanyPhase2, approveCompanyPhase3, approveCompanyPhase4, postCompanyClientPhase3, postCompanyClientPhase4 } = require('../Controllers/CompanyClientApplication');
+const {postCompanyClientPhase1, postCompanyClientPhase2, requestCompanyClientPhase, sendRequestToCompanyClient, acceptCompanyInitialRequest, approveCompanyPhase1, approveCompanyPhase2, approveCompanyPhase3, approveCompanyPhase4, postCompanyClientPhase3, postCompanyClientPhase4, getApplicationsByCompanyId, getGroupClientApplicationsById } = require('../Controllers/CompanyClientApplication');
 const router = express.Router();
 const multer = require("multer");
 
@@ -34,6 +34,9 @@ const chalanUpload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
 });
 
+
+router.get("/api/company/applications/:companyId", Authenticate, isAdminOrCaseWorker,getApplicationsByCompanyId)
+router.get("/api/company/application/:applicationId", Authenticate, isAdminOrCaseWorker,getGroupClientApplicationsById)
 router.post("/api/company/phase1/send", Authenticate, isAdminOrCaseWorker, sendRequestToCompanyClient);
 router.post("/api/company/phase/request/:applicationId", Authenticate, isAdminOrCaseWorker, requestCompanyClientPhase);
 router.post("/api/company/phase1/:applicationId", Authenticate, postCompanyClientPhase1);

@@ -768,6 +768,19 @@ const companyClientSchema = mongoose.Schema(
     caseWorkerName: {
       type: String,
     },
+    report: [
+      {
+        phase: Number,
+        status: String,
+        dateTime: Date,
+      },
+    ],
+    service: [
+      {
+        serviceType: String,
+        dateTime: Date,
+      },
+    ],
     notes: [
       {
         name: String,
