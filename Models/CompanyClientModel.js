@@ -14,6 +14,7 @@ const companyClientSchema = mongoose.Schema(
       },
       clientContact: {
         type: String,
+        unique: true,
         validate: [validator.isEmail, "Please enter a valid email"],
       },
       fullNameAsPassport: String,
@@ -719,7 +720,6 @@ const companyClientSchema = mongoose.Schema(
     },
     userId: {
       type: String,
-      default: "userid",
       unique: true,
     },
     companyId: {

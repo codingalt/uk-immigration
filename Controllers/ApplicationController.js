@@ -8,6 +8,7 @@ const MessageModel = require("../Models/MessageModel");
 const nodemailer = require("nodemailer");
 const { sendEmail } = require("../Utils/sendEmail");
 const CaseWorkerModel = require("../Models/CaseWorker");
+const PhaseNotificationModel = require("../Models/PhaseNotification");
 const logo = `https://res.cloudinary.com/dncjtzg2i/image/upload/v1699259845/Ukimmigration-logo_dwq9tm.png`;
 
 const phaseStaus = {
@@ -309,10 +310,13 @@ const postApplicationPhase2 = async (req, res) => {
         Object.entries(phase2Data).filter(([key, value]) => value !== "notreq")
       );
 
+      var propertiesToExclude = ["otherDocumentNotes", "other"];
       // Exclude "otherDocumentNotes" from validation
-      const filteredDataKeys = Object.keys(filteredData).filter(
-        (key) => key !== "otherDocumentNotes"
-      );
+     var filteredDataKeys = Object.keys(filteredData).filter(
+       (key) => !propertiesToExclude.includes(key)
+     );
+
+     console.log(filteredDataKeys);
 
       // Now validate whether required fields are submitted by client
       const missingProperties = filteredDataKeys.filter(
@@ -1177,156 +1181,156 @@ const approvePhase3 = async (req, res) => {
       );
 
       // Send email to the user
-//       const url = `${process.env.BASE_URL}`;
-//       const html = `<!DOCTYPE html>
-// <html lang="en">
-//   <head>
-//     <meta charset="UTF-8" />
-//     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-//     <title></title>
-//   </head>
-//   <body
-//     style="
-//       width: 100%;
-//       height: 95vh;
-//       background-color: #f6f9fc;
-//       display: flex;
-//       justify-content: center;
-//       align-items: center;
-//       font-family: sans-serif;
-//     "
-//   >
-//     <div
-//       class="card"
-//       style="
-//         width: 60%;
-//         height: 75%;
-//         background-color: #fff;
-//         border-radius: 10px;
-//         padding: 30px;
-//         margin-top: 2rem;
-//         padding-left: 40px;
-//         margin: 2rem auto;
-//       "
-//     >
-//       <img
-//         src=${logo}
-//         alt=""
-//         style="margin-left: auto; margin-right: auto"
-//       />
-//       <h3
-//         style="
-//           color:#5D982E;
-//           font-weight: 800;
-//           font-size: 1.1rem;
-//           letter-spacing: 0.5px;
-//         "
-//       >
-//         Approval of UK Immigration Phase 3
-//       </h3>
+      const url = `${process.env.BASE_URL}`;
+      const html = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body
+    style="
+      width: 100%;
+      height: 95vh;
+      background-color: #f6f9fc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+    "
+  >
+    <div
+      class="card"
+      style="
+        width: 60%;
+        height: 75%;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 30px;
+        margin-top: 2rem;
+        padding-left: 40px;
+        margin: 2rem auto;
+      "
+    >
+      <img
+        src=${logo}
+        alt=""
+        style="margin-left: auto; margin-right: auto"
+      />
+      <h3
+        style="
+          color:#5D982E;
+          font-weight: 800;
+          font-size: 1.1rem;
+          letter-spacing: 0.5px;
+        "
+      >
+        Approval of UK Immigration Phase 3
+      </h3>
 
 
-//       <p
-//       style="
-//         color: #414552 !important;
-//         font-weight: 400;
-//         font-size: 18px;
-//         line-height: 24px;
-//         margin-top: 1rem;
-//         max-width: 90%;
-//       "
-//     >
-//       Dear ${user.name}, 
-//     </p>
+      <p
+      style="
+        color: #414552 !important;
+        font-weight: 400;
+        font-size: 18px;
+        line-height: 24px;
+        margin-top: 1rem;
+        max-width: 90%;
+      "
+    >
+      Dear ${user.name}, 
+    </p>
 
-//     <p
-//     style="
-//       color: #414552 !important;
-//       font-weight: 400;
-//       font-size: 18px;
-//       line-height: 24px;
-//       margin-top: 1rem;
-//       max-width: 80%;
-//     "
-//   >
-//     We are pleased to inform you that your third
-//     phase of the UK immigration application process has been approved. To
-//     continue with the next phase, please log in to your account on our
-//     immigration portal and complete the required information for the fourth
-//     phase. Ensure all necessary fields are accurately filled out before
-//     submitting your application. Your login details remain the same as
-//     previously provided. If you encounter any issues or require assistance
-//     during this phase, please don't hesitate to contact our support team at
-//     immigration@support.com. We appreciate your cooperation and prompt
-//     attention to this next stage of the process. We look forward to
-//     receiving your completed fourth phase submission. 
-//   </p>
+    <p
+    style="
+      color: #414552 !important;
+      font-weight: 400;
+      font-size: 18px;
+      line-height: 24px;
+      margin-top: 1rem;
+      max-width: 80%;
+    "
+  >
+    We are pleased to inform you that your third
+    phase of the UK immigration application process has been approved. To
+    continue with the next phase, please log in to your account on our
+    immigration portal and complete the required information for the fourth
+    phase. Ensure all necessary fields are accurately filled out before
+    submitting your application. Your login details remain the same as
+    previously provided. If you encounter any issues or require assistance
+    during this phase, please don't hesitate to contact our support team at
+    immigration@support.com. We appreciate your cooperation and prompt
+    attention to this next stage of the process. We look forward to
+    receiving your completed fourth phase submission. 
+  </p>
   
-//   <p
-//   style="
-//     color: #414552 !important;
-//     font-weight: 400;
-//     font-size: 18px;
-//     line-height: 24px;
-//     margin-top: 1rem;
-//     max-width: 80%;
-//   "
-// >
-//  Best regards,
-//   Uk Immigration
-// </p>
+  <p
+  style="
+    color: #414552 !important;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 24px;
+    margin-top: 1rem;
+    max-width: 80%;
+  "
+>
+ Best regards,
+  Uk Immigration
+</p>
 
-//       <a
-//         style="margin-top: 1.5rem; cursor: pointer"
-//         href=${url}
-//         target="_blank"
-//         ><button
-//           style="
-//             width: 10.4rem;
-//             height: 2.8rem;
-//             border-radius: 8px;
-//             outline: none;
-//             border: none;
-//             color: #fff;
-//             background-color:#5D982E;
-//             font-weight: 600;
-//             font-size: 1.05rem;
-//             cursor: pointer;
-//           "
-//         >
-//         login
-//         </button></a
-//       >
+      <a
+        style="margin-top: 1.5rem; cursor: pointer"
+        href=${url}
+        target="_blank"
+        ><button
+          style="
+            width: 10.4rem;
+            height: 2.8rem;
+            border-radius: 8px;
+            outline: none;
+            border: none;
+            color: #fff;
+            background-color:#5D982E;
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+          "
+        >
+        login
+        </button></a
+      >
 
-//       <p
-//         style="
-//           color: #414552 !important;
-//           font-weight: 400;
-//           font-size: 16px;
-//           line-height: 24px;
-//           max-width: 88%;
-//           margin-top: 6rem;
-//         "
-//       >
-//       All rights reserved by UK Immigration © 2023.
-//       </p>
-//     </div>
-//   </body>
-// </html>`;
-//       const info = await transporter.sendMail({
-//         from: {
-//           address: "testmailingsmtp@lesoft.io",
-//           name: "Lesoft",
-//         },
-//         to: user?.email,
-//         subject: "Approval of UK Immigration Phase 3",
-//         text: "",
-//         html: html,
-//       });
+      <p
+        style="
+          color: #414552 !important;
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 24px;
+          max-width: 88%;
+          margin-top: 6rem;
+        "
+      >
+      All rights reserved by UK Immigration © 2023.
+      </p>
+    </div>
+  </body>
+</html>`;
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Approval of UK Immigration Phase 3",
+        text: "",
+        html: html,
+      });
 
-//       if (info.messageId) {
-//         console.log("Email sent to the user", info.messageId);
-//       }
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
 
       let content =
         "Congratulations, Phase 3 Approved Successfully. Click here to continue";
@@ -2167,18 +2171,19 @@ const rejectApplication = async (req, res) => {
       {
         $set: {
           applicationStatus: "rejected",
-          phaseStaus: phaseStaus.Rejected,
+          phaseStatus: "rejected",
           rejectPhaseReason: rejectPhaseReason,
-          $push: {
-            report: {
-              phase: isApplication.phase,
-              status: "rejected",
-              dateTime: new Date(),
-            },
+        },
+        $push: {
+          report: {
+            phase: isApplication.phase,
+            status: "rejected",
+            dateTime: new Date(),
           },
         },
       }
     );
+
 
     let content =
       "Apologies, form rejected. Incomplete documentation. Please resubmit with all details.";

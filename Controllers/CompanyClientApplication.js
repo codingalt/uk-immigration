@@ -7,23 +7,20 @@ const { sendEmail } = require("../Utils/sendEmail");
 const ChatModel = require("../Models/ChatModel");
 const MessageModel = require("../Models/MessageModel");
 const nodemailer = require("nodemailer");
+const logo = `https://res.cloudinary.com/dncjtzg2i/image/upload/v1699259845/Ukimmigration-logo_dwq9tm.png`;
+const bcrypt = require("bcryptjs");
+const axios = require("axios");
+const EmailTokenModel = require("../Models/EmailToken");
 
-// const transporter = nodemailer.createTransport({
-//   host: "smtp.gmail.com",
-//   port: 465,
-//   type: "SMTP",
-//   secure: true,
-//   logger: true,
-//   debug: true,
-//   secureConnection: true,
-//   auth: {
-//     user: "faheemmalik640@gmail.com",
-//     pass: "paho tctl xadt lnjo",
-//   },
-//   tls: {
-//     rejectUnAuthorized: false,
-//   },
-// });
+const transporter = nodemailer.createTransport({
+  host: process.env.HOST,
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 const phaseStaus = {
   Pending: "pending",
@@ -45,6 +42,27 @@ const sendRequestToCompanyClient = async (req, res) => {
         .status(400)
         .json({ message: "User not found", success: false });
 
+        
+
+        const emails = [];
+        if(req.body.phase1.companyContact){
+          emails.push(req.body.phase1.companyContact)
+        }
+
+        if (req.body.phase1.clientContact) {
+           const isAlreadyApp = await CompanyClientModel.findOne({
+             "phase1.clientContact": req.body.phase1.clientContact,
+           });
+           if (isAlreadyApp) {
+             return res
+               .status(422)
+               .json({
+                 message: "Client Application with this Email already Exist.",
+                 success: false,
+               });
+           }
+          emails.push(req.body.phase1.clientContact);
+        }
     // Generating CaseID
     const caseId = otpGenerator.generate(6, {
       digits: true,
@@ -54,6 +72,7 @@ const sendRequestToCompanyClient = async (req, res) => {
     });
 
     req.body.caseId = caseId;
+    req.body.userId = caseId;
 
     const application = await new CompanyClientModel(req.body).save();
     let email;
@@ -63,15 +82,135 @@ const sendRequestToCompanyClient = async (req, res) => {
       email = req.body.phase1.clientContact;
     }
 
-    const url = `http://localhost:3000/company/signup/app_id?=${application._id}`
-    const html = `<b style="color: green;font-size: 1rem; font-weight: 600;text-align: center;">New Group Client Application Request </b> <br> <a href=${url} target="_blank"> <button>Continue</button> </a>`;
+    const url = `${process.env.BASE_URL}/groupclient/signup/${application._id}`;
+    const html = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body
+    style="
+      width: 100%;
+      height: 95vh;
+      background-color: #f6f9fc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+    "
+  >
+    <div
+      class="card"
+      style="
+        width: 60%;
+        height: 75%;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 30px;
+        margin-top: 2rem;
+        padding-left: 40px;
+        margin: 2rem auto;
+      "
+    >
+      <img
+        src=${logo}
+        alt=""
+        style="margin-left: auto; margin-right: auto"
+      />
+      <h3
+        style="
+          color:#5D982E;
+          font-weight: 800;
+          font-size: 1.1rem;
+          letter-spacing: 0.5px;
+        "
+      >
+        Invitation to Complete Your Visa Application
+      </h3>
 
-    const info = await sendEmail(
-      email,
-      "Application Request",
-      url,
-      html
-    );
+
+      <p
+      style="
+        color: #414552 !important;
+        font-weight: 400;
+        font-size: 18px;
+        line-height: 24px;
+        margin-top: 1rem;
+        max-width: 90%;
+      "
+    >
+      Hi, 
+    </p>
+
+    <p
+    style="
+      color: #414552 !important;
+      font-weight: 400;
+      font-size: 18px;
+      line-height: 24px;
+      margin-top: 1rem;
+      max-width: 80%;
+    "
+  >
+  We hope this message finds you well. We are pleased to inform you that your visa application process has been initiated by our administration team. In order to proceed further, we kindly invite you to complete the required application phases through our secure immigration portal.
+Upon clicking the link, you will be directed to our portal where you can sign up and provide the necessary information in a phased manner. Please note that this process is designed to streamline the application process, making it convenient and efficient for you.
+If you have any questions or encounter any issues during the application process, feel free to contact our dedicated support team at [Support Email or Phone Number].
+We appreciate your prompt attention to this matter, as timely completion of the application will facilitate a smooth processing of your visa.
+To access and submit your visa application, please click on the following button
+  </p>
+      <a
+        style="margin-top: 1.5rem; cursor: pointer"
+        href=${url}
+        target="_blank"
+        ><button
+          style="
+            width: 10.4rem;
+            height: 2.8rem;
+            border-radius: 8px;
+            outline: none;
+            border: none;
+            color: #fff;
+            background-color:#5D982E;
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+          "
+        >
+        Signup
+        </button></a
+      >
+
+      <p
+        style="
+          color: #414552 !important;
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 24px;
+          max-width: 88%;
+          margin-top: 6rem;
+        "
+      >
+      All rights reserved by UK Immigration © 2023.
+      </p>
+    </div>
+  </body>
+</html>`;
+    const info = await transporter.sendMail({
+      from: {
+        address: "testmailingsmtp@lesoft.io",
+        name: "Lesoft",
+      },
+      to: emails,
+      subject: "Invitation to Complete Your Visa Application",
+      text: "",
+      html: html,
+    });
+
+    if (info.messageId) {
+      console.log("Email sent to the user", info.messageId);
+    }
 
     const { phase1, companyId, isInitialRequestAccepted, _id } = application;
     const result = {
@@ -89,6 +228,330 @@ const sendRequestToCompanyClient = async (req, res) => {
     console.log(err);
   }
 };
+
+const signupCompanyClient = async (req, res) => {
+  try {
+    const {
+      name,
+      password,
+      confirmPassword,
+      contact,
+      referringAgent,
+      fcmToken,
+      applicationId,
+    } = req.body;
+    console.log(req.body);
+
+    if (req.body.isAdmin)
+      return res
+        .status(400)
+        .json({ message: "Action Forbidden!", success: false });
+
+    if (req.body.isCaseWorker)
+      return res
+        .status(400)
+        .json({ message: "Action Forbidden!", success: false });
+
+    if (req.body.googleAccessToken) {
+      const googleAccessToken = req.body.googleAccessToken;
+      // Signup with google OAuth
+      try {
+        const { data } = await axios.get(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          {
+            headers: {
+              Authorization: `Bearer ${googleAccessToken}`,
+            },
+          }
+        );
+        console.log(data);
+
+        const userExist = await UserModel.findOne({ email: data?.email });
+        if (userExist) {
+          return res
+            .status(422)
+            .json({ message: "Email already exist", success: false });
+        }
+
+        const user = new UserModel({
+          name: data?.name,
+          email: data?.email,
+          isEmailVerified: data?.email_verified,
+          profilePic: data?.picture,
+          fcmToken,
+          googleId: data?.sub,
+        });
+
+        const token = await user.generateAuthToken();
+        const userData = await user.save();
+        res.cookie("ukImmigrationJwtoken", token, {
+          expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+          httpOnly: true,
+          sameSite: "none",
+          secure: true,
+        });
+
+        const { _id, email, isCaseWorker, isEmailVerified, tokens, googleId } =
+          userData;
+        const userToken = tokens[tokens.length - 1];
+        const result = {
+          _id,
+          email,
+          isCaseWorker,
+          isEmailVerified,
+          googleId,
+          token: userToken.token,
+        };
+        return res.status(200).json({ user: result, success: true });
+      } catch (err) {
+        res
+          .status(500)
+          .json({ message: "Something went wrong", success: false });
+      }
+    } else {
+      const { email } = req.body;
+      // Normal Signup
+      if (!name || !email || !password || !confirmPassword || !contact) {
+        return res.status(422).json({
+          message: "Please fill out all the fields properly",
+          success: false,
+        });
+      }
+
+      if (password != confirmPassword) {
+        return res
+          .status(422)
+          .json({ message: "Password do not match", success: false });
+      }
+
+      const userExist = await UserModel.findOne({ email: email });
+      if (userExist) {
+        return res
+          .status(422)
+          .json({ message: "Email already exist", success: false });
+      }
+
+      if (referringAgent) {
+        const isCaseWorker = await UserModel.findOne({
+          email: referringAgent,
+          isCaseWorker: true,
+        });
+        console.log(isCaseWorker);
+        if (!isCaseWorker)
+          return res
+            .status(400)
+            .json({
+              message: "Case worker not found with this email",
+              success: false,
+            });
+      }
+
+      const user = new UserModel({
+        name,
+        email,
+        password,
+        contact,
+        referringAgent,
+        fcmToken,
+      });
+      const token = await user.generateAuthToken();
+      const userData = await user.save();
+
+      const otp = otpGenerator.generate(6, {
+        digits: true,
+        lowerCaseAlphabets: false,
+        upperCaseAlphabets: false,
+        specialChars: false,
+      });
+
+      console.log(otp);
+
+      //  Saving token to emailToken model
+      const emailToken = await new EmailTokenModel({
+        userId: user._id,
+        email: user.email,
+        otp: otp,
+        token: crypto.randomBytes(32).toString("hex"),
+      }).save();
+      const url = `${process.env.BASE_URL}/group/${user._id}/verify/${emailToken.token}/${applicationId}`;
+      const html = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verify Email</title>
+  </head>
+  <body
+    style="
+      width: 100%;
+      height: 90vh;
+      background-color: #f6f9fc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+    "
+  >
+    <div
+      class="card"
+      style="
+        width: 60%;
+        height: 53%;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 30px;
+        margin-top: 2rem;
+        padding-left: 40px;
+        margin: 2rem auto;
+      "
+    >
+    <img
+    src=${logo}
+    alt=""
+    style="margin-left: auto; margin-right: auto"
+  />
+      <h3
+        style="
+          color: #5D982E;
+          font-weight: 800;
+          font-size: 1.1rem;
+          letter-spacing: 0.5px;
+          margin-top: 0.8rem;
+        "
+      >
+        Verification Code ${otp}
+      </h3>
+      <p
+        style="
+          color: #414552 !important;
+          font-weight: 400;
+          font-size: 18px;
+          line-height: 24px;
+          margin-top: 1rem;
+          max-width: 80%;
+        "
+      >
+        Thanks for creating a Uk Immigration account. Verify your email so you
+        can get up and running quickly.
+      </p>
+      <a
+        style="margin-top: 1.5rem; cursor: pointer"
+        href="${url}"
+        target="_blank"
+        ><button
+          style="
+            width: 10.4rem;
+            height: 2.8rem;
+            border-radius: 8px;
+            outline: none;
+            border: none;
+            color: #fff;
+            background-color: #5D982E;
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+          "
+        >
+          Verify Email
+        </button></a
+      >
+
+      <p
+        style="
+          color: #414552 !important;
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 24px;
+          max-width: 88%;
+          margin-top: 6rem;
+        "
+      >
+        Once your email is verified, we'll guide you to complete your account
+        application. Visit our support site if you have questions or need help.
+      </p>
+
+      <p
+      style="
+        color: #414552 !important;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 24px;
+        max-width: 88%;
+        margin-top: 6rem;
+      "
+    >
+    All rights reserved by UK Immigration © 2023.
+    </p>
+    </div>
+  </body>
+</html>`;
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: email,
+        subject:
+          "Verify your Email - Get started with your new Uk Immigration account",
+        text: "",
+        html: html,
+      });
+      console.log("Email Res", info);
+
+      if (info.messageId) {
+        console.log("Email sent successfully");
+        res.cookie("ukImmigrationJwtoken", token, {
+          expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+          httpOnly: true,
+          sameSite: "none",
+          secure: true,
+        });
+
+        // Update User Id in Client Application 
+        const updateUserId = await CompanyClientModel.updateOne(
+          { _id: applicationId },
+          { userId: userData?._id }
+        );
+
+        const {
+          _id,
+          email,
+          isCaseWorker,
+          isEmailVerified,
+          tokens,
+          contact,
+          googleId,
+        } = userData;
+        const userToken = tokens[tokens.length - 1];
+        const result = {
+          _id,
+          email,
+          isCaseWorker,
+          isEmailVerified,
+          googleId,
+          contact,
+          token: userToken.token,
+        };
+
+        return res.status(200).json({
+          user: result,
+          message: "Please Check your Email to verify your account",
+          success: true,
+        });
+      } else {
+        await UserModel.findByIdAndDelete(user._id);
+        await EmailTokenModel.deleteOne({ userId: user._id });
+        return res
+          .status(500)
+          .json({ message: "Error Sending Email", success: false });
+      }
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+    console.log(err);
+  }
+};
+
 
 const getApplicationsByCompanyId = async(req,res)=>{
   try {
@@ -783,4 +1246,5 @@ module.exports = {
   approveCompanyPhase4,
   getApplicationsByCompanyId,
   getGroupClientApplicationsById,
+  signupCompanyClient,
 };

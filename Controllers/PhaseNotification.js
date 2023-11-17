@@ -6,6 +6,11 @@ const getPhaseNotifications = async(req,res)=>{
 
         const phases = await PhaseNotificationModel.aggregate([
           {
+            $match: {
+              notificationType: "admin",
+            },
+          },
+          {
             $addFields: {
               convertedId: { $toObjectId: "$userId" },
             },
@@ -55,6 +60,7 @@ const getPhaseNotifications = async(req,res)=>{
               email: "$user.email",
               profilePic: "$user.profilePic",
               phaseStatus: "$application.phaseStatus",
+              phaseApp: "$application.phase",
               phaseSubmittedByClient: "$application.phaseSubmittedByClient",
               isInitialRequestAccepted: "$application.isInitialRequestAccepted",
             },

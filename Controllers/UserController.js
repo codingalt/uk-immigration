@@ -284,7 +284,6 @@ const signupUser = async (req, res) => {
           html: html,
         });
         console.log("Email Res", info);
-        //  await sendEmail(user.email, "Verify your Email - Get started with your new Uk Immigration account", "",html);
     
         if (info.messageId){
           console.log("Email sent successfully");
