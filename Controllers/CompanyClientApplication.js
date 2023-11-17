@@ -11,6 +11,8 @@ const logo = `https://res.cloudinary.com/dncjtzg2i/image/upload/v1699259845/Ukim
 const bcrypt = require("bcryptjs");
 const axios = require("axios");
 const EmailTokenModel = require("../Models/EmailToken");
+const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
 
 const transporter = nodemailer.createTransport({
   host: process.env.HOST,
