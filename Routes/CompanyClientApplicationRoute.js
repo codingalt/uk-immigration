@@ -34,7 +34,7 @@ const chalanUpload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
 });
 
-router.post("/api/companyclient/signup", Authenticate, signupCompanyClient);
+router.post("/api/companyclient/signup", signupCompanyClient);
 router.get("/api/company/applications/:companyId", Authenticate, isAdminOrCaseWorker,getApplicationsByCompanyId)
 router.get("/api/company/application/:applicationId", Authenticate, isAdminOrCaseWorker,getGroupClientApplicationsById)
 router.post("/api/company/phase1/send", Authenticate, isAdminOrCaseWorker, sendRequestToCompanyClient);
