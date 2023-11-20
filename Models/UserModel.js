@@ -38,6 +38,9 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isGroupClient: {
+      type: Boolean
+    },
     isEmailVerified: {
       type: Boolean,
       default: false,

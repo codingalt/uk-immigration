@@ -413,7 +413,7 @@ const verifyEmail = async(req,res)=>{
           console.log("token",userToken.token);
           await EmailTokenModel.deleteOne({ _id: verifyToken._id });
           res.cookie("ukImmigrationJwtoken", userToken.token, {
-            expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+            expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
             httpOnly: true,
             sameSite: "none",
             secure: true,
@@ -833,7 +833,15 @@ const loginUser = async (req, res) => {
           secure: true,
         });
 
-        const { _id, email, isCaseWorker, isEmailVerified, tokens,googleId } = signin;
+        const {
+          _id,
+          email,
+          isCaseWorker,
+          isEmailVerified,
+          tokens,
+          googleId,
+          isGroupClient,
+        } = signin;
         const userToken = tokens[tokens.length - 1];
         const result = {
           _id,
@@ -841,6 +849,7 @@ const loginUser = async (req, res) => {
           isCaseWorker,
           isEmailVerified,
           googleId,
+          isGroupClient,
           token: userToken.token,
         };
 
@@ -867,6 +876,7 @@ const loginUser = async (req, res) => {
         isEmailVerified: true,
         isAdmin: true,
         isCaseWorker: true,
+        isGroupClient: true,
         tokens: true
       });
 
@@ -888,7 +898,7 @@ const loginUser = async (req, res) => {
         const isMatch = await bcrypt.compare(password, signin.password);
         if (isMatch) {
 
-          const { _id, email, isCaseWorker, name,contact, profilePic, isEmailVerified, tokens} = signin;
+          const { _id, email, isCaseWorker, name,contact, profilePic, isEmailVerified,isGroupClient, tokens} = signin;
           const userToken = tokens[tokens.length - 1];
           const result = {
             _id,
@@ -897,6 +907,7 @@ const loginUser = async (req, res) => {
             contact,
             profilePic,
             isCaseWorker,
+            isGroupClient,
             isEmailVerified,
             token: userToken.token,
           };
@@ -1090,7 +1101,7 @@ const loginUser = async (req, res) => {
           //Generating JSON web token
           token = await signin.generateAuthToken();
           res.cookie("ukImmigrationJwtoken", token, {
-            expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+            expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
             httpOnly: true,
             sameSite: "none",
             secure: true,

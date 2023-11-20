@@ -1,78 +1,202 @@
 const ApplicationModel = require("../Models/ApplicationModel");
 const PhaseNotificationModel = require("../Models/PhaseNotification");
 
-const getPhaseNotifications = async(req,res)=>{
-    try {
+// const getPhaseNotifications = async(req,res)=>{
+//     try {
 
-        const phases = await PhaseNotificationModel.aggregate([
-          {
-            $match: {
-              notificationType: "admin",
-            },
-          },
-          {
-            $addFields: {
-              convertedId: { $toObjectId: "$userId" },
-            },
-          },
-          {
-            $lookup: {
-              from: "users",
-              localField: "convertedId",
-              foreignField: "_id",
-              as: "user",
-            },
-          },
-          {
-            $sort: {
-              createdAt: -1,
-            },
-          },
-          {
-            $unwind: "$user",
-          },
-          {
-            $addFields: {
-              convertedApplicationId: { $toObjectId: "$applicationId" },
-            },
-          },
-          {
-            $lookup: {
-              from: "applications",
-              localField: "convertedApplicationId",
-              foreignField: "_id",
-              as: "application",
-            },
-          },
-          {
-            $unwind: "$application",
-          },
-          {
-            $project: {
-              _id: 1,
-              userId: 1,
-              applicationId: 1,
-              createdAt: 1,
-              notificationType: 1,
-              phase: 1,
-              // phaseSubmittedByClient: 1,
-              name: "$user.name",
-              email: "$user.email",
-              profilePic: "$user.profilePic",
-              phaseStatus: "$application.phaseStatus",
-              phaseApp: "$application.phase",
-              phaseSubmittedByClient: "$application.phaseSubmittedByClient",
-              isInitialRequestAccepted: "$application.isInitialRequestAccepted",
-            },
-          },
-        ]);
-        return res.status(200).json({phases, success: true});
+//         const phases = await PhaseNotificationModel.aggregate([
+//           {
+//             $match: {
+//               notificationType: "admin",
+//             },
+//           },
+//           {
+//             $addFields: {
+//               convertedId: { $toObjectId: "$userId" },
+//             },
+//           },
+//           {
+//             $lookup: {
+//               from: "users",
+//               localField: "convertedId",
+//               foreignField: "_id",
+//               as: "user",
+//             },
+//           },
+//           {
+//             $sort: {
+//               createdAt: -1,
+//             },
+//           },
+//           {
+//             $unwind: "$user",
+//           },
+//           {
+//             $addFields: {
+//               convertedApplicationId: { $toObjectId: "$applicationId" },
+//             },
+//           },
+//           {
+//             $lookup: {
+//               from: "applications",
+//               localField: "convertedApplicationId",
+//               foreignField: "_id",
+//               as: "application",
+//             },
+//           },
+//           {
+//             $unwind: "$application",
+//           },
+//           {
+//             $project: {
+//               _id: 1,
+//               userId: 1,
+//               applicationId: 1,
+//               createdAt: 1,
+//               notificationType: 1,
+//               phase: 1,
+//               // phaseSubmittedByClient: 1,
+//               name: "$user.name",
+//               email: "$user.email",
+//               profilePic: "$user.profilePic",
+//               phaseStatus: "$application.phaseStatus",
+//               phaseApp: "$application.phase",
+//               phaseSubmittedByClient: "$application.phaseSubmittedByClient",
+//               isInitialRequestAccepted: "$application.isInitialRequestAccepted",
+//             },
+//           },
+//         ]);
+//         return res.status(200).json({phases, success: true});
         
-    } catch (err) {
+//     } catch (err) {
+//     res.status(500).json({ message: err.message, success: false });
+//     console.log(err);
+//     }
+// }
+
+const getPhaseNotifications = async (req, res) => {
+  try {
+    const phases = await PhaseNotificationModel.aggregate([
+      {
+        $match: {
+          notificationType: "admin",
+        },
+      },
+      {
+        $addFields: {
+          convertedId: { $toObjectId: "$userId" },
+          convertedApplicationId: { $toObjectId: "$applicationId" },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "convertedId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      {
+        $unwind: "$user",
+      },
+      {
+        $lookup: {
+          from: "applications",
+          let: { appId: "$convertedApplicationId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$_id", "$$appId"],
+                },
+              },
+            },
+          ],
+          as: "application",
+        },
+      },
+      {
+        $unwind: {
+          path: "$application",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "companyclientapplications",
+          let: { appId: "$convertedApplicationId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$_id", "$$appId"],
+                },
+              },
+            },
+          ],
+          as: "companyClientApplication",
+        },
+      },
+      {
+        $unwind: {
+          path: "$companyClientApplication",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          userId: 1,
+          applicationId: 1,
+          createdAt: 1,
+          notificationType: 1,
+          phase: 1,
+          name: "$user.name",
+          email: "$user.email",
+          profilePic: "$user.profilePic",
+          phaseStatus: {
+            $ifNull: [
+              "$application.phaseStatus",
+              "$companyClientApplication.phaseStatus",
+            ],
+          },
+          phaseApp: {
+            $ifNull: ["$application.phase", "$companyClientApplication.phase"],
+          },
+          phaseSubmittedByClient: {
+            $ifNull: [
+              "$application.phaseSubmittedByClient",
+              "$companyClientApplication.phaseSubmittedByClient",
+            ],
+          },
+          companyId: {
+            $ifNull: [
+              "$application.companyId",
+              "$companyClientApplication.companyId",
+            ],
+          },
+          isInitialRequestAccepted: {
+            $ifNull: [
+              "$application.isInitialRequestAccepted",
+              "$companyClientApplication.isInitialRequestAccepted",
+            ],
+          },
+        },
+      },
+    ]);
+
+    // Log the intermediate result for debugging
+    console.log("Phases after aggregation:", phases);
+
+    return res.status(200).json({ phases, success: true });
+  } catch (err) {
     res.status(500).json({ message: err.message, success: false });
     console.log(err);
-    }
-}
+  }
+};
+
+
+
 
 const getClientNotifications = async(req, res)=>{
   try {

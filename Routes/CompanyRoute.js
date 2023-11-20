@@ -38,7 +38,7 @@ router.post(
   createCompany
 );
 
-router.get("/api/company/:companyId", Authenticate, isAdminOrCaseWorker, getCompanyDetailsByID);
+router.get("/api/company/:companyId", Authenticate, getCompanyDetailsByID);
 router.get("/api/companies", Authenticate, isAdminOrCaseWorker, getAllCompanies);
 
 module.exports = router;

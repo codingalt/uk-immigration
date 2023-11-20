@@ -282,6 +282,7 @@ const signupCompanyClient = async (req, res) => {
           profilePic: data?.picture,
           fcmToken,
           googleId: data?.sub,
+          isGroupClient: true,
         });
 
         const token = await user.generateAuthToken();
@@ -355,6 +356,7 @@ const signupCompanyClient = async (req, res) => {
         contact,
         referringAgent,
         fcmToken,
+        isGroupClient: true,
       });
       const token = await user.generateAuthToken();
       const userData = await user.save();
@@ -581,6 +583,15 @@ const getGroupClientApplicationsById = async (req, res) => {
   try {
     const { applicationId } = req.params;
     const application = await CompanyClientModel.findById(applicationId);
+    return res.status(200).json({ application, success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+const getGroupClientApplicationsByUserId = async (req, res) => {
+  try {
+    const application = await CompanyClientModel.findOne({userId: req.userId.toString()});
     return res.status(200).json({ application, success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
@@ -1233,6 +1244,192 @@ const approveCompanyPhase4 = async (req, res) => {
   }
 };
 
+// Assign Application to CaseWorker By Admin
+const assignGroupApplicationToCaseWorker = async (req, res) => {
+  try {
+    const { applicationId, caseWorkerId, caseWorkerName } = req.body;
+    const caseWorker = await UserModel.findById(caseWorkerId);
+    const isApplication = await CompanyClientModel.findById(applicationId);
+    if (!isApplication) {
+      return res.status(400).json({
+        message: "Application not found with this id.",
+        success: false,
+      });
+    }
+    await CompanyClientModel.updateOne(
+      { _id: applicationId },
+      {
+        $set: {
+          isCaseWorkerHandling: true,
+          caseWorkerId: caseWorkerId,
+          caseWorkerName: caseWorkerName,
+        },
+      }
+    );
+
+    // Add This CaseWorker ID to Chat
+    const chat = await ChatModel.updateOne(
+      { applicationId: applicationId },
+      { $addToSet: { users: caseWorkerId } },
+      { new: true, useFindAndModify: false }
+    );
+
+    // Send email to the user
+//           const url = `${process.env.BASE_URL}`;
+//           const html = `<!DOCTYPE html>
+//     <html lang="en">
+//       <head>
+//         <meta charset="UTF-8" />
+//         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+//         <title></title>
+//       </head>
+//       <body
+//         style="
+//           width: 100%;
+//           height: 95vh;
+//           background-color: #f6f9fc;
+//           display: flex;
+//           justify-content: center;
+//           align-items: center;
+//           font-family: sans-serif;
+//         "
+//       >
+//         <div
+//           class="card"
+//           style="
+//             width: 60%;
+//             height: 75%;
+//             background-color: #fff;
+//             border-radius: 10px;
+//             padding: 30px;
+//             margin-top: 2rem;
+//             padding-left: 40px;
+//             margin: 2rem auto;
+//           "
+//         >
+//           <img
+//             src=${logo}
+//             alt=""
+//             style="margin-left: auto; margin-right: auto"
+//           />
+//           <h3
+//             style="
+//               color:#5D982E;
+//               font-weight: 800;
+//               font-size: 1.1rem;
+//               letter-spacing: 0.5px;
+//             "
+//           >
+//             Approval of UK Immigration Phase 3
+//           </h3>
+
+//           <p
+//           style="
+//             color: #414552 !important;
+//             font-weight: 400;
+//             font-size: 18px;
+//             line-height: 24px;
+//             margin-top: 1rem;
+//             max-width: 90%;
+//           "
+//         >
+//           Dear ${caseWorkerName},
+//         </p>
+
+//         <p
+//         style="
+//           color: #414552 !important;
+//           font-weight: 400;
+//           font-size: 18px;
+//           line-height: 24px;
+//           margin-top: 1rem;
+//           max-width: 80%;
+//         "
+//       >
+// I hope this message finds you well. We would like to inform you that a new case has been assigned to you in our system. As a dedicated member of our team, we trust you to manage this case with the same level of professionalism and diligence you've consistently demonstrated.
+
+// Here are the details of the new case:
+
+// Case ID: ${isApplication.caseId}
+// Service Type: ${isApplication?.phase1?.applicationType}
+// Client Name: ${isApplication?.phase1?.name}
+// Please log in to your account on the admin panel to access the full details and take appropriate action. If you have any questions or require additional information, feel free to reach out to the admin team at [Admin Team Email/Contact].
+
+// Your prompt attention to this matter is greatly appreciated. Thank you for your continued dedication to our mission.
+//       </p>
+
+//       <p
+//       style="
+//         color: #414552 !important;
+//         font-weight: 400;
+//         font-size: 18px;
+//         line-height: 24px;
+//         margin-top: 1rem;
+//         max-width: 80%;
+//       "
+//     >
+//      Best regards,
+//      Uk Immigration
+//     </p>
+
+//           <a
+//             style="margin-top: 1.5rem; cursor: pointer"
+//             href=${url}
+//             target="_blank"
+//             ><button
+//               style="
+//                 width: 10.4rem;
+//                 height: 2.8rem;
+//                 border-radius: 8px;
+//                 outline: none;
+//                 border: none;
+//                 color: #fff;
+//                 background-color:#5D982E;
+//                 font-weight: 600;
+//                 font-size: 1.05rem;
+//                 cursor: pointer;
+//               "
+//             >
+//             Login
+//             </button></a
+//           >
+
+//           <p
+//             style="
+//               color: #414552 !important;
+//               font-weight: 400;
+//               font-size: 16px;
+//               line-height: 24px;
+//               max-width: 88%;
+//               margin-top: 6rem;
+//             "
+//           >
+//           All rights reserved by UK Immigration © 2023.
+//           </p>
+//         </div>
+//       </body>
+//     </html>`;
+//           const info = await transporter.sendMail({
+//             from: {
+//               address: "testmailingsmtp@lesoft.io",
+//               name: "Lesoft",
+//             },
+//             to: caseWorker?.email,
+//             subject: "New Case Assignment: Action Required",
+//             text: "",
+//             html: html,
+//           });
+
+//           if (info.messageId) {
+//             console.log("Email sent to the user", info.messageId);
+//           }
+
+    res.status(200).json({ message: "CaseWorker Assigned", success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
 
 module.exports = {
   sendRequestToCompanyClient,
@@ -1249,4 +1446,6 @@ module.exports = {
   getApplicationsByCompanyId,
   getGroupClientApplicationsById,
   signupCompanyClient,
+  getGroupClientApplicationsByUserId,
+  assignGroupApplicationToCaseWorker,
 };
