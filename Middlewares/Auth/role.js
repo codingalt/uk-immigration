@@ -123,11 +123,12 @@ const isAssignedCaseWorker = async (req, res, next) => {
     });
     console.log(err);
   }
-};
+}; 
 
 const isAssignedCompanyCaseWorker = async (req, res, next) => {
   try {
-    const { applicationId } = req.params;
+     const applicationId = req.params.applicationId || req.body.applicationId;
+     console.log(applicationId);
     const application = await CompanyClientModel.findById(applicationId);
 
     if (application.isCaseWorkerHandling) {

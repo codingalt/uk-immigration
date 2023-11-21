@@ -2685,6 +2685,21 @@ const linkCompany = async (req, res) => {
   }
 };
 
+const arrayFileUploads = async (req, res) => {
+  try {
+    // const { applicationId } = req.params;
+    const files = req.files;
+    console.log("Files",files);
+    const filesObj = {};
+
+    res.send(files);
+
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+    console.log(err);
+  }
+};
+
 module.exports = {
   postApplicationPhase1,
   postApplicationPhase2,
@@ -2722,4 +2737,5 @@ module.exports = {
   updateApplicationService,
   postPhase1Manual,
   updatePhase1Manual,
+  arrayFileUploads,
 };

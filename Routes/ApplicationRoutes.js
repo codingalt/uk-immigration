@@ -1,5 +1,5 @@
 const express = require('express');
-const { getApplicationData, updateApplicationData, rejectApplication, filterApplication, approvePhase1, approvePhase2, approvePhase3, requestAPhase, postApplicationPhase1, postApplicationPhase2, postApplicationPhase3, postApplicationPhase4, approvePhase4, getApplicationDataByUser, addNotes, updatePhaseByAdmin, acceptInitialRequest, getApplicationDataById, getApplicationByUserId, assignApplicationToCaseWorker, getInvoiceDetails, filterInvoices, linkCompany, requestCompanyClientPhase1, postCharacter, getApplicationNotification, postGeneral, postAccomodation, postFamily, postLanguage, postEducation, postEmployment, postMaintenance, postTravel, postPhase1Manual, updatePhase1Manual, updateApplicationService } = require('../Controllers/ApplicationController');
+const { getApplicationData, updateApplicationData, rejectApplication, filterApplication, approvePhase1, approvePhase2, approvePhase3, requestAPhase, postApplicationPhase1, postApplicationPhase2, postApplicationPhase3, postApplicationPhase4, approvePhase4, getApplicationDataByUser, addNotes, updatePhaseByAdmin, acceptInitialRequest, getApplicationDataById, getApplicationByUserId, assignApplicationToCaseWorker, getInvoiceDetails, filterInvoices, linkCompany, requestCompanyClientPhase1, postCharacter, getApplicationNotification, postGeneral, postAccomodation, postFamily, postLanguage, postEducation, postEmployment, postMaintenance, postTravel, postPhase1Manual, updatePhase1Manual, updateApplicationService, arrayFileUploads } = require('../Controllers/ApplicationController');
 const Authenticate = require('../Middlewares/Auth/Auth');
 const { isAdmin, isAdminOrCaseWorker, isAssignedCaseWorker } = require('../Middlewares/Auth/role');
 const router = express.Router();
@@ -109,5 +109,12 @@ router.put("/api/phase1/manual/:applicationId", Authenticate,isAdminOrCaseWorker
 
 // Update Application Service 
 router.put("/api/service/:applicationId", Authenticate,isAdminOrCaseWorker, updateApplicationService)
+
+router.post(
+  "/api/application/files",
+  Authenticate,
+  applicationUpload.array("files", 10), // "files" is the field name, 10 is the maximum number of files
+  arrayFileUploads
+);
 
 module.exports = router;

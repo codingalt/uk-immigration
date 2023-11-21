@@ -1430,6 +1430,249 @@ const assignGroupApplicationToCaseWorker = async (req, res) => {
   }
 };
 
+// Add Note to Application By Admin
+const addNotesGroupClient = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const { name, content } = req.body;
+    console.log(req.body);
+    const notes = { name: name, content: content };
+    const isApplication = await CompanyClientModel.findById(applicationId);
+    if (!isApplication) {
+      return res.status(400).json({
+        message: "Application not found with this id",
+        success: false,
+      });
+    }
+    await CompanyClientModel.findByIdAndUpdate(
+      { _id: applicationId },
+      {
+        $push: { notes: notes },
+      },
+      {
+        new: true,
+        useFindAndModify: false,
+      }
+    );
+    res
+      .status(200)
+      .json({ message: "Notes Added Successfully", success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+const getAllGroupApplicationData = async (req, res) => {
+  try {
+    const applications = await CompanyClientModel.find({});
+
+    const applicationsWithUserData = [];
+
+    for (const application of applications) {
+      const userId = application.userId;
+      const user = await UserModel.findById(userId);
+
+      // If a user is found, add user information to the application
+      if (user) {
+        const applicationDataWithUser = {
+          ...application.toObject(), // Convert application to a plain JavaScript object
+          user: {
+            name: user.name,
+            email: user.email,
+            profilePic: user.profilePic,
+          },
+        };
+        applicationsWithUserData.push(applicationDataWithUser);
+      }
+    }
+
+    console.log(applicationsWithUserData);
+
+    const extractData = {
+      _id: applicationsWithUserData._id,
+      user: applicationsWithUserData.user,
+      phase: applicationsWithUserData.phase,
+      phaseStatus: applicationsWithUserData.phaseStatus,
+      userId: applicationsWithUserData.userId,
+    };
+
+    res
+      .status(200)
+      .json({ applications: applicationsWithUserData, success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+const updateGroupApplicationService = async (req, res) => {
+  try {
+    const { phaseStatus, phase, applicationStatus } = req.body;
+    const { applicationId } = req.params;
+    if (phaseStatus || phase || applicationStatus) {
+      return res.status(400).json({
+        message: "Action Forbidden! You don't have access to change.",
+      });
+    }
+
+    const application = await CompanyClientModel.findByIdAndUpdate(
+      applicationId,
+      {
+        "phase1.applicationType": req.body.applicationType,
+        $push: {
+          service: {
+            serviceType: req.body.applicationType,
+            dateTime: new Date(),
+          },
+        },
+      },
+      { new: true, useFindAndModify: false }
+    );
+    res.status(200).json({ application, success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+const rejectGroupApplication = async (req, res) => {
+  try {
+    const { applicationId, rejectPhaseReason } = req.body;
+    const isApplication = await CompanyClientModel.findById(applicationId);
+    if (!isApplication) {
+      return res.status(400).json({
+        message: "Application not found with this id.",
+        success: false,
+      });
+    }
+    await CompanyClientModel.updateOne(
+      { _id: applicationId },
+      {
+        $set: {
+          applicationStatus: "rejected",
+          phaseStatus: "rejected",
+          rejectPhaseReason: rejectPhaseReason,
+        },
+        $push: {
+          report: {
+            phase: isApplication.phase,
+            status: "rejected",
+            dateTime: new Date(),
+          },
+        },
+      }
+    );
+
+    let content =
+      "Apologies, form rejected. Incomplete documentation. Please resubmit with all details.";
+
+    // Find Chat
+    const chat = await ChatModel.findOne({ applicationId: applicationId });
+    if (chat) {
+      // Append Approved Phase Message
+      const newMessage = new MessageModel({
+        sender: req.userId.toString(),
+        content: content,
+        chatId: chat?._id,
+        isPhaseMessage: true,
+      });
+      await newMessage.save();
+
+      // Update Latest Message
+      await ChatModel.findByIdAndUpdate(chat?._id, {
+        latestMessage: content,
+      });
+    }
+
+    res.status(200).json({ message: "Application Rejected", success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+// Link Company With Client Application
+const linkGroupCompany = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const { companyId, name, email, fullNameCompanyContact } = req.body;
+
+    if (
+      !companyId ||
+      !name ||
+      !email ||
+      !fullNameCompanyContact ||
+      !applicationId
+    ) {
+      return res
+        .status(400)
+        .json({
+          message: "Please fill out all required fields",
+          success: false,
+        });
+    }
+
+    const application = await CompanyClientModel.findByIdAndUpdate(
+      { _id: applicationId },
+      { linkedCompany: { companyId, name, email, fullNameCompanyContact } },
+      { new: true, useFindAndModify: false }
+    );
+
+    res.status(200).json({ application, success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+// Update Application Phases Data By Admin
+
+const updateGroupPhaseByAdmin = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const { phase, data } = req.body;
+    const user = await UserModel.findById(req.userId.toString());
+    if (!user)
+      return res
+        .status(400)
+        .json({ message: "User not found", success: false });
+
+    if (phase === 1) {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        { $set: { phase1: data } },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    }
+
+    if (phase === 2) {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        { $set: { phase2: data } },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    }
+
+    if (phase === 3) {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        { $set: { phase3: data } },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    }
+
+    if (phase === 4) {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        { $set: { phase4: data } },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
 
 module.exports = {
   sendRequestToCompanyClient,
@@ -1448,4 +1691,10 @@ module.exports = {
   signupCompanyClient,
   getGroupClientApplicationsByUserId,
   assignGroupApplicationToCaseWorker,
+  addNotesGroupClient,
+  getAllGroupApplicationData,
+  updateGroupApplicationService,
+  rejectGroupApplication,
+  linkGroupCompany,
+  updateGroupPhaseByAdmin,
 };
