@@ -350,7 +350,9 @@ const postApplicationPhase3 = async (req, res) => {
     const { phaseStatus, phase, applicationStatus } = req.body;
     const { applicationId } = req.params;
     const files = req.files;
+    console.log("Files",files);
     const chalanFile = `/Uploads/${files?.chalan[0]?.filename}`;
+    console.log("Chalan File",chalanFile);
     if (phaseStatus || phase || applicationStatus) {
       return res.status(400).json({
         message: "Action Forbidden! You don't have access to change.",
@@ -413,7 +415,9 @@ const postApplicationPhase3 = async (req, res) => {
         },
         { new: true, useFindAndModify: false }
       );
-      return res.status(200).json({ application, success: true });
+      if(application){
+        return res.status(200).json({ application, success: true });
+      }
     }
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
@@ -2480,7 +2484,7 @@ Your prompt attention to this matter is greatly appreciated. Thank you for your 
               address: "testmailingsmtp@lesoft.io",
               name: "Lesoft",
             },
-            to: caseWorker?.email,
+            to: caseWorker.email,
             subject: "New Case Assignment: Action Required",
             text: "",
             html: html,

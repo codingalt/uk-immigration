@@ -54,6 +54,7 @@ router.post(
   ]),
   postApplicationPhase2
 );
+
 router.post("/api/application/phase3/:applicationId", Authenticate,chalanUpload.fields([{name: "chalan", maxCount: 1}]) ,postApplicationPhase3);
 router.post("/api/application/phase4/:applicationId", Authenticate, postApplicationPhase4);
 router.post("/api/application/general/:applicationId", Authenticate, postGeneral);
