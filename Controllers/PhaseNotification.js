@@ -1,4 +1,5 @@
 const ApplicationModel = require("../Models/ApplicationModel");
+const CompanyClientModel = require("../Models/CompanyClientModel");
 const PhaseNotificationModel = require("../Models/PhaseNotification");
 
 // const getPhaseNotifications = async(req,res)=>{
@@ -196,22 +197,34 @@ const getPhaseNotifications = async (req, res) => {
 };
 
 
-
-
 const getClientNotifications = async(req, res)=>{
   try {
 
     const application = await ApplicationModel.findOne({userId: req.userId.toString()});
-    console.log(application._id.toString());
+    if(application){
+      const notifications = await PhaseNotificationModel.find({
+        userId: req.userId.toString(),
+        applicationId: application._id.toString(),
+        notificationType: "client",
+      });
+
+      console.log(notifications);
+
+      return res
+        .status(200)
+        .json({ notifications, success: true, companyClient: false });
+    }else{
+    const groupApp = await CompanyClientModel.findOne({userId: req.userId.toString()});
     const notifications = await PhaseNotificationModel.find({
       userId: req.userId.toString(),
-      applicationId: application._id.toString(),
+      applicationId: groupApp._id.toString(),
       notificationType: "client",
     });
-
     console.log(notifications);
+    return res.status(200).json({ notifications, success: true,companyClient: true });
 
-    return res.status(200).json({notifications, success: true});
+    }
+    
     
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });

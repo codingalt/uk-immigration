@@ -629,6 +629,7 @@ const postGeneral = async (req, res) => {
         applicationId,
         {
           "phase4.general": req.body,
+          "phase4.isCompleted": 1
         },
         { new: true, useFindAndModify: false }
       );
@@ -636,7 +637,7 @@ const postGeneral = async (req, res) => {
     } else {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
-        { "phase4.general": req.body },
+        { "phase4.general": req.body, "phase4.isCompleted": 1 },
         { new: true, useFindAndModify: false }
       );
       res.status(200).json({ application, success: true });
@@ -666,6 +667,7 @@ const postAccomodation = async (req, res) => {
         applicationId,
         {
           "phase4.accommodation": req.body,
+          "phase4.isCompleted": 2,
         },
         { new: true, useFindAndModify: false }
       );
@@ -673,7 +675,7 @@ const postAccomodation = async (req, res) => {
     } else {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
-        { "phase4.accommodation": req.body },
+        { "phase4.accommodation": req.body, "phase4.isCompleted": 2 },
         { new: true, useFindAndModify: false }
       );
       res.status(200).json({ application, success: true });
@@ -703,6 +705,7 @@ const postFamily = async (req, res) => {
         applicationId,
         {
           "phase4.family": req.body,
+          "phase4.isCompleted": 3,
         },
         { new: true, useFindAndModify: false }
       );
@@ -710,7 +713,7 @@ const postFamily = async (req, res) => {
     } else {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
-        { "phase4.family": req.body },
+        { "phase4.family": req.body, "phase4.isCompleted": 3 },
         { new: true, useFindAndModify: false }
       );
       res.status(200).json({ application, success: true });
@@ -740,6 +743,7 @@ const postLanguage = async (req, res) => {
         applicationId,
         {
           "phase4.languageProficiency": req.body,
+          "phase4.isCompleted": 4,
         },
         { new: true, useFindAndModify: false }
       );
@@ -747,7 +751,7 @@ const postLanguage = async (req, res) => {
     } else {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
-        { "phase4.languageProficiency": req.body },
+        { "phase4.languageProficiency": req.body, "phase4.isCompleted": 4 },
         { new: true, useFindAndModify: false }
       );
       res.status(200).json({ application, success: true });
@@ -777,6 +781,7 @@ const postEducation = async (req, res) => {
         applicationId,
         {
           "phase4.education": req.body,
+          "phase4.isCompleted": 5,
         },
         { new: true, useFindAndModify: false }
       );
@@ -784,7 +789,7 @@ const postEducation = async (req, res) => {
     } else {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
-        { "phase4.education": req.body },
+        { "phase4.education": req.body, "phase4.isCompleted": 5 },
         { new: true, useFindAndModify: false }
       );
       res.status(200).json({ application, success: true });
@@ -814,6 +819,7 @@ const postEmployment = async (req, res) => {
         applicationId,
         {
           "phase4.employment": req.body,
+          "phase4.isCompleted": 6,
         },
         { new: true, useFindAndModify: false }
       );
@@ -821,7 +827,7 @@ const postEmployment = async (req, res) => {
     } else {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
-        { "phase4.employment": req.body },
+        { "phase4.employment": req.body, "phase4.isCompleted": 6 },
         { new: true, useFindAndModify: false }
       );
       res.status(200).json({ application, success: true });
@@ -851,6 +857,7 @@ const postMaintenance = async (req, res) => {
         applicationId,
         {
           "phase4.maintenance": req.body,
+          "phase4.isCompleted": 7,
         },
         { new: true, useFindAndModify: false }
       );
@@ -858,7 +865,7 @@ const postMaintenance = async (req, res) => {
     } else {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
-        { "phase4.maintenance": req.body },
+        { "phase4.maintenance": req.body, "phase4.isCompleted": 7 },
         { new: true, useFindAndModify: false }
       );
       res.status(200).json({ application, success: true });
@@ -888,6 +895,7 @@ const postTravel = async (req, res) => {
         applicationId,
         {
           "phase4.travel": req.body,
+          "phase4.isCompleted": 8,
         },
         { new: true, useFindAndModify: false }
       );
@@ -895,7 +903,7 @@ const postTravel = async (req, res) => {
     } else {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
-        { "phase4.travel": req.body },
+        { "phase4.travel": req.body, "phase4.isCompleted": 8 },
         { new: true, useFindAndModify: false }
       );
       res.status(200).json({ application, success: true });
@@ -925,6 +933,7 @@ const postCharacter = async (req, res) => {
         applicationId,
         {
           "phase4.character": req.body,
+          "phase4.isCompleted": 9,
           phaseSubmittedByClient: 4,
           phase: 4,
           phaseStatus: "approved",
@@ -935,7 +944,11 @@ const postCharacter = async (req, res) => {
     } else {
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
-        { "phase4.character": req.body, phaseSubmittedByClient: 4 },
+        {
+          "phase4.character": req.body,
+          phaseSubmittedByClient: 4,
+          "phase4.isCompleted": 9,
+        },
         { new: true, useFindAndModify: false }
       );
       return res.status(200).json({ application, success: true });

@@ -93,6 +93,11 @@ const applicationSchema = mongoose.Schema(
       dateTime: Date,
     },
     phase4: {
+      isCompleted: {
+        type: Number,
+        default: 0,
+        required: true,
+      },
       general: {
         fullName: {
           type: String,
