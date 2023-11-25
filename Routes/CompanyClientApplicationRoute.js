@@ -1,7 +1,7 @@
 const express = require('express');
 const Authenticate = require('../Middlewares/Auth/Auth');
 const { isAssignedCompanyCaseWorker, isAssignedCaseWorker, isAdmin, isAdminOrCaseWorker } = require('../Middlewares/Auth/role');
-const {postCompanyClientPhase1, postCompanyClientPhase2, requestCompanyClientPhase, sendRequestToCompanyClient, acceptCompanyInitialRequest, approveCompanyPhase1, approveCompanyPhase2, approveCompanyPhase3, approveCompanyPhase4, postCompanyClientPhase3, postCompanyClientPhase4, getApplicationsByCompanyId, getGroupClientApplicationsById, signupCompanyClient, getGroupClientApplicationsByUserId, assignGroupApplicationToCaseWorker, addNotesGroupClient, getAllGroupApplicationData, updateGroupApplicationService, rejectGroupApplication, linkGroupCompany, updateGroupPhaseByAdmin } = require('../Controllers/CompanyClientApplication');
+const {postCompanyClientPhase1, postCompanyClientPhase2, requestCompanyClientPhase, sendRequestToCompanyClient, acceptCompanyInitialRequest, approveCompanyPhase1, approveCompanyPhase2, approveCompanyPhase3, approveCompanyPhase4, postCompanyClientPhase3, postCompanyClientPhase4, getApplicationsByCompanyId, getGroupClientApplicationsById, signupCompanyClient, getGroupClientApplicationsByUserId, assignGroupApplicationToCaseWorker, addNotesGroupClient, getAllGroupApplicationData, updateGroupApplicationService, rejectGroupApplication, linkGroupCompany, updateGroupPhaseByAdmin, postGroupGeneral, postGroupAccomodation, postGroupFamily, postGroupLanguage, postGroupEducation, postGroupEmployment, postGroupMaintenance, postGroupTravel, postGroupCharacter } = require('../Controllers/CompanyClientApplication');
 const router = express.Router();
 const multer = require("multer");
 
@@ -41,7 +41,7 @@ router.get("/api/company/user/application", Authenticate,getGroupClientApplicati
 router.post("/api/company/phase1/send", Authenticate, isAssignedCompanyCaseWorker, sendRequestToCompanyClient);
 router.post("/api/company/phase/request/:applicationId", Authenticate, isAssignedCompanyCaseWorker, requestCompanyClientPhase);
 router.post("/api/company/phase1/:applicationId", Authenticate, postCompanyClientPhase1);
-router.post("/api/company/phase2/:applicationId", Authenticate, applicationUpload.fields([
+router.post("/api/company/phase2", Authenticate, applicationUpload.fields([
     { name: "passport", maxCount: 1 },
     { name: "dependantPassport", maxCount: 1 },
     { name: "utilityBill", maxCount: 1 },
@@ -79,5 +79,15 @@ router.post("/api/company/group/link/:applicationId",Authenticate, isAdminOrCase
 
 router.put("/api/phase/group/update/:applicationId", Authenticate, isAdminOrCaseWorker, isAssignedCompanyCaseWorker, updateGroupPhaseByAdmin);
 
+// Phase 4 
+router.post("/api/group/application/general/:applicationId", Authenticate, postGroupGeneral);
+router.post("/api/group/application/accomodation/:applicationId", Authenticate, postGroupAccomodation);
+router.post("/api/group/application/family/:applicationId", Authenticate, postGroupFamily);
+router.post("/api/group/application/language/:applicationId", Authenticate, postGroupLanguage);
+router.post("/api/group/application/education/:applicationId", Authenticate, postGroupEducation);
+router.post("/api/group/application/employment/:applicationId", Authenticate, postGroupEmployment);
+router.post("/api/group/application/maintenance/:applicationId", Authenticate, postGroupMaintenance);
+router.post("/api/group/application/travel/:applicationId", Authenticate, postGroupTravel);
+router.post("/api/group/application/character/:applicationId", Authenticate, postGroupCharacter);
 
 module.exports = router;

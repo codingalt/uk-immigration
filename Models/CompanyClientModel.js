@@ -53,6 +53,7 @@ const companyClientSchema = mongoose.Schema(
         type: Boolean,
         default: false,
       },
+      reason: String,
       dateTime: Date,
     },
     phase4: {
@@ -243,7 +244,7 @@ const companyClientSchema = mongoose.Schema(
           required: false,
         },
         countryPrefix: {
-          type: Number,
+          type: String,
           required: false,
         },
         country: {
@@ -266,7 +267,9 @@ const companyClientSchema = mongoose.Schema(
         },
         homeType: {
           type: String,
-          required: false,
+        },
+        otherHomeDetails: {
+          type: String,
         },
         landLordName: {
           type: String,
@@ -289,6 +292,9 @@ const companyClientSchema = mongoose.Schema(
         landLordLocationCode: {
           type: String,
         },
+        landLordTown: {
+          type: String,
+        },
         landLordCounty: {
           type: String,
         },
@@ -296,7 +302,7 @@ const companyClientSchema = mongoose.Schema(
           type: String,
         },
         landLordCountryPrefix: {
-          type: Number,
+          type: String,
         },
         landLordCountry: {
           type: String,
@@ -324,7 +330,7 @@ const companyClientSchema = mongoose.Schema(
           town: String,
           county: String,
           postCode: String,
-          countryPrefix: Number,
+          countryPrefix: String,
           country: String,
           fax: String,
           vatRate: String,
@@ -337,10 +343,6 @@ const companyClientSchema = mongoose.Schema(
         },
         spouseName: {
           type: String,
-        },
-        isMarried: {
-          type: Boolean,
-          required: false,
         },
         marriageDate: {
           type: Date,
@@ -377,33 +379,50 @@ const companyClientSchema = mongoose.Schema(
           type: Boolean,
           required: false,
         },
-        childName: {
-          type: String,
+        numberOfChildren: {
+          type: Number,
         },
-        childGender: {
-          type: String,
-        },
-        childDob: {
-          type: Date,
-        },
-        childNationality: {
-          type: String,
-        },
-        childPassportNumber: {
-          type: String,
-        },
-        childPassportIssueDate: {
-          type: Date,
-        },
-        childPassportExpiryDate: {
-          type: Date,
-        },
-        childVisaIssueDate: {
-          type: Date,
-        },
-        childVisaExpiryDate: {
-          type: String,
-        },
+        childDetails: [
+          {
+            childName: {
+              type: String,
+            },
+            childGender: {
+              type: String,
+            },
+            childDob: {
+              type: Date,
+            },
+            childNationality: {
+              type: String,
+            },
+            isChildPassport: {
+              type: Boolean,
+            },
+            childPassportNumber: {
+              type: String,
+            },
+            childPassportIssueDate: {
+              type: Date,
+            },
+            childPassportExpiryDate: {
+              type: Date,
+            },
+            isChildVisa: {
+              type: Boolean,
+            },
+            childVisaType: {
+              type: String,
+            },
+            childVisaIssueDate: {
+              type: Date,
+            },
+            childVisaExpiryDate: {
+              type: String,
+            },
+          },
+        ],
+
         isMarriedBefore: {
           type: Boolean,
           required: false,
@@ -545,7 +564,7 @@ const companyClientSchema = mongoose.Schema(
           type: String,
         },
         employerCountryPrefix: {
-          type: Number,
+          type: String,
         },
         employerCountry: {
           type: String,
@@ -602,6 +621,9 @@ const companyClientSchema = mongoose.Schema(
         },
         reasonForVisit: {
           type: String,
+        },
+        numberOfVisitsToUk: {
+          type: Number,
         },
         lastUkVisits: [
           {

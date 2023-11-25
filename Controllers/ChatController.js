@@ -3,6 +3,7 @@ const ChatModel = require("../Models/ChatModel");
 const UserModel = require("../Models/UserModel");
 const MessageModel = require("../Models/MessageModel");
 const ApplicationModel = require("../Models/ApplicationModel");
+const CompanyClientModel = require("../Models/CompanyClientModel");
 
 const accessChat = async (req, res) => {
   try {
@@ -89,6 +90,28 @@ const getUserChats = async (req, res) => {
 
 const getAllChats = async (req, res) => {
   try {
+    const user = await UserModel.findById(req.userId.toString());
+
+    if(user.isCaseWorker){
+      const chats = await ChatModel.find({
+        users: {
+          $elemMatch: {
+            $eq: req.userId,
+          },
+        },
+      })
+        .sort({ updatedAt: -1 })
+        .populate({
+          path: "users",
+          select: "name email profilePic _id",
+          match: { _id: { $ne: req.userId.toString() } }, // Exclude the current user
+          model: UserModel,
+        })
+        .exec();
+
+        return res.status(200).json({ chats, success: true });
+    }
+
     const chats = await ChatModel.find({})
       .sort({ updatedAt: -1 })
       .populate({
@@ -121,7 +144,16 @@ const sendMessage = async (req, res) => {
 
     const isCaseWorker = await UserModel.findById(req.userId.toString())
     if(isCaseWorker.isCaseWorker){
-      const application = await ApplicationModel.findById(applicationId);
+      let application;
+      console.log("applicationId",applicationId);
+      application = await ApplicationModel.findById(applicationId);
+      console.log("before app",application);
+      if(!application){
+        application = await CompanyClientModel.findById(applicationId);
+      }
+
+      console.log("after app", application);
+
       if(application.isCaseWorkerHandling){
         if(application.caseWorkerId != req.userId.toString()){
           return res.status(400).json({message:"Action Forbidden! This Case is not assigned to you.",success: false})

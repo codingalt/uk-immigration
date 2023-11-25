@@ -13,6 +13,7 @@ const axios = require("axios");
 const EmailTokenModel = require("../Models/EmailToken");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
+const PhaseNotificationModel = require("../Models/PhaseNotification");
 
 const transporter = nodemailer.createTransport({
   host: process.env.HOST,
@@ -680,7 +681,9 @@ const postCompanyClientPhase1 = async (req, res) => {
 const postCompanyClientPhase2 = async (req, res) => {
   try {
     const { phaseStatus, phase, applicationStatus } = req.body;
-    const { applicationId } = req.params;
+         const applicationId =
+           req.params.applicationId || req.body.applicationId;
+
     const files = req.files;
     if (phaseStatus || phase || applicationStatus) {
       return res.status(400).json({
@@ -781,9 +784,10 @@ const postCompanyClientPhase2 = async (req, res) => {
 const postCompanyClientPhase3 = async (req, res) => {
   try {
     const { phaseStatus, phase, applicationStatus } = req.body;
-    const { applicationId } = req.params;
+    const applicationId = req.params.applicationId || req.body.applicationId;
     const files = req.files;
-    const chalanFile = `/Uploads/${files.chalan[0].filename}`;
+    console.log(files);
+    const chalanFile = `/Uploads/${files?.chalan[0]?.filename}`;
     if (phaseStatus || phase || applicationStatus) {
       return res.status(400).json({
         message: "Action Forbidden! You don't have access to change.",
@@ -817,6 +821,7 @@ const postCompanyClientPhase3 = async (req, res) => {
             "phase3.paymentEvidence": chalanFile,
             "phase3.isOnlinePayment": false,
             "phase3.isPaid": true,
+            "phase3.dateTime": new Date(),
             phaseSubmittedByClient: 3,
           },
         },
@@ -896,6 +901,355 @@ const postCompanyClientPhase4 = async (req, res) => {
   }
 };
 
+const postGroupGeneral = async (req, res) => {
+  try {
+    const { phaseStatus, phase, applicationStatus } = req.body;
+    const { applicationId } = req.params;
+    if (phaseStatus || phase || applicationStatus) {
+      return res.status(400).json({
+        message: "Action Forbidden! You don't have access to change.",
+      });
+    }
+    const user = await UserModel.findById(req.userId.toString());
+    if (!user)
+      return res
+        .status(400)
+        .json({ message: "User not found", success: false });
+    console.log(req.body);
+    if (user.isAdmin || user.isCaseWorker) {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        {
+          "phase4.general": req.body,
+          "phase4.isCompleted": 1,
+        },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    } else {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        { "phase4.general": req.body, "phase4.isCompleted": 1 },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+const postGroupAccomodation = async (req, res) => {
+  try {
+    const { phaseStatus, phase, applicationStatus } = req.body;
+    const { applicationId } = req.params;
+    if (phaseStatus || phase || applicationStatus) {
+      return res.status(400).json({
+        message: "Action Forbidden! You don't have access to change.",
+      });
+    }
+    const user = await UserModel.findById(req.userId.toString());
+    if (!user)
+      return res
+        .status(400)
+        .json({ message: "User not found", success: false });
+    console.log(req.body);
+    if (user.isAdmin || user.isCaseWorker) {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        {
+          "phase4.accommodation": req.body,
+          "phase4.isCompleted": 2,
+        },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    } else {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        { "phase4.accommodation": req.body, "phase4.isCompleted": 2 },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+const postGroupFamily = async (req, res) => {
+  try {
+    const { phaseStatus, phase, applicationStatus } = req.body;
+    const { applicationId } = req.params;
+    if (phaseStatus || phase || applicationStatus) {
+      return res.status(400).json({
+        message: "Action Forbidden! You don't have access to change.",
+      });
+    }
+    const user = await UserModel.findById(req.userId.toString());
+    if (!user)
+      return res
+        .status(400)
+        .json({ message: "User not found", success: false });
+    console.log(req.body);
+    if (user.isAdmin || user.isCaseWorker) {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        {
+          "phase4.family": req.body,
+          "phase4.isCompleted": 3,
+        },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    } else {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        { "phase4.family": req.body, "phase4.isCompleted": 3 },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+const postGroupLanguage = async (req, res) => {
+  try {
+    const { phaseStatus, phase, applicationStatus } = req.body;
+    const { applicationId } = req.params;
+    if (phaseStatus || phase || applicationStatus) {
+      return res.status(400).json({
+        message: "Action Forbidden! You don't have access to change.",
+      });
+    }
+    const user = await UserModel.findById(req.userId.toString());
+    if (!user)
+      return res
+        .status(400)
+        .json({ message: "User not found", success: false });
+    console.log(req.body);
+    if (user.isAdmin || user.isCaseWorker) {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        {
+          "phase4.languageProficiency": req.body,
+          "phase4.isCompleted": 4,
+        },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    } else {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        { "phase4.languageProficiency": req.body, "phase4.isCompleted": 4 },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+const postGroupEducation = async (req, res) => {
+  try {
+    const { phaseStatus, phase, applicationStatus } = req.body;
+    const { applicationId } = req.params;
+    if (phaseStatus || phase || applicationStatus) {
+      return res.status(400).json({
+        message: "Action Forbidden! You don't have access to change.",
+      });
+    }
+    const user = await UserModel.findById(req.userId.toString());
+    if (!user)
+      return res
+        .status(400)
+        .json({ message: "User not found", success: false });
+    console.log(req.body);
+    if (user.isAdmin || user.isCaseWorker) {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        {
+          "phase4.education": req.body,
+          "phase4.isCompleted": 5,
+        },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    } else {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        { "phase4.education": req.body, "phase4.isCompleted": 5 },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+const postGroupEmployment = async (req, res) => {
+  try {
+    const { phaseStatus, phase, applicationStatus } = req.body;
+    const { applicationId } = req.params;
+    if (phaseStatus || phase || applicationStatus) {
+      return res.status(400).json({
+        message: "Action Forbidden! You don't have access to change.",
+      });
+    }
+    const user = await UserModel.findById(req.userId.toString());
+    if (!user)
+      return res
+        .status(400)
+        .json({ message: "User not found", success: false });
+    console.log(req.body);
+    if (user.isAdmin || user.isCaseWorker) {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        {
+          "phase4.employment": req.body,
+          "phase4.isCompleted": 6,
+        },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    } else {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        { "phase4.employment": req.body, "phase4.isCompleted": 6 },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+const postGroupMaintenance = async (req, res) => {
+  try {
+    const { phaseStatus, phase, applicationStatus } = req.body;
+    const { applicationId } = req.params;
+    if (phaseStatus || phase || applicationStatus) {
+      return res.status(400).json({
+        message: "Action Forbidden! You don't have access to change.",
+      });
+    }
+    const user = await UserModel.findById(req.userId.toString());
+    if (!user)
+      return res
+        .status(400)
+        .json({ message: "User not found", success: false });
+    console.log(req.body);
+    if (user.isAdmin || user.isCaseWorker) {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        {
+          "phase4.maintenance": req.body,
+          "phase4.isCompleted": 7,
+        },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    } else {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        { "phase4.maintenance": req.body, "phase4.isCompleted": 7 },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+const postGroupTravel = async (req, res) => {
+  try {
+    const { phaseStatus, phase, applicationStatus } = req.body;
+    const { applicationId } = req.params;
+    if (phaseStatus || phase || applicationStatus) {
+      return res.status(400).json({
+        message: "Action Forbidden! You don't have access to change.",
+      });
+    }
+    const user = await UserModel.findById(req.userId.toString());
+    if (!user)
+      return res
+        .status(400)
+        .json({ message: "User not found", success: false });
+    console.log(req.body);
+    if (user.isAdmin || user.isCaseWorker) {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        {
+          "phase4.travel": req.body,
+          "phase4.isCompleted": 8,
+        },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    } else {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        { "phase4.travel": req.body, "phase4.isCompleted": 8 },
+        { new: true, useFindAndModify: false }
+      );
+      res.status(200).json({ application, success: true });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+const postGroupCharacter = async (req, res) => {
+  try {
+    const { phaseStatus, phase, applicationStatus } = req.body;
+    const { applicationId } = req.params;
+    if (phaseStatus || phase || applicationStatus) {
+      return res.status(400).json({
+        message: "Action Forbidden! You don't have access to change.",
+      });
+    }
+    const user = await UserModel.findById(req.userId.toString());
+    if (!user)
+      return res
+        .status(400)
+        .json({ message: "User not found", success: false });
+    console.log(req.body);
+    if (user.isAdmin || user.isCaseWorker) {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        {
+          "phase4.character": req.body,
+          "phase4.isCompleted": 9,
+          phaseSubmittedByClient: 4,
+          phase: 4,
+          phaseStatus: "approved",
+        },
+        { new: true, useFindAndModify: false }
+      );
+      return res.status(200).json({ application, success: true });
+    } else {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        {
+          "phase4.character": req.body,
+          phaseSubmittedByClient: 4,
+          "phase4.isCompleted": 9,
+        },
+        { new: true, useFindAndModify: false }
+      );
+      return res.status(200).json({ application, success: true });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
 const requestCompanyClientPhase = async (req, res) => {
   try {
     const { applicationId } = req.params;
@@ -912,6 +1266,158 @@ const requestCompanyClientPhase = async (req, res) => {
         { $set: { ...req.body, requestedPhase: 2 } },
         { new: true, useFindAndModify: false }
       );
+
+      const url = `${process.env.BASE_URL}`;
+      const html = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body
+    style="
+      width: 100%;
+      height: 95vh;
+      background-color: #f6f9fc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+    "
+  >
+    <div
+      class="card"
+      style="
+        width: 60%;
+        height: 75%;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 30px;
+        margin-top: 2rem;
+        padding-left: 40px;
+        margin: 2rem auto;
+      "
+    >
+      <img
+        src=${logo}
+        alt=""
+        style="margin-left: auto; margin-right: auto"
+      />
+      <h3
+        style="
+          color:#5D982E;
+          font-weight: 800;
+          font-size: 1.1rem;
+          letter-spacing: 0.5px;
+        "
+      >
+        Approval of UK Immigration Phase 1
+      </h3>
+
+
+      <p
+      style="
+        color: #414552 !important;
+        font-weight: 400;
+        font-size: 18px;
+        line-height: 24px;
+        margin-top: 1rem;
+        max-width: 80%;
+      "
+    >
+      Dear ${user.name}, 
+    </p>
+
+    <p
+    style="
+      color: #414552 !important;
+      font-weight: 400;
+      font-size: 18px;
+      line-height: 24px;
+      margin-top: 1rem;
+      max-width: 90%;
+    "
+  >
+    We are pleased to inform you that your initial
+    phase of the UK immigration application process has been approved. To
+    continue with the next phase, please log in to your account on our
+    immigration portal and complete the required information for the second
+    phase. Ensure all necessary fields are accurately filled out before
+    submitting your application. Your login details remain the same as
+    previously provided. If you encounter any issues or require assistance
+    during this phase, please don't hesitate to contact our support team at
+    immigration@support.com. We appreciate your cooperation and prompt
+    attention to this next stage of the process. We look forward to
+    receiving your completed second phase submission. 
+  </p>
+  
+  <p
+  style="
+    color: #414552 !important;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 24px;
+    margin-top: 1rem;
+    max-width: 80%;
+  "
+>
+ Best regards,
+  Uk Immigration
+</p>
+
+      <a
+        style="margin-top: 1.5rem; cursor: pointer"
+        href=${url}
+        target="_blank"
+        ><button
+          style="
+            width: 10.4rem;
+            height: 2.8rem;
+            border-radius: 8px;
+            outline: none;
+            border: none;
+            color: #fff;
+            background-color:#5D982E;
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+          "
+        >
+        login
+        </button></a
+      >
+
+      <p
+        style="
+          color: #414552 !important;
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 24px;
+          max-width: 88%;
+          margin-top: 6rem;
+        "
+      >
+      All rights reserved by UK Immigration © 2023.
+      </p>
+    </div>
+  </body>
+</html>`;
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Approval of UK Immigration Phase 1",
+        text: "",
+        html: html,
+      });
+
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
+
       return res
         .status(200)
         .json({ message: "Phase 2 Requested", success: true });
@@ -924,6 +1430,158 @@ const requestCompanyClientPhase = async (req, res) => {
         { $set: { ...req.body, requestedPhase: 3 } },
         { new: true, useFindAndModify: false }
       );
+
+      // Send email to the user
+      const url = `${process.env.BASE_URL}`;
+      const html = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body
+    style="
+      width: 100%;
+      height: 95vh;
+      background-color: #f6f9fc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+    "
+  >
+    <div
+      class="card"
+      style="
+        width: 60%;
+        height: 75%;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 30px;
+        margin-top: 2rem;
+        padding-left: 40px;
+        margin: 2rem auto;
+      "
+    >
+      <img
+        src=${logo}
+        alt=""
+        style="margin-left: auto; margin-right: auto"
+      />
+      <h3
+        style="
+          color:#5D982E;
+          font-weight: 800;
+          font-size: 1.1rem;
+          letter-spacing: 0.5px;
+        "
+      >
+        Approval of UK Immigration Phase 2
+      </h3>
+
+
+      <p
+      style="
+        color: #414552 !important;
+        font-weight: 400;
+        font-size: 18px;
+        line-height: 24px;
+        margin-top: 1rem;
+        max-width: 80%;
+      "
+    >
+      Dear ${user?.name}, 
+    </p>
+
+    <p
+    style="
+      color: #414552 !important;
+      font-weight: 400;
+      font-size: 18px;
+      line-height: 24px;
+      margin-top: 1rem;
+      max-width: 90%;
+    "
+  >
+    We are pleased to inform you that your first
+    phase of the UK immigration application process has been approved. To
+    continue with the next phase, please log in to your account on our
+    immigration portal and complete the required information for the third
+    phase. Ensure all necessary fields are accurately filled out before
+    submitting your application. Your login details remain the same as
+    previously provided. If you encounter any issues or require assistance
+    during this phase, please don't hesitate to contact our support team at
+    immigration@support.com. We appreciate your cooperation and prompt
+    attention to this next stage of the process. We look forward to
+    receiving your completed third phase submission. 
+  </p>
+  
+  <p
+  style="
+    color: #414552 !important;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 24px;
+    margin-top: 1rem;
+    max-width: 80%;
+  "
+>
+ Best regards,
+  Uk Immigration
+</p>
+      <a
+        style="margin-top: 1.5rem; cursor: pointer"
+        href=${url}
+        target="_blank"
+        ><button
+          style="
+            width: 10.4rem;
+            height: 2.8rem;
+            border-radius: 8px;
+            outline: none;
+            border: none;
+            color: #fff;
+            background-color:#5D982E;
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+          "
+        >
+        login
+        </button></a
+      >
+
+      <p
+        style="
+          color: #414552 !important;
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 24px;
+          max-width: 88%;
+          margin-top: 6rem;
+        "
+      >
+      All rights reserved by UK Immigration © 2023.
+      </p>
+    </div>
+  </body>
+</html>`;
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Approval of UK Immigration Phase 2",
+        text: "",
+        html: html,
+      });
+
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
+
       return res
         .status(200)
         .json({ message: "Phase 3 Requested", success: true });
@@ -978,27 +1636,26 @@ const approveCompanyPhase1 = async (req, res) => {
       });
     }
 
+    if (
+      isApplication.phase >= 1 &&
+      isApplication.phaseStatus === phaseStaus.Approved
+    ) {
+      return res
+        .status(400)
+        .json({ message: "This Phase is Already Approved", success: false });
+    }
+
     await CompanyClientModel.updateOne(
       { _id: applicationId },
-      { phaseStatus: "approved", isInitialRequestAccepted: true }
+      {
+        phaseStatus: "approved",
+        isInitialRequestAccepted: true,
+        $push: {
+          report: { phase: 1, status: "approved", dateTime: new Date() },
+        },
+      }
     );
-    
-    const user = await UserModel.findById(isApplication.userId);
-    const email = user?.email;
-    const html = `<b>Congratulations! Your application's initial phase has been approved. Please log in to the website to check your application status.</b> <br>`;
-    // const info = await transporter.sendMail({
-    //   from: "faheemmalik640@gmail.com",
-    //   to: email,
-    //   subject: "Congratulations! Phase 1 Approved.",
-    //   text: "text",
-    //   html: html,
-    // });
-    // const info = await sendEmail(
-    //   email,
-    //   "Congratulations! Phase 1 Approved.",
-    //   "",
-    //   html
-    // );
+
     let content =
       "Congratulations, Phase 1 Approved Successfully. Click here to continue";
 
@@ -1010,9 +1667,11 @@ const approveCompanyPhase1 = async (req, res) => {
         sender: req.userId.toString(),
         content: content,
         chatId: chat?._id,
-        isPhaseMessage: true,
+        isPhaseApprovedMessage: true,
+        redirect: "/phase2",
       });
-      await newMessage.save();
+      const approveMsg = await newMessage.save();
+      console.log(approveMsg);
 
       // Update Latest Message
       await ChatModel.findByIdAndUpdate(chat?._id, {
@@ -1020,13 +1679,10 @@ const approveCompanyPhase1 = async (req, res) => {
       });
     }
 
-    res
-      .status(200)
-      .json({
-        message: "Application(Phase 1) Approved Successfully.",
-        success: true,
-      });
-
+    res.status(200).json({
+      message: "Application(Phase 1) Approved Successfully.",
+      success: true,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -1044,23 +1700,27 @@ const approveCompanyPhase2 = async (req, res) => {
     }
 
     if (
+      isApplication.phase >= 2 &&
+      isApplication.phaseStatus === phaseStaus.Approved
+    ) {
+      return res
+        .status(400)
+        .json({ message: "This Phase is Already Approved", success: false });
+    }
+
+    if (
       isApplication.phase === 1 &&
       isApplication.phaseStatus === phaseStaus.Approved
     ) {
       await CompanyClientModel.updateOne(
         { _id: applicationId },
-        { phase: 2, phaseStaus: phaseStaus.Approved }
-      );
-
-      const user = await UserModel.findById(isApplication.userId);
-      const email = user?.email;
-      const html = `<b>Congratulations! Your application's Phase 2 has been approved. Please log in to the website to check your application status.</b> <br>`;
-
-      const info = await sendEmail(
-        email,
-        "Congratulations! Phase 2 Approved.",
-        "",
-        html
+        {
+          phase: 2,
+          phaseStaus: phaseStaus.Approved,
+          $push: {
+            report: { phase: 2, status: "approved", dateTime: new Date() },
+          },
+        }
       );
 
       let content =
@@ -1074,9 +1734,11 @@ const approveCompanyPhase2 = async (req, res) => {
           sender: req.userId.toString(),
           content: content,
           chatId: chat?._id,
-          isPhaseMessage: true,
+          isPhaseApprovedMessage: true,
+          redirect: "/phase3",
         });
-        await newMessage.save();
+        const approveMsg = await newMessage.save();
+        console.log(approveMsg);
 
         // Update Latest Message
         await ChatModel.findByIdAndUpdate(chat?._id, {
@@ -1084,20 +1746,16 @@ const approveCompanyPhase2 = async (req, res) => {
         });
       }
 
-      res
-        .status(200)
-        .json({
-          message: "Application(Phase 2) Approved Successfully.",
-          success: true,
-        });
+      res.status(200).json({
+        message: "Application(Phase 2) Approved Successfully.",
+        success: true,
+      });
     } else {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Action Forbidden! To approve phase 2, Application's phase 1 must be approved.",
-          success: false,
-        });
+      return res.status(400).json({
+        message:
+          "Action Forbidden! To approve phase 2, Application's phase 1 must be approved.",
+        success: false,
+      });
     }
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
@@ -1108,6 +1766,7 @@ const approveCompanyPhase3 = async (req, res) => {
   try {
     const { applicationId } = req.params;
     const isApplication = await CompanyClientModel.findById(applicationId);
+    const user = await UserModel.findById(isApplication.userId);
     if (!isApplication) {
       return res.status(400).json({
         message: "Application not found with this id",
@@ -1116,24 +1775,180 @@ const approveCompanyPhase3 = async (req, res) => {
     }
 
     if (
+      isApplication.phase >= 3 &&
+      isApplication.phaseStatus === phaseStaus.Approved
+    ) {
+      return res
+        .status(400)
+        .json({ message: "This Phase is Already Approved", success: false });
+    }
+
+    if (
       isApplication.phase === 2 &&
       isApplication.phaseStatus === phaseStaus.Approved
     ) {
       await CompanyClientModel.updateOne(
         { _id: applicationId },
-        { phase: 3, phaseStaus: phaseStaus.Approved }
+        {
+          phase: 3,
+          phaseStaus: phaseStaus.Approved,
+          $push: {
+            report: { phase: 3, status: "approved", dateTime: new Date() },
+          },
+        }
       );
 
-      const user = await UserModel.findById(isApplication.userId);
-      const email = user?.email;
-      const html = `<b style="color: green;font-size: 1rem; font-weight: 600;text-align: center;">Congratulations! Your application's Phase 3 has been approved. Please log in to the website to check your <br> application status.</b> <br> <a href="http://localhost:3000" target="_blank"> <button>Login Here</button> </a>`;
+      // Send email to the user
+      const url = `${process.env.BASE_URL}`;
+      const html = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body
+    style="
+      width: 100%;
+      height: 95vh;
+      background-color: #f6f9fc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+    "
+  >
+    <div
+      class="card"
+      style="
+        width: 60%;
+        height: 75%;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 30px;
+        margin-top: 2rem;
+        padding-left: 40px;
+        margin: 2rem auto;
+      "
+    >
+      <img
+        src=${logo}
+        alt=""
+        style="margin-left: auto; margin-right: auto"
+      />
+      <h3
+        style="
+          color:#5D982E;
+          font-weight: 800;
+          font-size: 1.1rem;
+          letter-spacing: 0.5px;
+        "
+      >
+        Approval of UK Immigration Phase 3
+      </h3>
 
-      const info = await sendEmail(
-        email,
-        "Congratulations! Phase 3 Approved.",
-        "",
-        html
-      );
+
+      <p
+      style="
+        color: #414552 !important;
+        font-weight: 400;
+        font-size: 18px;
+        line-height: 24px;
+        margin-top: 1rem;
+        max-width: 90%;
+      "
+    >
+      Dear ${user.name}, 
+    </p>
+
+    <p
+    style="
+      color: #414552 !important;
+      font-weight: 400;
+      font-size: 18px;
+      line-height: 24px;
+      margin-top: 1rem;
+      max-width: 80%;
+    "
+  >
+    We are pleased to inform you that your third
+    phase of the UK immigration application process has been approved. To
+    continue with the next phase, please log in to your account on our
+    immigration portal and complete the required information for the fourth
+    phase. Ensure all necessary fields are accurately filled out before
+    submitting your application. Your login details remain the same as
+    previously provided. If you encounter any issues or require assistance
+    during this phase, please don't hesitate to contact our support team at
+    immigration@support.com. We appreciate your cooperation and prompt
+    attention to this next stage of the process. We look forward to
+    receiving your completed fourth phase submission. 
+  </p>
+  
+  <p
+  style="
+    color: #414552 !important;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 24px;
+    margin-top: 1rem;
+    max-width: 80%;
+  "
+>
+ Best regards,
+  Uk Immigration
+</p>
+
+      <a
+        style="margin-top: 1.5rem; cursor: pointer"
+        href=${url}
+        target="_blank"
+        ><button
+          style="
+            width: 10.4rem;
+            height: 2.8rem;
+            border-radius: 8px;
+            outline: none;
+            border: none;
+            color: #fff;
+            background-color:#5D982E;
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+          "
+        >
+        login
+        </button></a
+      >
+
+      <p
+        style="
+          color: #414552 !important;
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 24px;
+          max-width: 88%;
+          margin-top: 6rem;
+        "
+      >
+      All rights reserved by UK Immigration © 2023.
+      </p>
+    </div>
+  </body>
+</html>`;
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Approval of UK Immigration Phase 3",
+        text: "",
+        html: html,
+      });
+
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
 
       let content =
         "Congratulations, Phase 3 Approved Successfully. Click here to continue";
@@ -1146,9 +1961,11 @@ const approveCompanyPhase3 = async (req, res) => {
           sender: req.userId.toString(),
           content: content,
           chatId: chat?._id,
-          isPhaseMessage: true,
+          isPhaseApprovedMessage: true,
+          redirect: "/phase3",
         });
-        await newMessage.save();
+        const approveMsg = await newMessage.save();
+        console.log(approveMsg);
 
         // Update Latest Message
         await ChatModel.findByIdAndUpdate(chat?._id, {
@@ -1176,11 +1993,21 @@ const approveCompanyPhase4 = async (req, res) => {
   try {
     const { applicationId } = req.params;
     const isApplication = await CompanyClientModel.findById(applicationId);
+    const user = await UserModel.findById(isApplication.userId);
     if (!isApplication) {
       return res.status(400).json({
         message: "Application not found with this id",
         success: false,
       });
+    }
+
+    if (
+      isApplication.phase >= 4 &&
+      isApplication.phaseStatus === phaseStaus.Approved
+    ) {
+      return res
+        .status(400)
+        .json({ message: "This Phase is Already Approved", success: false });
     }
 
     if (
@@ -1193,19 +2020,157 @@ const approveCompanyPhase4 = async (req, res) => {
           phase: 4,
           phaseStaus: phaseStaus.Approved,
           applicationStatus: "approved",
+          $push: {
+            report: { phase: 4, status: "approved", dateTime: new Date() },
+          },
         }
       );
 
-      const user = await UserModel.findById(isApplication.userId);
-      const email = user?.email;
-      const html = `<b>Congratulations! Your application's Phase 4 has been approved. Please log in to the website to check your application status.</b> <br>`;
+      // Send email to the user
+      const url = `${process.env.BASE_URL}`;
+      const html = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body
+    style="
+      width: 100%;
+      height: 95vh;
+      background-color: #f6f9fc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+    "
+  >
+    <div
+      class="card"
+      style="
+        width: 60%;
+        height: 75%;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 30px;
+        margin-top: 2rem;
+        padding-left: 40px;
+        margin: 2rem auto;
+      "
+    >
+      <img
+        src=${logo}
+        alt=""
+        style="margin-left: auto; margin-right: auto"
+      />
+      <h3
+        style="
+          color:#5D982E;
+          font-weight: 800;
+          font-size: 1.1rem;
+          letter-spacing: 0.5px;
+        "
+      >
+        Approval of UK Immigration Phase 4
+      </h3>
 
-      const info = await sendEmail(
-        email,
-        "Congratulations! Phase 4 Approved.",
-        "",
-        html
-      );
+
+      <p
+      style="
+        color: #414552 !important;
+        font-weight: 400;
+        font-size: 18px;
+        line-height: 24px;
+        margin-top: 1rem;
+        max-width: 90%;
+      "
+    >
+      Dear ${user?.name}, 
+    </p>
+
+    <p
+    style="
+      color: #414552 !important;
+      font-weight: 400;
+      font-size: 18px;
+      line-height: 24px;
+      margin-top: 1rem;
+      max-width: 80%;
+    "
+  >
+    We are pleased to inform you that your fourth
+    phase of the UK immigration application process has been approved. Your login details remain the same as
+    previously provided. If you encounter any issues or require assistance
+    during this phase, please don't hesitate to contact our support team at
+    immigration@support.com. We appreciate your cooperation and prompt
+    attention to this next stage of the process. 
+  </p>
+  
+  <p
+  style="
+    color: #414552 !important;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 24px;
+    margin-top: 1rem;
+    max-width: 80%;
+  "
+>
+ Best regards,
+  Uk Immigration
+</p>
+      <a
+        style="margin-top: 1.5rem; cursor: pointer"
+        href=${url}
+        target="_blank"
+        ><button
+          style="
+            width: 10.4rem;
+            height: 2.8rem;
+            border-radius: 8px;
+            outline: none;
+            border: none;
+            color: #fff;
+            background-color:#5D982E;
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+          "
+        >
+        login
+        </button></a
+      >
+
+      <p
+        style="
+          color: #414552 !important;
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 24px;
+          max-width: 88%;
+          margin-top: 6rem;
+        "
+      >
+      All rights reserved by UK Immigration © 2023.
+      </p>
+    </div>
+  </body>
+</html>`;
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Approval of UK Immigration Phase 4",
+        text: "",
+        html: html,
+      });
+
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
 
       let content =
         "Congratulations, Phase 4 Approved Successfully. Click here to continue";
@@ -1218,7 +2183,7 @@ const approveCompanyPhase4 = async (req, res) => {
           sender: req.userId.toString(),
           content: content,
           chatId: chat?._id,
-          isPhaseMessage: true,
+          isPhaseApprovedMessage: true,
         });
         await newMessage.save();
 
@@ -1266,6 +2231,17 @@ const assignGroupApplicationToCaseWorker = async (req, res) => {
         },
       }
     );
+
+    // Add CaseWorker Id to notifications 
+     await PhaseNotificationModel.updateMany(
+       { applicationId: applicationId },
+       {
+         $set: {
+           caseWorkerId: caseWorkerId,
+         },
+       }
+     );
+
 
     // Add This CaseWorker ID to Chat
     const chat = await ChatModel.updateOne(
@@ -1697,4 +2673,13 @@ module.exports = {
   rejectGroupApplication,
   linkGroupCompany,
   updateGroupPhaseByAdmin,
+  postGroupGeneral,
+  postGroupAccomodation,
+  postGroupFamily,
+  postGroupLanguage,
+  postGroupEducation,
+  postGroupEmployment,
+  postGroupMaintenance,
+  postGroupTravel,
+  postGroupCharacter,
 };

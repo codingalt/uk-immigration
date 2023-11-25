@@ -10,30 +10,33 @@ const phaseNotificationSchema = mongoose.Schema(
       required: true,
     },
     phase: {
-      type: Number
+      type: Number,
     },
     phaseStatus: {
-      type: String
+      type: String,
     },
     requestStatus: {
       type: Number,
       default: 0,
     },
     redirect: {
-      type: String
+      type: String,
     },
     applicationId: {
       type: String,
       required: true,
     },
+    caseWorkerId: {
+      type: String,
+    },
     notificationType: {
       type: String,
-      enum: ["admin", "client"]
+      enum: ["admin", "client"],
     },
     status: {
       type: Number,
-      default: 0
-    }
+      default: 0,
+    },
   },
   { timestamps: true }
 );

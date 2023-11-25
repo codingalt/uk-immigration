@@ -1,6 +1,7 @@
 const ApplicationModel = require("../Models/ApplicationModel");
 const CompanyClientModel = require("../Models/CompanyClientModel");
 const PhaseNotificationModel = require("../Models/PhaseNotification");
+const UserModel = require("../Models/UserModel");
 
 // const getPhaseNotifications = async(req,res)=>{
 //     try {
@@ -77,11 +78,17 @@ const PhaseNotificationModel = require("../Models/PhaseNotification");
 
 const getPhaseNotifications = async (req, res) => {
   try {
+    const user = await UserModel.findById(req.userId.toString());
+    let match;
+    if(user.isAdmin){
+      match = { notificationType: "admin" };
+    }else if(user.isCaseWorker){
+      match = { notificationType: "admin", caseWorkerId: req.userId.toString() };
+    }
+    console.log("match",match);
     const phases = await PhaseNotificationModel.aggregate([
       {
-        $match: {
-          notificationType: "admin",
-        },
+        $match: match,
       },
       {
         $addFields: {
@@ -168,6 +175,18 @@ const getPhaseNotifications = async (req, res) => {
             $ifNull: [
               "$application.phaseSubmittedByClient",
               "$companyClientApplication.phaseSubmittedByClient",
+            ],
+          },
+          isCaseWorkerHandling: {
+            $ifNull: [
+              "$application.isCaseWorkerHandling",
+              "$companyClientApplication.isCaseWorkerHandling",
+            ],
+          },
+          caseWorkerId: {
+            $ifNull: [
+              "$application.caseWorkerId",
+              "$companyClientApplication.caseWorkerId",
             ],
           },
           companyId: {

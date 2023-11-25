@@ -9,6 +9,7 @@ const nodemailer = require("nodemailer");
 const { sendEmail } = require("../Utils/sendEmail");
 const CaseWorkerModel = require("../Models/CaseWorker");
 const PhaseNotificationModel = require("../Models/PhaseNotification");
+const CompanyClientModel = require("../Models/CompanyClientModel");
 const logo = `https://res.cloudinary.com/dncjtzg2i/image/upload/v1699259845/Ukimmigration-logo_dwq9tm.png`;
 
 const phaseStaus = {
@@ -2069,6 +2070,81 @@ const getApplicationData = async (req, res) => {
   }
 };
 
+const getApplicationsNotesData = async (req, res) => {
+  try {
+    let applications;
+    let groupClient;
+
+    const isAdmin = await UserModel.findById(req.userId.toString());
+    if(isAdmin.isAdmin){
+      applications = await ApplicationModel.find({});
+      groupClient = await CompanyClientModel.find({});
+    }else{
+      applications = await ApplicationModel.find({
+        caseWorkerId: req.userId.toString(),
+      });
+      groupClient = await CompanyClientModel.find({
+        caseWorkerId: req.userId.toString(),
+      });
+    }
+     
+    const applicationsWithUserData = [];
+
+    for (const application of applications) {
+      const userId = application.userId;
+      const user = await UserModel.findById(userId);
+
+      // If a user is found, add user information to the application
+      if (user) {
+        const applicationDataWithUser = {
+          ...application.toObject(), // Convert application to a plain JavaScript object
+          user: {
+            name: user.name,
+            email: user.email,
+            profilePic: user.profilePic,
+          },
+        };
+        applicationsWithUserData.push(applicationDataWithUser);
+      }
+    }
+
+     for (const application of groupClient) {
+       const userId = application.userId;
+       const user = await UserModel.findById(userId);
+
+       // If a user is found, add user information to the application
+       if (user) {
+         const applicationDataWithUser = {
+           ...application.toObject(), // Convert application to a plain JavaScript object
+           user: {
+             name: user.name,
+             email: user.email,
+             profilePic: user.profilePic,
+           },
+         };
+         applicationsWithUserData.push(applicationDataWithUser);
+       }
+     }
+
+    console.log(applicationsWithUserData);
+
+    const extractData = {
+      _id: applicationsWithUserData._id,
+      user: applicationsWithUserData.user,
+      phase: applicationsWithUserData.phase,
+      phaseStatus: applicationsWithUserData.phaseStatus,
+      userId: applicationsWithUserData.userId,
+    };
+
+    res
+      .status(200)
+      .json({ applications: applicationsWithUserData, success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+
 const getApplicationNotification = async (req, res) => {
   try {
     const applications = await ApplicationModel.find({}).select({
@@ -2230,55 +2306,166 @@ const rejectApplication = async (req, res) => {
 };
 
 // Search Filter Application
+// const filterApplication = async (req, res) => {
+//   try {
+//     const queryConditions = [];
+//     const { filters } = req.body;
+
+//     console.log(filters.birthDate);
+
+//     if (filters.name) {
+//       queryConditions.push({
+//         "phase1.name": { $regex: new RegExp(filters.name, "i") },
+//       });
+//     }
+
+//     if (filters.caseId) {
+//       queryConditions.push({
+//         caseId: { $regex: new RegExp(filters.caseId, "i") },
+//       });
+//     }
+
+//     if (filters.country) {
+//       queryConditions.push({
+//         "phase1.country": { $regex: new RegExp(filters.country, "i") },
+//       });
+//     }
+
+//     if (filters.birthDate) {
+//       // Convert the string date to a JavaScript Date object
+//       const birthDate = new Date(filters.birthDate);
+
+//       // Create a range for birthDate filtering (e.g., matching on the exact date)
+//       const startDate = new Date(birthDate);
+//       const endDate = new Date(birthDate);
+//       endDate.setDate(endDate.getDate() + 1); // Add one day to include the whole day
+
+//       queryConditions.push({
+//         "phase1.birthDate": { $gte: startDate, $lt: endDate },
+//       });
+//     }
+
+//     console.log(queryConditions);
+
+//     const query =
+//       queryConditions.length === 1
+//         ? { $or: queryConditions }
+//         : queryConditions.length > 1
+//         ? { $and: queryConditions }
+//         : {};
+
+//     const result = await ApplicationModel.find(query).select({
+//       "phase1.name": true,
+//       "phase1.email": true,
+//       "phase1.contact": true,
+//       "phase1.birthDate": true,
+//       "phase1.country": true,
+//       caseId: true,
+//       "phase1.applicationType": true,
+//       applicationStatus: true,
+//     });
+
+//     res.status(200).json({ result, success: true });
+//   } catch (error) {
+//     res.status(500).json(error);
+//   }
+// };
+
+
+const generateQueryConditions = (filters, modelName, caseWorkerId) => {
+  const queryConditions = [];
+
+  if (caseWorkerId) {
+    const nameField =
+      modelName === "ApplicationModel" ? "caseWorkerId" : "caseWorkerId";
+    queryConditions.push({
+      [nameField]: { $regex: new RegExp(caseWorkerId, "i") },
+    });
+  }
+
+  if (filters.name) {
+    const nameField =
+      modelName === "ApplicationModel"
+        ? "phase1.name"
+        : "phase1.fullNameAsPassport";
+    queryConditions.push({
+      [nameField]: { $regex: new RegExp(filters.name, "i") },
+    });
+  }
+
+  if (filters.caseId) {
+    queryConditions.push({
+      caseId: { $regex: new RegExp(filters.caseId, "i") },
+    });
+  }
+
+  if (filters.country) {
+    const countryField =
+      modelName === "ApplicationModel"
+        ? "phase1.country"
+        : "phase1.nationality";
+    queryConditions.push({
+      [countryField]: { $regex: new RegExp(filters.country, "i") },
+    });
+  }
+
+  if (filters.birthDate) {
+    // Convert the string date to a JavaScript Date object
+    const birthDate = new Date(filters.birthDate);
+
+    // Create a range for birthDate filtering (e.g., matching on the exact date)
+    const startDate = new Date(birthDate);
+    const endDate = new Date(birthDate);
+    endDate.setDate(endDate.getDate() + 1); // Add one day to include the whole day
+
+    const birthDateField =
+      modelName === "ApplicationModel"
+        ? "phase1.birthDate"
+        : "phase1.birthDate"; // Adjust field name
+    queryConditions.push({
+      [birthDateField]: { $gte: startDate, $lt: endDate },
+    });
+  }
+
+  return queryConditions;
+};
+
 const filterApplication = async (req, res) => {
   try {
-    const queryConditions = [];
+    const user = await UserModel.findById(req.userId.toString());
+    let caseWorkerId;
+    if(user.isCaseWorker){
+      caseWorkerId = user._id;
+    }
     const { filters } = req.body;
+    const applicationQueryConditions = generateQueryConditions(
+      filters,
+      "ApplicationModel",
+      caseWorkerId
+    );
+    const companyClientQueryConditions = generateQueryConditions(
+      filters,
+      "CompanyClientApplication",
+      caseWorkerId
+    );
 
-    console.log(filters.birthDate);
-
-    if (filters.name) {
-      queryConditions.push({
-        "phase1.name": { $regex: new RegExp(filters.name, "i") },
-      });
-    }
-
-    if (filters.caseId) {
-      queryConditions.push({
-        caseId: { $regex: new RegExp(filters.caseId, "i") },
-      });
-    }
-
-    if (filters.country) {
-      queryConditions.push({
-        "phase1.country": { $regex: new RegExp(filters.country, "i") },
-      });
-    }
-
-    if (filters.birthDate) {
-      // Convert the string date to a JavaScript Date object
-      const birthDate = new Date(filters.birthDate);
-
-      // Create a range for birthDate filtering (e.g., matching on the exact date)
-      const startDate = new Date(birthDate);
-      const endDate = new Date(birthDate);
-      endDate.setDate(endDate.getDate() + 1); // Add one day to include the whole day
-
-      queryConditions.push({
-        "phase1.birthDate": { $gte: startDate, $lt: endDate },
-      });
-    }
-
-    console.log(queryConditions);
-
-    const query =
-      queryConditions.length === 1
-        ? { $or: queryConditions }
-        : queryConditions.length > 1
-        ? { $and: queryConditions }
+    const applicationQuery =
+      applicationQueryConditions.length === 1
+        ? { $or: applicationQueryConditions }
+        : applicationQueryConditions.length > 1
+        ? { $and: applicationQueryConditions }
         : {};
 
-    const result = await ApplicationModel.find(query).select({
+    const companyClientQuery =
+      companyClientQueryConditions.length === 1
+        ? { $or: companyClientQueryConditions }
+        : companyClientQueryConditions.length > 1
+        ? { $and: companyClientQueryConditions }
+        : {};
+
+    const applicationResult = await ApplicationModel.find(
+      applicationQuery
+    ).select({
       "phase1.name": true,
       "phase1.email": true,
       "phase1.contact": true,
@@ -2289,11 +2476,28 @@ const filterApplication = async (req, res) => {
       applicationStatus: true,
     });
 
+    const companyClientResult = await CompanyClientModel.find(
+      companyClientQuery
+    ).select({
+      "phase1.fullNameAsPassport": true,
+      "phase1.birthDate": true,
+      "phase1.nationality": true,
+      "phase1.companyContact": true,
+      "phase1.clientContact": true,
+      caseId: true,
+      "phase1.applicationType": true,
+      applicationStatus: true,
+    });
+
+   const result = [...applicationResult, ...companyClientResult];
+    console.log("result",result);
+
     res.status(200).json({ result, success: true });
   } catch (error) {
     res.status(500).json(error);
   }
 };
+
 
 // Add Note to Application By Admin
 const addNotes = async (req, res) => {
@@ -2555,63 +2759,103 @@ const getInvoiceDetails = async (req, res) => {
   }
 };
 
-// Search Filter Invoices of Application
+const generateInvoiceQueryConditions = (filters, modelName, caseWorkerId) => {
+  const queryConditions = [];
+
+  if (caseWorkerId) {
+    const nameField =
+      modelName === "ApplicationModel" ? "caseWorkerId" : "caseWorkerId";
+    queryConditions.push({
+      [nameField]: { $regex: new RegExp(caseWorkerId, "i") },
+    });
+  }
+
+  if (filters.name) {
+    const nameField =
+      modelName === "ApplicationModel"
+        ? "phase1.name"
+        : "phase1.fullNameAsPassport";
+    queryConditions.push({
+      [nameField]: { $regex: new RegExp(filters.name, "i") },
+    });
+  }
+
+  if (filters.applicationType) {
+    queryConditions.push({
+      "phase1.applicationType": {
+        $regex: new RegExp(filters.applicationType, "i"),
+      },
+    });
+  }
+
+  if (filters.caseWorkerId) {
+    queryConditions.push({
+      caseWorkerId: { $regex: new RegExp(filters.caseWorkerId, "i") },
+    });
+  }
+
+  if (filters.from && filters.to) {
+    queryConditions.push({
+      "phase3.dateTime": {
+        $gte: new Date(filters.from),
+        $lte: new Date(filters.to),
+      },
+    });
+  } else if (filters.from) {
+    queryConditions.push({
+      "phase3.dateTime": {
+        $gte: new Date(filters.from),
+      },
+    });
+  } else if (filters.to) {
+    queryConditions.push({
+      "phase3.dateTime": {
+        $lte: new Date(filters.to),
+      },
+    });
+  }
+
+  return queryConditions;
+};
+
 const filterInvoices = async (req, res) => {
   try {
-    const queryConditions = [];
     const { filters } = req.body;
-    console.log(req.body);
-    if (filters.name) {
-      queryConditions.push({
-        "phase1.name": { $regex: new RegExp(filters.name, "i") },
-      });
+
+    const user = await UserModel.findById(req.userId.toString());
+    let caseWorkerId;
+    if (user.isCaseWorker) {
+      caseWorkerId = user._id;
     }
 
-    if (filters.applicationType) {
-      queryConditions.push({
-        "phase1.applicationType": {
-          $regex: new RegExp(filters.applicationType, "i"),
-        },
-      });
-    }
+    const applicationQueryConditions = generateInvoiceQueryConditions(
+      filters,
+      "ApplicationModel",
+      caseWorkerId
+    );
+    const companyClientQueryConditions = generateInvoiceQueryConditions(
+      filters,
+      "CompanyClientModel",
+      caseWorkerId
+    );
 
-    if (filters.caseWorkerId) {
-      queryConditions.push({
-        caseWorkerId: { $regex: new RegExp(filters.caseWorkerId, "i") },
-      });
-    }
-
-    if (filters.from && filters.to) {
-      // Filter by date range using $gte and $lte operators
-      queryConditions.push({
-        "phase3.dateTime": {
-          $gte: new Date(filters.from),
-          $lte: new Date(filters.to),
-        },
-      });
-    } else if (filters.from) {
-      // Filter by "from" date using $gte operator
-      queryConditions.push({
-        "phase3.dateTime": {
-          $gte: new Date(filters.from),
-        },
-      });
-    } else if (filters.to) {
-      // Filter by "to" date using $lte operator
-      queryConditions.push({
-        "phase3.dateTime": {
-          $lte: new Date(filters.to),
-        },
-      });
-    }
-
-    const query =
-      queryConditions.length === 1
-        ? { $or: queryConditions }
-        : queryConditions.length > 1
-        ? { $and: queryConditions }
+    const applicationQuery =
+      applicationQueryConditions.length === 1
+        ? { $or: applicationQueryConditions }
+        : applicationQueryConditions.length > 1
+        ? { $and: applicationQueryConditions }
         : {};
-    const result = await ApplicationModel.find(query).select({
+
+    const companyClientQuery =
+      companyClientQueryConditions.length === 1
+        ? { $or: companyClientQueryConditions }
+        : companyClientQueryConditions.length > 1
+        ? { $and: companyClientQueryConditions }
+        : {};
+
+    const applicationResult = await ApplicationModel.find(
+      applicationQuery
+    ).select({
       caseId: true,
       "phase1.name": true,
       "phase1.applicationType": true,
@@ -2622,52 +2866,140 @@ const filterInvoices = async (req, res) => {
       "phase3.isPaid": true,
     });
 
-    // const query =
-    //   queryConditions.length === 1
-    //     ? { $or: queryConditions }
-    //     : queryConditions.length > 1
-    //     ? { $and: queryConditions }
-    //     : {};
-    // console.log(query);
-    // const result = await ApplicationModel.aggregate([
-    //   {
-    //     $addFields: {
-    //       convertedId: { $toObjectId: "$caseWorkerId" },
-    //     },
-    //   },
-    //   {
-    //     $match: query,
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: "users",
-    //       localField: "convertedId",
-    //       foreignField: "_id",
-    //       as: "caseWorker",
-    //     },
-    //   },
-    //   {
-    //     $unwind: "$caseWorker",
-    //   },
-    //   {
-    //     $project: {
-    //       caseId: true,
-    //       "phase1.name": true,
-    //       "phase1.applicationType": true,
-    //       caseWorkerId: true,
-    //       "phase3.dateTime": true,
-    //       "phase3.cost": true,
-    //       "phase3.isPaid": true,
-    //       caseWorkerName: "$caseWorker.name",
-    //     },
-    //   },
-    // ]);
+    const companyClientResult = await CompanyClientModel.find(
+      companyClientQuery
+    ).select({
+      caseId: true,
+      "phase1.fullNameAsPassport": true,
+      "phase1.applicationType": true,
+      caseWorkerId: true,
+      caseWorkerName: true,
+      "phase3.dateTime": true,
+      "phase3.cost": true,
+      "phase3.isPaid": true,
+    });
+
+    const result = [...applicationResult, ...companyClientResult];
 
     res.status(200).json({ result, success: true });
   } catch (error) {
-    res.status(500).json({ message: err.message, success: false });
+    res.status(500).json({ message: error.message, success: false });
   }
 };
+
+// Search Filter Invoices of Application
+// const filterInvoices = async (req, res) => {
+//   try {
+//     const queryConditions = [];
+//     const { filters } = req.body;
+//     console.log(req.body);
+//     if (filters.name) {
+//       queryConditions.push({
+//         "phase1.name": { $regex: new RegExp(filters.name, "i") },
+//       });
+//     }
+
+//     if (filters.applicationType) {
+//       queryConditions.push({
+//         "phase1.applicationType": {
+//           $regex: new RegExp(filters.applicationType, "i"),
+//         },
+//       });
+//     }
+
+//     if (filters.caseWorkerId) {
+//       queryConditions.push({
+//         caseWorkerId: { $regex: new RegExp(filters.caseWorkerId, "i") },
+//       });
+//     }
+
+//     if (filters.from && filters.to) {
+//       // Filter by date range using $gte and $lte operators
+//       queryConditions.push({
+//         "phase3.dateTime": {
+//           $gte: new Date(filters.from),
+//           $lte: new Date(filters.to),
+//         },
+//       });
+//     } else if (filters.from) {
+//       // Filter by "from" date using $gte operator
+//       queryConditions.push({
+//         "phase3.dateTime": {
+//           $gte: new Date(filters.from),
+//         },
+//       });
+//     } else if (filters.to) {
+//       // Filter by "to" date using $lte operator
+//       queryConditions.push({
+//         "phase3.dateTime": {
+//           $lte: new Date(filters.to),
+//         },
+//       });
+//     }
+
+//     const query =
+//       queryConditions.length === 1
+//         ? { $or: queryConditions }
+//         : queryConditions.length > 1
+//         ? { $and: queryConditions }
+//         : {};
+//     const result = await ApplicationModel.find(query).select({
+//       caseId: true,
+//       "phase1.name": true,
+//       "phase1.applicationType": true,
+//       caseWorkerId: true,
+//       caseWorkerName: true,
+//       "phase3.dateTime": true,
+//       "phase3.cost": true,
+//       "phase3.isPaid": true,
+//     });
+
+//     // const query =
+//     //   queryConditions.length === 1
+//     //     ? { $or: queryConditions }
+//     //     : queryConditions.length > 1
+//     //     ? { $and: queryConditions }
+//     //     : {};
+//     // console.log(query);
+//     // const result = await ApplicationModel.aggregate([
+//     //   {
+//     //     $addFields: {
+//     //       convertedId: { $toObjectId: "$caseWorkerId" },
+//     //     },
+//     //   },
+//     //   {
+//     //     $match: query,
+//     //   },
+//     //   {
+//     //     $lookup: {
+//     //       from: "users",
+//     //       localField: "convertedId",
+//     //       foreignField: "_id",
+//     //       as: "caseWorker",
+//     //     },
+//     //   },
+//     //   {
+//     //     $unwind: "$caseWorker",
+//     //   },
+//     //   {
+//     //     $project: {
+//     //       caseId: true,
+//     //       "phase1.name": true,
+//     //       "phase1.applicationType": true,
+//     //       caseWorkerId: true,
+//     //       "phase3.dateTime": true,
+//     //       "phase3.cost": true,
+//     //       "phase3.isPaid": true,
+//     //       caseWorkerName: "$caseWorker.name",
+//     //     },
+//     //   },
+//     // ]);
+
+//     res.status(200).json({ result, success: true });
+//   } catch (error) {
+//     res.status(500).json({ message: err.message, success: false });
+//   }
+// };
 
 // Link Company With Client Application
 const linkCompany = async (req, res) => {
@@ -2755,4 +3087,5 @@ module.exports = {
   postPhase1Manual,
   updatePhase1Manual,
   arrayFileUploads,
+  getApplicationsNotesData,
 };

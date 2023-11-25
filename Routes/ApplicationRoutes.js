@@ -1,5 +1,5 @@
 const express = require('express');
-const { getApplicationData, updateApplicationData, rejectApplication, filterApplication, approvePhase1, approvePhase2, approvePhase3, requestAPhase, postApplicationPhase1, postApplicationPhase2, postApplicationPhase3, postApplicationPhase4, approvePhase4, getApplicationDataByUser, addNotes, updatePhaseByAdmin, acceptInitialRequest, getApplicationDataById, getApplicationByUserId, assignApplicationToCaseWorker, getInvoiceDetails, filterInvoices, linkCompany, requestCompanyClientPhase1, postCharacter, getApplicationNotification, postGeneral, postAccomodation, postFamily, postLanguage, postEducation, postEmployment, postMaintenance, postTravel, postPhase1Manual, updatePhase1Manual, updateApplicationService, arrayFileUploads } = require('../Controllers/ApplicationController');
+const { getApplicationData, updateApplicationData, rejectApplication, filterApplication, approvePhase1, approvePhase2, approvePhase3, requestAPhase, postApplicationPhase1, postApplicationPhase2, postApplicationPhase3, postApplicationPhase4, approvePhase4, getApplicationDataByUser, addNotes, updatePhaseByAdmin, acceptInitialRequest, getApplicationDataById, getApplicationByUserId, assignApplicationToCaseWorker, getInvoiceDetails, filterInvoices, linkCompany, requestCompanyClientPhase1, postCharacter, getApplicationNotification, postGeneral, postAccomodation, postFamily, postLanguage, postEducation, postEmployment, postMaintenance, postTravel, postPhase1Manual, updatePhase1Manual, updateApplicationService, arrayFileUploads, getApplicationsNotesData } = require('../Controllers/ApplicationController');
 const Authenticate = require('../Middlewares/Auth/Auth');
 const { isAdmin, isAdminOrCaseWorker, isAssignedCaseWorker } = require('../Middlewares/Auth/role');
 const router = express.Router();
@@ -68,6 +68,7 @@ router.post("/api/application/travel/:applicationId", Authenticate, postTravel);
 router.post("/api/application/character/:applicationId", Authenticate, postCharacter);
 
 router.get("/api/application", Authenticate, getApplicationData);
+router.get("/api/application/notes/get", Authenticate, isAdminOrCaseWorker, getApplicationsNotesData);
 router.get("/api/application/:applicationId", Authenticate, getApplicationDataById);
 router.get("/api/user/application", Authenticate, getApplicationByUserId);
 router.get("/api/application/user", Authenticate, getApplicationDataByUser);
