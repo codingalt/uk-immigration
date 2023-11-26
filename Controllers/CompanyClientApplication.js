@@ -2568,13 +2568,11 @@ const rejectGroupApplication = async (req, res) => {
 const linkGroupCompany = async (req, res) => {
   try {
     const { applicationId } = req.params;
-    const { companyId, name, email, fullNameCompanyContact } = req.body;
+    const { companyId, name } = req.body;
 
     if (
       !companyId ||
       !name ||
-      !email ||
-      !fullNameCompanyContact ||
       !applicationId
     ) {
       return res
@@ -2587,7 +2585,7 @@ const linkGroupCompany = async (req, res) => {
 
     const application = await CompanyClientModel.findByIdAndUpdate(
       { _id: applicationId },
-      { linkedCompany: { companyId, name, email, fullNameCompanyContact } },
+      { linkedCompany: { companyId, name } },
       { new: true, useFindAndModify: false }
     );
 

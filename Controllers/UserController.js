@@ -826,16 +826,18 @@ const loginUser = async (req, res) => {
 
         //Generating JSON web token
        const token = await signin.generateAuthToken();
-        res.cookie("ukImmigrationJwtoken", token, {
-          expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-          httpOnly: true,
-          sameSite: "none",
-          secure: true,
-        });
+       res.cookie("ukImmigrationJwtoken", token, {
+         expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+         httpOnly: true,
+         sameSite: "none",
+         secure: true,
+       });
 
         const {
           _id,
+          name,
           email,
+          contact,
           isCaseWorker,
           isEmailVerified,
           tokens,
@@ -846,6 +848,8 @@ const loginUser = async (req, res) => {
         const result = {
           _id,
           email,
+          name,
+          contact,
           isCaseWorker,
           isEmailVerified,
           googleId,
@@ -853,7 +857,9 @@ const loginUser = async (req, res) => {
           token: userToken.token,
         };
 
-        return res.status(200).json({user: result, success: true});
+        return res
+          .status(200)
+          .json({ user: result, redirect: "/companyscreen", success: true });
       } catch (err) {
         res.status(500).json({message: "Something went wrong", success: false});
       }

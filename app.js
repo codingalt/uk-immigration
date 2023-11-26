@@ -26,7 +26,7 @@ app.use((req, res, next) => {
 const path = require("path");
 const UserModel = require("./Models/UserModel");
 const PhaseNotificationModel = require("./Models/PhaseNotification");
-const { sendNotification } = require("./Utils/sendNotification");
+const { sendNotification, sendNotificationToCaseWorker } = require("./Utils/sendNotification");
 const cron = require("node-cron");
 // const {initializeSocket} = require("./socket")
 
@@ -155,6 +155,24 @@ app.get("/timeleft", (req, res) => {
       });
     });
 
+    // Send Notification to Case Worker for Assigned cases
+    socket.on("send noti to caseworker", async (request) => {
+      console.log("Case worker notification", request);
+      if (!request) return console.log("Case worker notification is undefined");
+
+      socket.in(request.caseWorkerId).emit("caseworker noti received", request);
+
+      // Send Notification and Store Request In Database
+      await sendNotificationToCaseWorker({
+        title: "New Assigned Case",
+        notificationType: "admin",
+        userId: request.userId,
+        applicationId: request.applicationId,
+        phase: request.phase,
+        caseWorkerId: request.caseWorkerId,
+      });
+    });
+
     // Send Notification to Client of phase Approval from Admin
     socket.on("phase notification", async (request) => {
       console.log("Phase Notification", request);
@@ -178,7 +196,6 @@ app.get("/timeleft", (req, res) => {
 
       socket.in(request.userId).emit("phase request received", request);
     });
-
   });
 
 app.get("/", (req, res) => {

@@ -38,7 +38,7 @@ router.post("/api/companyclient/signup", signupCompanyClient);
 router.get("/api/company/applications/:companyId", Authenticate,getApplicationsByCompanyId)
 router.get("/api/company/application/:applicationId", Authenticate,getGroupClientApplicationsById)
 router.get("/api/company/user/application", Authenticate,getGroupClientApplicationsByUserId)
-router.post("/api/company/phase1/send", Authenticate, isAssignedCompanyCaseWorker, sendRequestToCompanyClient);
+router.post("/api/company/phase1/send", Authenticate, isAdmin, isAssignedCompanyCaseWorker, sendRequestToCompanyClient);
 router.post("/api/company/phase/request/:applicationId", Authenticate, isAssignedCompanyCaseWorker, requestCompanyClientPhase);
 router.post("/api/company/phase1/:applicationId", Authenticate, postCompanyClientPhase1);
 router.post("/api/company/phase2", Authenticate, applicationUpload.fields([

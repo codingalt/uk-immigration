@@ -76,7 +76,7 @@ const getUserChats = async (req, res) => {
        .sort({ updatedAt: -1 })
        .populate({
          path: "users",
-         select: "name email profilePic _id",
+         select: "name email profilePic _id googleId",
          match: { _id: { $ne: req.userId.toString() } }, // Exclude the current user
          model: UserModel, 
        })
@@ -103,20 +103,20 @@ const getAllChats = async (req, res) => {
         .sort({ updatedAt: -1 })
         .populate({
           path: "users",
-          select: "name email profilePic _id",
+          select: "name email profilePic _id googleId",
           match: { _id: { $ne: req.userId.toString() } }, // Exclude the current user
           model: UserModel,
         })
         .exec();
 
-        return res.status(200).json({ chats, success: true });
+        return res.status(200).json({ chats, success: true,hello:"hello" });
     }
 
     const chats = await ChatModel.find({})
       .sort({ updatedAt: -1 })
       .populate({
         path: "users",
-        select: "name email profilePic _id",
+        select: "name email profilePic _id googleId",
         match: { _id: { $ne: req.userId.toString() } }, // Exclude the current user
         model: UserModel,
       })
@@ -246,7 +246,7 @@ const getChatByApplicationId = async (req, res) => {
         path: "users", 
         model: "Users", 
         match: { _id: { $ne: userId } }, 
-        select: "name email profilePic _id", 
+        select: "name email profilePic _id googleId", 
       })
       .exec();
 
@@ -264,6 +264,44 @@ const getChatByApplicationId = async (req, res) => {
   }
 };
 
+// Get chat notification count 
+const getChatNotificationCount = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const count = await MessageModel.find({
+      chatId: chatId,
+      isRead: 0,
+    });
+
+    if(count?.length > 0){
+      await ChatModel.updateOne({ _id: chatId }, { unseen: count?.length });
+    }
+    
+    return res.status(200).json({ count: count?.length, success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+// Read Messages 
+const readMessagesByChat = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    await MessageModel.updateMany(
+      { chatId: chatId },
+      { $set: { isRead: 1 } },
+      { new: true, useFindAndModify: false }
+    );
+
+    // await ChatModel.updateOne({ _id: chatId }, { unseen: count?.length });
+    
+    return res
+      .status(200)
+      .json({ message: "Messages Seen.", success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
 
 
 module.exports = {
@@ -274,4 +312,6 @@ module.exports = {
   createChat,
   getChatByApplicationId,
   getAllChats,
+  getChatNotificationCount,
+  readMessagesByChat,
 };

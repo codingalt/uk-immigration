@@ -2,6 +2,7 @@ const PhaseNotificationModel = require("../Models/PhaseNotification");
 const admin = require("firebase-admin");
 const serviceAccount = require("../uk-immigration-96842-firebase-adminsdk-3ad66-4fe25cf428.json");
 const UserModel = require("../Models/UserModel");
+const CaseWorkerNotificationModel = require("../Models/CaseWorkerNotificationModel");
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
@@ -72,4 +73,31 @@ const sendNotification = async(req)=>{
     }
 }
 
-module.exports = {sendNotification}
+const sendNotificationToCaseWorker = async (req) => {
+  try {
+    const {
+      title,
+      userId,
+      applicationId,
+      notificationType,
+      phase,
+      phaseStatus,
+      caseWorkerId
+    } = req;
+
+    await new CaseWorkerNotificationModel({
+      title: title,
+      userId: userId,
+      applicationId: applicationId,
+      phase: phase,
+      phaseStatus: phaseStatus,
+      notificationType,
+      caseWorkerId: caseWorkerId,
+    }).save();
+
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+module.exports = { sendNotification, sendNotificationToCaseWorker};

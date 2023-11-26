@@ -11,6 +11,10 @@ const chatSchema = mongoose.Schema(
     latestMessage: {
       type: String,
     },
+    unseen: {
+      type: Number,
+      default: 0
+    },
     applicationId: {
       type: String,
       required: true,

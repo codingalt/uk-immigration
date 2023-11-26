@@ -1,4 +1,5 @@
 const ApplicationModel = require("../Models/ApplicationModel");
+const CaseWorkerNotificationModel = require("../Models/CaseWorkerNotificationModel");
 const CompanyClientModel = require("../Models/CompanyClientModel");
 const PhaseNotificationModel = require("../Models/PhaseNotification");
 const UserModel = require("../Models/UserModel");
@@ -82,133 +83,267 @@ const getPhaseNotifications = async (req, res) => {
     let match;
     if(user.isAdmin){
       match = { notificationType: "admin" };
+      console.log("match", match);
+      const phases = await PhaseNotificationModel.aggregate([
+        {
+          $match: match,
+        },
+        {
+          $addFields: {
+            convertedId: { $toObjectId: "$userId" },
+            convertedApplicationId: { $toObjectId: "$applicationId" },
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "convertedId",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        {
+          $unwind: "$user",
+        },
+        {
+          $lookup: {
+            from: "applications",
+            let: { appId: "$convertedApplicationId" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$_id", "$$appId"],
+                  },
+                },
+              },
+            ],
+            as: "application",
+          },
+        },
+        {
+          $unwind: {
+            path: "$application",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: "companyclientapplications",
+            let: { appId: "$convertedApplicationId" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$_id", "$$appId"],
+                  },
+                },
+              },
+            ],
+            as: "companyClientApplication",
+          },
+        },
+        {
+          $unwind: {
+            path: "$companyClientApplication",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            userId: 1,
+            applicationId: 1,
+            createdAt: 1,
+            notificationType: 1,
+            phase: 1,
+            name: "$user.name",
+            email: "$user.email",
+            googleId: "$user.googleId",
+            profilePic: "$user.profilePic",
+            phaseStatus: {
+              $ifNull: [
+                "$application.phaseStatus",
+                "$companyClientApplication.phaseStatus",
+              ],
+            },
+            phaseApp: {
+              $ifNull: [
+                "$application.phase",
+                "$companyClientApplication.phase",
+              ],
+            },
+            phaseSubmittedByClient: {
+              $ifNull: [
+                "$application.phaseSubmittedByClient",
+                "$companyClientApplication.phaseSubmittedByClient",
+              ],
+            },
+            isCaseWorkerHandling: {
+              $ifNull: [
+                "$application.isCaseWorkerHandling",
+                "$companyClientApplication.isCaseWorkerHandling",
+              ],
+            },
+            caseWorkerId: {
+              $ifNull: [
+                "$application.caseWorkerId",
+                "$companyClientApplication.caseWorkerId",
+              ],
+            },
+            companyId: {
+              $ifNull: [
+                "$application.companyId",
+                "$companyClientApplication.companyId",
+              ],
+            },
+            isInitialRequestAccepted: {
+              $ifNull: [
+                "$application.isInitialRequestAccepted",
+                "$companyClientApplication.isInitialRequestAccepted",
+              ],
+            },
+          },
+        },
+      ]);
+
+      // Log the intermediate result for debugging
+      console.log("Phases after aggregation:", phases);
+
+      return res.status(200).json({ phases, success: true });
     }else if(user.isCaseWorker){
       match = { notificationType: "admin", caseWorkerId: req.userId.toString() };
+
+      console.log("match", match);
+      const phases = await CaseWorkerNotificationModel.aggregate([
+        {
+          $match: match,
+        },
+        {
+          $addFields: {
+            convertedId: { $toObjectId: "$userId" },
+            convertedApplicationId: { $toObjectId: "$applicationId" },
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "convertedId",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        {
+          $unwind: "$user",
+        },
+        {
+          $lookup: {
+            from: "applications",
+            let: { appId: "$convertedApplicationId" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$_id", "$$appId"],
+                  },
+                },
+              },
+            ],
+            as: "application",
+          },
+        },
+        {
+          $unwind: {
+            path: "$application",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: "companyclientapplications",
+            let: { appId: "$convertedApplicationId" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$_id", "$$appId"],
+                  },
+                },
+              },
+            ],
+            as: "companyClientApplication",
+          },
+        },
+        {
+          $unwind: {
+            path: "$companyClientApplication",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            userId: 1,
+            applicationId: 1,
+            createdAt: 1,
+            notificationType: 1,
+            phase: 1,
+            name: "$user.name",
+            email: "$user.email",
+            googleId: "$user.googleId",
+            profilePic: "$user.profilePic",
+            phaseStatus: {
+              $ifNull: [
+                "$application.phaseStatus",
+                "$companyClientApplication.phaseStatus",
+              ],
+            },
+            phaseApp: {
+              $ifNull: [
+                "$application.phase",
+                "$companyClientApplication.phase",
+              ],
+            },
+            phaseSubmittedByClient: {
+              $ifNull: [
+                "$application.phaseSubmittedByClient",
+                "$companyClientApplication.phaseSubmittedByClient",
+              ],
+            },
+            isCaseWorkerHandling: {
+              $ifNull: [
+                "$application.isCaseWorkerHandling",
+                "$companyClientApplication.isCaseWorkerHandling",
+              ],
+            },
+            caseWorkerId: {
+              $ifNull: [
+                "$application.caseWorkerId",
+                "$companyClientApplication.caseWorkerId",
+              ],
+            },
+            companyId: {
+              $ifNull: [
+                "$application.companyId",
+                "$companyClientApplication.companyId",
+              ],
+            },
+            isInitialRequestAccepted: {
+              $ifNull: [
+                "$application.isInitialRequestAccepted",
+                "$companyClientApplication.isInitialRequestAccepted",
+              ],
+            },
+          },
+        },
+      ]);
+
+      // Log the intermediate result for debugging
+      console.log("Phases after aggregation:", phases);
+
+      return res.status(200).json({ phases, success: true });
     }
-    console.log("match",match);
-    const phases = await PhaseNotificationModel.aggregate([
-      {
-        $match: match,
-      },
-      {
-        $addFields: {
-          convertedId: { $toObjectId: "$userId" },
-          convertedApplicationId: { $toObjectId: "$applicationId" },
-        },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "convertedId",
-          foreignField: "_id",
-          as: "user",
-        },
-      },
-      {
-        $unwind: "$user",
-      },
-      {
-        $lookup: {
-          from: "applications",
-          let: { appId: "$convertedApplicationId" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $eq: ["$_id", "$$appId"],
-                },
-              },
-            },
-          ],
-          as: "application",
-        },
-      },
-      {
-        $unwind: {
-          path: "$application",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "companyclientapplications",
-          let: { appId: "$convertedApplicationId" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $eq: ["$_id", "$$appId"],
-                },
-              },
-            },
-          ],
-          as: "companyClientApplication",
-        },
-      },
-      {
-        $unwind: {
-          path: "$companyClientApplication",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $project: {
-          _id: 1,
-          userId: 1,
-          applicationId: 1,
-          createdAt: 1,
-          notificationType: 1,
-          phase: 1,
-          name: "$user.name",
-          email: "$user.email",
-          profilePic: "$user.profilePic",
-          phaseStatus: {
-            $ifNull: [
-              "$application.phaseStatus",
-              "$companyClientApplication.phaseStatus",
-            ],
-          },
-          phaseApp: {
-            $ifNull: ["$application.phase", "$companyClientApplication.phase"],
-          },
-          phaseSubmittedByClient: {
-            $ifNull: [
-              "$application.phaseSubmittedByClient",
-              "$companyClientApplication.phaseSubmittedByClient",
-            ],
-          },
-          isCaseWorkerHandling: {
-            $ifNull: [
-              "$application.isCaseWorkerHandling",
-              "$companyClientApplication.isCaseWorkerHandling",
-            ],
-          },
-          caseWorkerId: {
-            $ifNull: [
-              "$application.caseWorkerId",
-              "$companyClientApplication.caseWorkerId",
-            ],
-          },
-          companyId: {
-            $ifNull: [
-              "$application.companyId",
-              "$companyClientApplication.companyId",
-            ],
-          },
-          isInitialRequestAccepted: {
-            $ifNull: [
-              "$application.isInitialRequestAccepted",
-              "$companyClientApplication.isInitialRequestAccepted",
-            ],
-          },
-        },
-      },
-    ]);
-
-    // Log the intermediate result for debugging
-    console.log("Phases after aggregation:", phases);
-
-    return res.status(200).json({ phases, success: true });
+    
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
     console.log(err);
@@ -284,6 +419,21 @@ const getNotificationCountAdmin = async (req, res) => {
   }
 };
 
+// Get Case worker notifications 
+const getNotificationCountCaseWorker = async (req, res) => {
+  try {
+    const notifications = await CaseWorkerNotificationModel.find({
+      notificationType: "admin",
+      status: 0,
+    });
+    console.log(notifications);
+    const count = notifications?.length;
+    return res.status(200).json({ count, success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
 const readNotification = async(req,res)=>{
   try {
 
@@ -314,6 +464,22 @@ const readNotificationAdmin = async (req, res) => {
   }
 };
 
+// Read Notification Case Worker 
+const readNotificationCaseWorker = async (req, res) => {
+  try {
+    await CaseWorkerNotificationModel.updateMany(
+      { notificationType: "admin" },
+      { $set: { status: 1 } },
+      { new: true, useFindAndModify: false }
+    );
+    return res
+      .status(200)
+      .json({ message: "Notification Seen.", success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
 module.exports = {
   getPhaseNotifications,
   getClientNotifications,
@@ -321,4 +487,6 @@ module.exports = {
   getNotificationCount,
   getNotificationCountAdmin,
   readNotificationAdmin,
+  getNotificationCountCaseWorker,
+  readNotificationCaseWorker,
 };
