@@ -1287,7 +1287,7 @@ const requestCompanyClientPhase = async (req, res) => {
   try {
     const { applicationId } = req.params;
     const application = await CompanyClientModel.findById(applicationId);
-
+    const user = await UserModel.findById(application.userId);
     if(Object.keys(req.body).length === 0 && req.body.constructor === Object) return res.status(400).json({message: "Please fill out all the required fields", success: false});
 
     if (
