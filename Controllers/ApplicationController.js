@@ -2488,6 +2488,7 @@ const filterApplication = async (req, res) => {
       caseId: true,
       "phase1.applicationType": true,
       applicationStatus: true,
+      companyId: companyId,
     });
 
    const result = [...applicationResult, ...companyClientResult];
