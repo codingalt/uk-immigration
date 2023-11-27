@@ -807,7 +807,7 @@ const postCompanyClientPhase2 = async (req, res) => {
       { $set: { phase2: finalValues, phaseSubmittedByClient: 2 } },
       { new: true, useFindAndModify: false }
     );
-    res.status(200).json({ result: result?.phase2, success: true });
+    res.status(200).json({ application: result, success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
     console.log(err);
