@@ -1471,7 +1471,7 @@ const requestCompanyClientPhase = async (req, res) => {
           success: false,
         });
       }
-      
+
       await CompanyClientModel.findByIdAndUpdate(
         applicationId,
         { $set: { ...req.body, requestedPhase: 3 } },
@@ -2285,6 +2285,15 @@ const assignGroupApplicationToCaseWorker = async (req, res) => {
        {
          $set: {
            caseWorkerId: caseWorkerId,
+         },
+       }
+     );
+
+     const user = await UserModel.updateOne(
+       { _id: isApplication.userId },
+       {
+         $set: {
+           referringAgent: caseWorkerId,
          },
        }
      );

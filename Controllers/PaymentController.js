@@ -65,20 +65,21 @@ const payWithCard = async (req, res) => {
 
   // console.log(type, cardBrand, last4, expMonth, expYear, amount, email,currency);
 
-   await ApplicationModel.findByIdAndUpdate(
+   const application = await ApplicationModel.findByIdAndUpdate(
      applicationId,
      {
        $set: {
          "phase3.onlinePaymentEvidence": charge.receipt_url,
          "phase3.isOnlinePayment": true,
          phaseSubmittedByClient: 3,
-         "phase3.dateTime": new Date()
+         "phase3.dateTime": new Date(),
        },
      },
      { new: true, useFindAndModify: false }
    );
 
     res.status(200).json({
+      application,
       message: "Congrats! Payment Successfull.",
       success: true,
     });
@@ -247,7 +248,7 @@ const payWithCardCompanyClient = async (req, res) => {
 
     // console.log(type, cardBrand, last4, expMonth, expYear, amount, email,currency);
 
-    await CompanyClientModel.findByIdAndUpdate(
+    const application = await CompanyClientModel.findByIdAndUpdate(
       applicationId,
       {
         $set: {
@@ -261,6 +262,7 @@ const payWithCardCompanyClient = async (req, res) => {
     );
 
     res.status(200).json({
+      application,
       message: "Congrats! Payment Successfull.",
       success: true,
     });

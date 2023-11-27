@@ -909,8 +909,8 @@ const loginUser = async (req, res) => {
       });
 
       let referringAgent;
-      if (signin.referringAgent){
-        referringAgent = signin.referringAgent;
+      if (signin?.referringAgent){
+        referringAgent = signin?.referringAgent;
       } 
       console.log("Signin", signin);
 
@@ -1231,6 +1231,7 @@ const AuthRoute = async (req, res) => {
       req.token = token;
       req.rootUser = { data: others, success: true };
       req.userId = rootUser._id;
+      console.log("Others",others);
       const data = {
         _id: others._id,
         name: others.name,

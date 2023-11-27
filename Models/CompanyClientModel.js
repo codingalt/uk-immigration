@@ -320,6 +320,9 @@ const companyClientSchema = mongoose.Schema(
         otherWhoLives: {
           type: String,
         },
+        ispreviousHome: {
+          type: Boolean,
+        },
         previousHomeDetails: {
           address1: String,
           address2: String,

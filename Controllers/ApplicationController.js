@@ -234,7 +234,7 @@ Date of Submission: ${formattedDate} <br>
         phaseStatus: application.phaseStatus,
         phaseSubmittedByClient,
         isInitialRequestAccepted,
-        caseWorkerId,
+        caseWorkerId: application?.caseWorkerId,
       };
       console.log(result);
       res.status(200).json({ result, success: true });
@@ -2552,6 +2552,15 @@ const assignApplicationToCaseWorker = async (req, res) => {
           isCaseWorkerHandling: true,
           caseWorkerId: caseWorkerId,
           caseWorkerName: caseWorkerName,
+        },
+      }
+    );
+
+    const user = await UserModel.updateOne(
+      { _id: isApplication.userId },
+      {
+        $set: {
+          referringAgent: caseWorkerId,
         },
       }
     );
