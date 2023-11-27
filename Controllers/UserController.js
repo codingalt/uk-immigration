@@ -858,8 +858,13 @@ const loginUser = async (req, res) => {
           tokens,
           googleId,
           isGroupClient,
-          referringAgent,
         } = signin;
+
+        let referringAgent;
+        if (signin.referringAgent) {
+          referringAgent = signin.referringAgent;
+        }
+
         const userToken = tokens[tokens.length - 1];
         const result = {
           _id,
@@ -900,11 +905,14 @@ const loginUser = async (req, res) => {
         isAdmin: true,
         isCaseWorker: true,
         isGroupClient: true,
-        referringAgent,
         tokens: true
       });
 
-      console.log("Signin",signin);
+      let referringAgent;
+      if (signin.referringAgent){
+        referringAgent = signin.referringAgent;
+      } 
+      console.log("Signin", signin);
 
       if (!signin) {
         return res
@@ -932,7 +940,6 @@ const loginUser = async (req, res) => {
             isEmailVerified,
             isGroupClient,
             tokens,
-            referringAgent,
           } = signin;
           const userToken = tokens[tokens.length - 1];
           const result = {
@@ -1233,8 +1240,8 @@ const AuthRoute = async (req, res) => {
         profilePic: others.profilePic,
         isCaseWorker: others.isCaseWorker,
         googleId: others.googleId,
-        referringAgent: referringAgent,
-        isGroupClient: isGroupClient
+        referringAgent: others?.referringAgent,
+        isGroupClient: others?.isGroupClient
       };
 
       if(rootUser){
