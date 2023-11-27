@@ -1294,6 +1294,12 @@ const requestCompanyClientPhase = async (req, res) => {
       application.phase === 1 &&
       application.phaseStatus === phaseStaus.Approved
     ) {
+      if (application.requestedPhase >= 2) {
+        return res.status(400).json({
+          message: "You have already requested this phase.",
+          success: false,
+        });
+      }
       await CompanyClientModel.findByIdAndUpdate(
         applicationId,
         { $set: { ...req.body, requestedPhase: 2 } },
@@ -1458,6 +1464,14 @@ const requestCompanyClientPhase = async (req, res) => {
       application.phase === 2 &&
       application.phaseStatus === phaseStaus.Approved
     ) {
+
+      if (application.requestedPhase >= 3) {
+        return res.status(400).json({
+          message: "You have already requested this phase.",
+          success: false,
+        });
+      }
+      
       await CompanyClientModel.findByIdAndUpdate(
         applicationId,
         { $set: { ...req.body, requestedPhase: 3 } },
