@@ -71,7 +71,7 @@ const signupUser = async (req, res) => {
           const token = await user.generateAuthToken();
          const userData = await user.save();
           res.cookie("ukImmigrationJwtoken", token, {
-            expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+            expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
             httpOnly: true,
             sameSite: "none",
             secure: true,
@@ -80,10 +80,13 @@ const signupUser = async (req, res) => {
           const {
             _id,
             email,
+            name,
+            contact,
             isCaseWorker,
             isEmailVerified,
             tokens,
             googleId,
+            referringAgent,
           } = userData;
           const userToken = tokens[tokens.length - 1];
           const result = {
@@ -92,6 +95,9 @@ const signupUser = async (req, res) => {
             isCaseWorker,
             isEmailVerified,
             googleId,
+            name,
+            contact,
+            referringAgent,
             token: userToken.token,
           };
           return res.status(200).json({ user: result, success: true });
@@ -124,12 +130,14 @@ const signupUser = async (req, res) => {
             .json({ message: "Email already exist", success: false });
         }
 
+        let caseWorkerId;
         if(referringAgent){
           const isCaseWorker = await UserModel.findOne({
-            email: referringAgent,
+            workerId: referringAgent,
             isCaseWorker: true,
           });
           console.log(isCaseWorker);
+          caseWorkerId = isCaseWorker._id;
           if(!isCaseWorker) return res.status(400).json({ message: "Case worker not found with this email", success: false});
         }
 
@@ -138,9 +146,10 @@ const signupUser = async (req, res) => {
           email,
           password,
           contact,
-          referringAgent,
+          referringAgent: caseWorkerId,
           fcmToken,
         });
+
         const token = await user.generateAuthToken();
         const userData = await user.save();
 
@@ -302,6 +311,7 @@ const signupUser = async (req, res) => {
              tokens,
              contact,
              googleId,
+             referringAgent,
            } = userData;
            const userToken = tokens[tokens.length - 1];
            const result = {
@@ -311,6 +321,7 @@ const signupUser = async (req, res) => {
              isEmailVerified,
              googleId,
              contact,
+             referringAgent,
              token: userToken.token,
            };
 
@@ -474,6 +485,8 @@ const updateUserData = async (req, res) => {
       profilePic: userProfilePic,
       isEmailVerified,
       isMobileVerified,
+      referringAgent,
+      isGroupClient
     } = updatedData;
      
     res.status(200).json({
@@ -487,6 +500,8 @@ const updateUserData = async (req, res) => {
         profilePic: userProfilePic,
         isEmailVerified: isEmailVerified,
         isMobileVerified: isMobileVerified,
+        referringAgent: referringAgent,
+        isGroupClient: isGroupClient
       },
     });
   } catch (err) {
@@ -843,6 +858,7 @@ const loginUser = async (req, res) => {
           tokens,
           googleId,
           isGroupClient,
+          referringAgent,
         } = signin;
         const userToken = tokens[tokens.length - 1];
         const result = {
@@ -854,6 +870,7 @@ const loginUser = async (req, res) => {
           isEmailVerified,
           googleId,
           isGroupClient,
+          referringAgent,
           token: userToken.token,
         };
 
@@ -883,6 +900,7 @@ const loginUser = async (req, res) => {
         isAdmin: true,
         isCaseWorker: true,
         isGroupClient: true,
+        referringAgent,
         tokens: true
       });
 
@@ -904,7 +922,18 @@ const loginUser = async (req, res) => {
         const isMatch = await bcrypt.compare(password, signin.password);
         if (isMatch) {
 
-          const { _id, email, isCaseWorker, name,contact, profilePic, isEmailVerified,isGroupClient, tokens} = signin;
+          const {
+            _id,
+            email,
+            isCaseWorker,
+            name,
+            contact,
+            profilePic,
+            isEmailVerified,
+            isGroupClient,
+            tokens,
+            referringAgent,
+          } = signin;
           const userToken = tokens[tokens.length - 1];
           const result = {
             _id,
@@ -915,6 +944,7 @@ const loginUser = async (req, res) => {
             isCaseWorker,
             isGroupClient,
             isEmailVerified,
+            referringAgent,
             token: userToken.token,
           };
 
@@ -1101,7 +1131,7 @@ const loginUser = async (req, res) => {
                 success: false,
               });
             }
-            
+      
             
           }
           //Generating JSON web token
@@ -1203,6 +1233,8 @@ const AuthRoute = async (req, res) => {
         profilePic: others.profilePic,
         isCaseWorker: others.isCaseWorker,
         googleId: others.googleId,
+        referringAgent: referringAgent,
+        isGroupClient: isGroupClient
       };
 
       if(rootUser){

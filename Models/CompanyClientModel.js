@@ -10,12 +10,10 @@ const companyClientSchema = mongoose.Schema(
       dateTime: Date,
       companyContact: {
         type: String,
-        validate: [validator.isEmail, "Please enter a valid email"],
       },
       clientContact: {
         type: String,
         unique: true,
-        validate: [validator.isEmail, "Please enter a valid email"],
       },
       fullNameAsPassport: String,
       postalAddress: String,

@@ -289,18 +289,27 @@ const signupCompanyClient = async (req, res) => {
         const token = await user.generateAuthToken();
         const userData = await user.save();
         res.cookie("ukImmigrationJwtoken", token, {
-          expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           httpOnly: true,
           sameSite: "none",
           secure: true,
         });
 
-        const { _id, email, isCaseWorker, isEmailVerified, tokens, googleId } =
+        const { _id, email, name,contact, isCaseWorker, isEmailVerified, tokens, googleId } =
           userData;
         const userToken = tokens[tokens.length - 1];
+
+        // Update User Id in Client Application 
+        const updateUserId = await CompanyClientModel.updateOne(
+          { _id: applicationId },
+          { userId: userData?._id }
+        );
+
         const result = {
           _id,
           email,
+          name,
+          contact,
           isCaseWorker,
           isEmailVerified,
           googleId,
@@ -335,12 +344,14 @@ const signupCompanyClient = async (req, res) => {
           .json({ message: "Email already exist", success: false });
       }
 
+      let caseWorkerId;
       if (referringAgent) {
         const isCaseWorker = await UserModel.findOne({
-          email: referringAgent,
+          workerId: referringAgent,
           isCaseWorker: true,
         });
         console.log(isCaseWorker);
+        caseWorkerId = isCaseWorker._id;
         if (!isCaseWorker)
           return res
             .status(400)
@@ -355,7 +366,7 @@ const signupCompanyClient = async (req, res) => {
         email,
         password,
         contact,
-        referringAgent,
+        referringAgent: caseWorkerId,
         fcmToken,
         isGroupClient: true,
       });
@@ -526,6 +537,7 @@ const signupCompanyClient = async (req, res) => {
           tokens,
           contact,
           googleId,
+          referringAgent,
         } = userData;
         const userToken = tokens[tokens.length - 1];
         const result = {
@@ -535,6 +547,7 @@ const signupCompanyClient = async (req, res) => {
           isEmailVerified,
           googleId,
           contact,
+          referringAgent,
           token: userToken.token,
         };
 
@@ -626,39 +639,59 @@ const postCompanyClientPhase1 = async (req, res) => {
       !nationality ||
       !passportNumber
     )
-      return res
-        .status(400)
-        .json({
-          message: "Please fill out all the fileds properly.",
-          success: true,
-        });
+      return res.status(400).json({
+        message: "Please fill out all the fileds properly.",
+        success: true,
+      });
 
     const application = await CompanyClientModel.findById(applicationId);
 
     if (!application)
-      return res
-        .status(404)
-        .json({
-          message: "Application not found with this id",
-          success: false,
-        });
+      return res.status(404).json({
+        message: "Application not found with this id",
+        success: false,
+      });
 
-    await CompanyClientModel.findByIdAndUpdate(
-      applicationId,
-      {
-        $set: {
-          "phase1.fullNameAsPassport": fullNameAsPassport,
-          "phase1.postalAddress": postalAddress,
-          "phase1.birthDate": birthDate,
-          "phase1.nationality": nationality,
-          "phase1.passportNumber": passportNumber,
-          phaseSubmittedByClient: 1,
-          phase: 1,
-          userId: req.userId.toString(),
-        },
-      },
-      { new: true, useFindAndModify: false }
-    );
+    const user = await UserModel.findById(req.userId.toString());
+
+    let isCaseWorkerHandling;
+    let caseWorkerId;
+    let caseWorkerName;
+    // Assign case to case worker
+    if (user.referringAgent) {
+      // Find Case Worker
+      const caseWorker = await UserModel.findById({
+        _id: user.referringAgent,
+      });
+
+      if (caseWorker) {
+        isCaseWorkerHandling = true;
+        caseWorkerId = caseWorker?._id;
+        caseWorkerName = caseWorker?.name;
+      }
+    }
+
+   const updatedDocument = await CompanyClientModel.findByIdAndUpdate(
+     applicationId,
+     {
+       $set: {
+         "phase1.fullNameAsPassport": fullNameAsPassport,
+         "phase1.postalAddress": postalAddress,
+         "phase1.birthDate": birthDate,
+         "phase1.nationality": nationality,
+         "phase1.passportNumber": passportNumber,
+         phaseSubmittedByClient: 1,
+         phase: 1,
+         userId: req.userId.toString(),
+         isCaseWorkerHandling: isCaseWorkerHandling,
+         caseWorkerId: caseWorkerId,
+         caseWorkerName: caseWorkerName,
+       },
+     },
+     { new: true, useFindAndModify: false }
+   );
+
+   console.log("Updated Document", updatedDocument);
 
     // Create Chat with this Application
     const chat = await createChat({
@@ -666,13 +699,13 @@ const postCompanyClientPhase1 = async (req, res) => {
       applicationId: application._id,
     });
 
-    if(!chat){
-      return res.status(400).json({message: "Error creating chat", success: false});
+    if (!chat) {
+      return res
+        .status(400)
+        .json({ message: "Error creating chat", success: false });
     }
 
-    return res
-      .status(200)
-      .json({ message: "Phase 1 Data Submitted", success: true });
+    return res.status(200).json({ result: updatedDocument, success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }

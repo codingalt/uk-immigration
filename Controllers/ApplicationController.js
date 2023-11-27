@@ -53,8 +53,8 @@ const postApplicationPhase1 = async (req, res) => {
     // Assign case to case worker
     if (user.referringAgent) {
       // Find Case Worker
-      const caseWorker = await UserModel.findOne({
-        email: user.referringAgent,
+      const caseWorker = await UserModel.findById({
+        _id: user.referringAgent,
       });
 
       if (caseWorker) {
@@ -234,6 +234,7 @@ Date of Submission: ${formattedDate} <br>
         phaseStatus: application.phaseStatus,
         phaseSubmittedByClient,
         isInitialRequestAccepted,
+        caseWorkerId,
       };
       console.log(result);
       res.status(200).json({ result, success: true });
