@@ -120,6 +120,10 @@ app.get("/timeleft", (req, res) => {
       console.log("User Joined room", room);
     });
 
+    // socket.on("read notification", (noti) => {
+    //   console.log("Read Notification", noti);
+    // });
+
     socket.on("new message", (chat) => {
       if (!chat?.users) return console.log("chat.users is undefined");
       console.log("chat", chat.users);
