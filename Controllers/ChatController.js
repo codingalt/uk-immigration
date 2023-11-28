@@ -270,6 +270,7 @@ const getChatNotificationCount = async (req, res) => {
     const { chatId } = req.params;
     const count = await MessageModel.find({
       chatId: chatId,
+      sender: {$ne: req.userId},
       isRead: 0,
     });
 
@@ -283,17 +284,41 @@ const getChatNotificationCount = async (req, res) => {
   }
 };
 
+// Get chat notification count 
+const getUnreadByUserId = async (req, res) => {
+  try {
+    
+    const chat = await ChatModel.findOne({
+      users: {
+        $elemMatch: {
+          $eq: req.userId,
+        },
+      },
+    });
+    console.log("Chat",chat);
+    const count = await MessageModel.find({
+      chatId: chat?._id,
+      isRead: 0,
+    });
+    
+    return res.status(200).json({ count: count?.length, success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
 // Read Messages 
 const readMessagesByChat = async (req, res) => {
   try {
     const { chatId } = req.params;
-    await MessageModel.updateMany(
-      { chatId: chatId },
+    console.log("user Id",req.userId);
+    const updated = await MessageModel.updateMany(
+      { chatId: chatId, sender: { $ne: req.userId } },
       { $set: { isRead: 1 } },
       { new: true, useFindAndModify: false }
     );
 
-    // await ChatModel.updateOne({ _id: chatId }, { unseen: count?.length });
+    await ChatModel.updateOne({ _id: chatId }, { unseen: 0 });
     
     return res
       .status(200)
@@ -314,4 +339,5 @@ module.exports = {
   getAllChats,
   getChatNotificationCount,
   readMessagesByChat,
+  getUnreadByUserId,
 };

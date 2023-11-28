@@ -127,6 +127,7 @@ app.get("/timeleft", (req, res) => {
       chat.users.forEach((user) => {
         if (user == chat.result.sender) return;
         socket.in(user).emit("message received", chat);
+        socket.in(user).emit("message notification", chat);
       });
     });
 
