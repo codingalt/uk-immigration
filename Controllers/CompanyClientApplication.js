@@ -14,6 +14,7 @@ const EmailTokenModel = require("../Models/EmailToken");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const PhaseNotificationModel = require("../Models/PhaseNotification");
+const CaseWorkerModel = require("../Models/CaseWorker");
 
 const transporter = nodemailer.createTransport({
   host: process.env.HOST,
@@ -345,21 +346,20 @@ const signupCompanyClient = async (req, res) => {
       }
 
       let caseWorkerId;
-      if (referringAgent) {
-        const isCaseWorker = await UserModel.findOne({
-          workerId: referringAgent,
-          isCaseWorker: true,
-        });
-        console.log(isCaseWorker);
-        caseWorkerId = isCaseWorker._id;
-        if (!isCaseWorker)
-          return res
-            .status(400)
-            .json({
-              message: "Case worker not found with this email",
-              success: false,
-            });
-      }
+       if (referringAgent) {
+         const isCaseWorker = await CaseWorkerModel.findOne({
+           workerId: referringAgent,
+         });
+         console.log("is case worker", isCaseWorker);
+         if (!isCaseWorker)
+           return res.status(400).json({
+             message: "Case worker not found with this ID",
+             success: false,
+           });
+         const caseworker = await UserModel.findById(isCaseWorker?._id);
+         caseWorkerId = caseworker?._id;
+         
+       }
 
       const user = new UserModel({
         name,

@@ -132,13 +132,20 @@ const signupUser = async (req, res) => {
 
         let caseWorkerId;
         if(referringAgent){
-          const isCaseWorker = await UserModel.findOne({
+          const isCaseWorker = await CaseWorkerModel.findOne({
             workerId: referringAgent,
-            isCaseWorker: true,
           });
-          console.log(isCaseWorker);
-          caseWorkerId = isCaseWorker._id;
-          if(!isCaseWorker) return res.status(400).json({ message: "Case worker not found with this email", success: false});
+          console.log("is case worker",isCaseWorker);
+          if (!isCaseWorker)
+            return res
+              .status(400)
+              .json({
+                message: "Case worker not found with this ID",
+                success: false,
+              });
+
+          const caseworker = await UserModel.findById(isCaseWorker?._id);
+          caseWorkerId = caseworker?._id;
         }
 
         const user = new UserModel({
