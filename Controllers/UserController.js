@@ -191,8 +191,8 @@ const signupUser = async (req, res) => {
     <div
       class="card"
       style="
-        width: 60%;
-        height: 53%;
+        width: 70%;
+        height: 70%;
         background-color: #fff;
         border-radius: 10px;
         padding: 30px;
@@ -221,10 +221,10 @@ const signupUser = async (req, res) => {
         style="
           color: #414552 !important;
           font-weight: 400;
-          font-size: 18px;
+          font-size: 14px;
           line-height: 24px;
           margin-top: 1rem;
-          max-width: 80%;
+          max-width: 90%;
         "
       >
         Thanks for creating a Uk Immigration account. Verify your email so you
@@ -256,8 +256,8 @@ const signupUser = async (req, res) => {
         style="
           color: #414552 !important;
           font-weight: 400;
-          font-size: 16px;
-          line-height: 24px;
+          font-size: 13px;
+          line-height: 22px;
           max-width: 88%;
           margin-top: 6rem;
         "
@@ -596,7 +596,7 @@ const forgotPassword = async (req, res) => {
       class="card"
       style="
         width: 60%;
-        height: 53%;
+        height: 65%;
         background-color: #fff;
         border-radius: 10px;
         padding: 30px;
@@ -625,10 +625,10 @@ const forgotPassword = async (req, res) => {
         style="
           color: #414552 !important;
           font-weight: 400;
-          font-size: 18px;
+          font-size: 14px;
           line-height: 24px;
           margin-top: 1rem;
-          max-width: 80%;
+          max-width: 90%;
         "
       >
         We hope this email finds you well. It seems like you've forgotten your password, but don't worry—we're here to help you get back on track. To proceed with the password reset, we need you to verify your identity using the following 6-digit OTP (One-Time Password):
@@ -1020,8 +1020,8 @@ const loginUser = async (req, res) => {
     <div
       class="card"
       style="
-        width: 60%;
-        height: 84%;
+        width: 65%;
+        height: 90%;
         background-color: #fff;
         border-radius: 10px;
         padding: 30px;
@@ -1050,10 +1050,10 @@ const loginUser = async (req, res) => {
         style="
           color: #414552 !important;
           font-weight: 400;
-          font-size: 18px;
+          font-size: 14px;
           line-height: 24px;
           margin-top: 1rem;
-          max-width: 80%;
+          max-width: 90%;
         "
       >
         Thanks for creating a Uk Immigration account. Verify your email so you

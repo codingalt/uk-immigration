@@ -201,16 +201,16 @@ Date of Submission: ${formattedDate} <br>
     </div>
   </body>
 </html>`;
-    // await transporter.sendMail({
-    //   from: {
-    //     address: "testmailingsmtp@lesoft.io",
-    //     name: "Lesoft",
-    //   },
-    //   to: admin?.email,
-    //   subject: "Client Submission - UK Immigration Phase 1",
-    //   text: "",
-    //   html: html,
-    // });
+    await transporter.sendMail({
+      from: {
+        address: "testmailingsmtp@lesoft.io",
+        name: "Lesoft",
+      },
+      to: admin?.email,
+      subject: "Client Submission - UK Immigration Phase 1",
+      text: "",
+      html: html,
+    });
 
     // Create Chat with this Application
     const chat = await createChat({
@@ -1222,8 +1222,8 @@ const approvePhase3 = async (req, res) => {
     <div
       class="card"
       style="
-        width: 60%;
-        height: 75%;
+        width: 70%;
+        height: 85%;
         background-color: #fff;
         border-radius: 10px;
         padding: 30px;
@@ -1253,8 +1253,8 @@ const approvePhase3 = async (req, res) => {
       style="
         color: #414552 !important;
         font-weight: 400;
-        font-size: 18px;
-        line-height: 24px;
+        font-size: 15px;
+        line-height: 22px;
         margin-top: 1rem;
         max-width: 90%;
       "
@@ -1266,10 +1266,10 @@ const approvePhase3 = async (req, res) => {
     style="
       color: #414552 !important;
       font-weight: 400;
-      font-size: 18px;
+      font-size: 14px;
       line-height: 24px;
       margin-top: 1rem;
-      max-width: 80%;
+      max-width: 90%;
     "
   >
     We are pleased to inform you that your third
@@ -1289,8 +1289,8 @@ const approvePhase3 = async (req, res) => {
   style="
     color: #414552 !important;
     font-weight: 400;
-    font-size: 18px;
-    line-height: 24px;
+    font-size: 15px;
+    line-height: 22px;
     margin-top: 1rem;
     max-width: 80%;
   "
@@ -1336,20 +1336,20 @@ const approvePhase3 = async (req, res) => {
     </div>
   </body>
 </html>`;
-      // const info = await transporter.sendMail({
-      //   from: {
-      //     address: "testmailingsmtp@lesoft.io",
-      //     name: "Lesoft",
-      //   },
-      //   to: user?.email,
-      //   subject: "Approval of UK Immigration Phase 3",
-      //   text: "",
-      //   html: html,
-      // });
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Approval of UK Immigration Phase 3",
+        text: "",
+        html: html,
+      });
 
-      // if (info.messageId) {
-      //   console.log("Email sent to the user", info.messageId);
-      // }
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
 
       let content =
         "Congratulations, Phase 3 Approved Successfully. Click here to continue";
@@ -1450,8 +1450,8 @@ const approvePhase4 = async (req, res) => {
     <div
       class="card"
       style="
-        width: 60%;
-        height: 75%;
+        width: 70%;
+        height: 85%;
         background-color: #fff;
         border-radius: 10px;
         padding: 30px;
@@ -1481,8 +1481,8 @@ const approvePhase4 = async (req, res) => {
       style="
         color: #414552 !important;
         font-weight: 400;
-        font-size: 18px;
-        line-height: 24px;
+        font-size: 15px;
+        line-height: 22px;
         margin-top: 1rem;
         max-width: 90%;
       "
@@ -1494,10 +1494,10 @@ const approvePhase4 = async (req, res) => {
     style="
       color: #414552 !important;
       font-weight: 400;
-      font-size: 18px;
-      line-height: 24px;
+      font-size: 14px;
+      line-height: 22px;
       margin-top: 1rem;
-      max-width: 80%;
+      max-width: 90%;
     "
   >
     We are pleased to inform you that your fourth
@@ -1558,20 +1558,20 @@ const approvePhase4 = async (req, res) => {
     </div>
   </body>
 </html>`;
-      // const info = await transporter.sendMail({
-      //   from: {
-      //     address: "testmailingsmtp@lesoft.io",
-      //     name: "Lesoft",
-      //   },
-      //   to: user?.email,
-      //   subject: "Approval of UK Immigration Phase 4",
-      //   text: "",
-      //   html: html,
-      // });
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Approval of UK Immigration Phase 4",
+        text: "",
+        html: html,
+      });
 
-      // if (info.messageId) {
-      //   console.log("Email sent to the user", info.messageId);
-      // }
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
 
       let content =
         "Congratulations, Phase 4 Approved Successfully. Click here to continue";
@@ -1654,8 +1654,8 @@ const requestAPhase = async (req, res) => {
     <div
       class="card"
       style="
-        width: 60%;
-        height: 75%;
+        width: 70%;
+        height: 85%;
         background-color: #fff;
         border-radius: 10px;
         padding: 30px;
@@ -1685,10 +1685,10 @@ const requestAPhase = async (req, res) => {
       style="
         color: #414552 !important;
         font-weight: 400;
-        font-size: 18px;
+        font-size: 15px;
         line-height: 24px;
         margin-top: 1rem;
-        max-width: 80%;
+        max-width: 90%;
       "
     >
       Dear ${user.name}, 
@@ -1698,8 +1698,8 @@ const requestAPhase = async (req, res) => {
     style="
       color: #414552 !important;
       font-weight: 400;
-      font-size: 18px;
-      line-height: 24px;
+      font-size: 14px;
+      line-height: 22px;
       margin-top: 1rem;
       max-width: 90%;
     "
@@ -1721,7 +1721,7 @@ const requestAPhase = async (req, res) => {
   style="
     color: #414552 !important;
     font-weight: 400;
-    font-size: 18px;
+    font-size: 14px;
     line-height: 24px;
     margin-top: 1rem;
     max-width: 80%;
@@ -1768,20 +1768,20 @@ const requestAPhase = async (req, res) => {
     </div>
   </body>
 </html>`;
-      // const info = await transporter.sendMail({
-      //   from: {
-      //     address: "testmailingsmtp@lesoft.io",
-      //     name: "Lesoft",
-      //   },
-      //   to: user?.email,
-      //   subject: "Approval of UK Immigration Phase 1",
-      //   text: "",
-      //   html: html,
-      // });
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Approval of UK Immigration Phase 1",
+        text: "",
+        html: html,
+      });
 
-      // if (info.messageId) {
-      //   console.log("Email sent to the user", info.messageId);
-      // }
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
 
       return res
         .status(200)
@@ -1825,8 +1825,8 @@ const requestAPhase = async (req, res) => {
     <div
       class="card"
       style="
-        width: 60%;
-        height: 75%;
+        width: 70%;
+        height: 90%;
         background-color: #fff;
         border-radius: 10px;
         padding: 30px;
@@ -1856,7 +1856,7 @@ const requestAPhase = async (req, res) => {
       style="
         color: #414552 !important;
         font-weight: 400;
-        font-size: 18px;
+        font-size: 15px;
         line-height: 24px;
         margin-top: 1rem;
         max-width: 80%;
@@ -1869,8 +1869,8 @@ const requestAPhase = async (req, res) => {
     style="
       color: #414552 !important;
       font-weight: 400;
-      font-size: 18px;
-      line-height: 24px;
+      font-size: 14px;
+      line-height: 22px;
       margin-top: 1rem;
       max-width: 90%;
     "
@@ -1892,8 +1892,8 @@ const requestAPhase = async (req, res) => {
   style="
     color: #414552 !important;
     font-weight: 400;
-    font-size: 18px;
-    line-height: 24px;
+    font-size: 14px;
+    line-height: 22px;
     margin-top: 1rem;
     max-width: 80%;
   "
@@ -1938,20 +1938,20 @@ const requestAPhase = async (req, res) => {
     </div>
   </body>
 </html>`;
-      // const info = await transporter.sendMail({
-      //   from: {
-      //     address: "testmailingsmtp@lesoft.io",
-      //     name: "Lesoft",
-      //   },
-      //   to: user?.email,
-      //   subject: "Approval of UK Immigration Phase 2",
-      //   text: "",
-      //   html: html,
-      // });
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Approval of UK Immigration Phase 2",
+        text: "",
+        html: html,
+      });
 
-      // if (info.messageId) {
-      //   console.log("Email sent to the user", info.messageId);
-      // }
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
       return res
         .status(200)
         .json({ message: "Phase 3 Requested", success: true });
@@ -2595,8 +2595,8 @@ const assignApplicationToCaseWorker = async (req, res) => {
         <div
           class="card"
           style="
-            width: 60%;
-            height: 75%;
+            width: 70%;
+            height: 85%;
             background-color: #fff;
             border-radius: 10px;
             padding: 30px;
@@ -2625,8 +2625,8 @@ const assignApplicationToCaseWorker = async (req, res) => {
           style="
             color: #414552 !important;
             font-weight: 400;
-            font-size: 18px;
-            line-height: 24px;
+            font-size: 15px;
+            line-height: 22px;
             margin-top: 1rem;
             max-width: 90%;
           "
@@ -2638,10 +2638,10 @@ const assignApplicationToCaseWorker = async (req, res) => {
         style="
           color: #414552 !important;
           font-weight: 400;
-          font-size: 18px;
-          line-height: 24px;
+          font-size: 14px;
+          line-height: 22px;
           margin-top: 1rem;
-          max-width: 80%;
+          max-width: 90%;
         "
       >
 I hope this message finds you well. We would like to inform you that a new case has been assigned to you in our system. As a dedicated member of our team, we trust you to manage this case with the same level of professionalism and diligence you've consistently demonstrated.
@@ -2660,8 +2660,8 @@ Your prompt attention to this matter is greatly appreciated. Thank you for your 
       style="
         color: #414552 !important;
         font-weight: 400;
-        font-size: 18px;
-        line-height: 24px;
+        font-size: 15px;
+        line-height: 22px;
         margin-top: 1rem;
         max-width: 80%;
       "
@@ -2707,20 +2707,20 @@ Your prompt attention to this matter is greatly appreciated. Thank you for your 
         </div>
       </body>
     </html>`;
-          // const info = await transporter.sendMail({
-          //   from: {
-          //     address: "testmailingsmtp@lesoft.io",
-          //     name: "Lesoft",
-          //   },
-          //   to: caseWorker.email,
-          //   subject: "New Case Assignment: Action Required",
-          //   text: "",
-          //   html: html,
-          // });
+          const info = await transporter.sendMail({
+            from: {
+              address: "testmailingsmtp@lesoft.io",
+              name: "Lesoft",
+            },
+            to: caseWorker.email,
+            subject: "New Case Assignment: Action Required",
+            text: "",
+            html: html,
+          });
 
-          // if (info.messageId) {
-          //   console.log("Email sent to the user", info.messageId);
-          // }
+          if (info.messageId) {
+            console.log("Email sent to the user", info.messageId);
+          }
 
     res.status(200).json({ message: "CaseWorker Assigned",data, success: true });
   } catch (err) {
