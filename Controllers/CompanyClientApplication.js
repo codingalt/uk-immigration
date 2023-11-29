@@ -108,8 +108,8 @@ const sendRequestToCompanyClient = async (req, res) => {
     <div
       class="card"
       style="
-        width: 60%;
-        height: 75%;
+        width: 70%;
+        height: 86%;
         background-color: #fff;
         border-radius: 10px;
         padding: 30px;
@@ -139,8 +139,8 @@ const sendRequestToCompanyClient = async (req, res) => {
       style="
         color: #414552 !important;
         font-weight: 400;
-        font-size: 18px;
-        line-height: 24px;
+        font-size: 15px;
+        line-height: 22px;
         margin-top: 1rem;
         max-width: 90%;
       "
@@ -152,10 +152,10 @@ const sendRequestToCompanyClient = async (req, res) => {
     style="
       color: #414552 !important;
       font-weight: 400;
-      font-size: 18px;
+      font-size: 14px;
       line-height: 24px;
       margin-top: 1rem;
-      max-width: 80%;
+      max-width: 90%;
     "
   >
   We hope this message finds you well. We are pleased to inform you that your visa application process has been initiated by our administration team. In order to proceed further, we kindly invite you to complete the required application phases through our secure immigration portal.
@@ -773,6 +773,7 @@ const postCompanyClientPhase2 = async (req, res) => {
     // Properties to exclude from validation
     const excludedProperties = [
       "otherDocumentNotes",
+      "other",
       "isTerms",
       "isAuthority",
       "isAllowAccessToFile",
