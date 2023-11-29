@@ -144,7 +144,8 @@ const signupUser = async (req, res) => {
                 success: false,
               });
 
-          const caseworker = await UserModel.findById(isCaseWorker?._id);
+          const caseworker = await UserModel.findById(isCaseWorker?.userId);
+         console.log("Case worker found", caseworker);
           caseWorkerId = caseworker?._id;
         }
 
