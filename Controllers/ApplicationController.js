@@ -216,6 +216,7 @@ Date of Submission: ${formattedDate} <br>
     const chat = await createChat({
       userId: req.userId.toString(),
       applicationId: application._id,
+      caseWorkerId: req.body.caseWorkerId ? req.body.caseWorkerId : null,
     });
     if (chat.success) {
       const {
@@ -2573,8 +2574,8 @@ const assignApplicationToCaseWorker = async (req, res) => {
     );
 
     // Send email to the user
-          const url = `${process.env.BASE_URL}`;
-          const html = `<!DOCTYPE html>
+    const url = `${process.env.BASE_URL}`;
+    const html = `<!DOCTYPE html>
     <html lang="en">
       <head>
         <meta charset="UTF-8" />
@@ -2707,22 +2708,24 @@ Your prompt attention to this matter is greatly appreciated. Thank you for your 
         </div>
       </body>
     </html>`;
-          const info = await transporter.sendMail({
-            from: {
-              address: "testmailingsmtp@lesoft.io",
-              name: "Lesoft",
-            },
-            to: caseWorker.email,
-            subject: "New Case Assignment: Action Required",
-            text: "",
-            html: html,
-          });
+    const info = await transporter.sendMail({
+      from: {
+        address: "testmailingsmtp@lesoft.io",
+        name: "Lesoft",
+      },
+      to: caseWorker.email,
+      subject: "New Case Assignment: Action Required",
+      text: "",
+      html: html,
+    });
 
-          if (info.messageId) {
-            console.log("Email sent to the user", info.messageId);
-          }
+    if (info.messageId) {
+      console.log("Email sent to the user", info.messageId);
+    }
 
-    res.status(200).json({ message: "CaseWorker Assigned",data, success: true });
+    res
+      .status(200)
+      .json({ message: "CaseWorker Assigned", data, success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }

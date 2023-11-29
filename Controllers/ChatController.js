@@ -56,12 +56,24 @@ const createChat = async (req) => {
     if (chat) {
       return {message: "Chat with this person already exists", success: true}
     } else {
-      const newChat = new ChatModel({
-        users: [userId, adminId],
-        applicationId: applicationId,
-      });
-      await newChat.save();
-      return {message: "Chat Created", success: true}
+
+      if(req.caseWorkerId){
+        let caseWorkerId = req.caseWorkerId;
+        const newChat = new ChatModel({
+          users: [userId, adminId, caseWorkerId],
+          applicationId: applicationId,
+        });
+        await newChat.save();
+        return { message: "Chat Created", success: true };
+      }else{
+        const newChat = new ChatModel({
+          users: [userId, adminId],
+          applicationId: applicationId,
+        });
+        await newChat.save();
+        return { message: "Chat Created", success: true };
+      }
+      
     }
   } catch (err) {
     res.status(500).json({ data: err.message, success: false });
