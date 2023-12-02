@@ -62,6 +62,7 @@ const createChat = async (req) => {
         const newChat = new ChatModel({
           users: [userId, adminId, caseWorkerId],
           applicationId: applicationId,
+          clientId: userId,
         });
         await newChat.save();
         return { message: "Chat Created", success: true };
@@ -69,6 +70,7 @@ const createChat = async (req) => {
         const newChat = new ChatModel({
           users: [userId, adminId],
           applicationId: applicationId,
+          clientId: userId,
         });
         await newChat.save();
         return { message: "Chat Created", success: true };
@@ -280,9 +282,15 @@ const getChatByApplicationId = async (req, res) => {
 const getChatNotificationCount = async (req, res) => {
   try {
     const { chatId } = req.params;
+    const chat = await ChatModel.findById(chatId);
+    // const count = await MessageModel.find({
+    //   chatId: chatId,
+    //   sender: {$ne: req.userId},
+    //   isRead: 0,
+    // });
     const count = await MessageModel.find({
       chatId: chatId,
-      sender: {$ne: req.userId},
+      sender: chat.clientId,
       isRead: 0,
     });
 

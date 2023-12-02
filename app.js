@@ -191,6 +191,7 @@ app.get("/timeleft", (req, res) => {
         applicationId: request.applicationId,
         phase: request.phase,
         phaseStatus: request.phaseStatus,
+        phaseSubmittedByClient: request.phaseSubmittedByClient,
       });
       socket.in(request.userId).emit("phase notification received", request);
     });

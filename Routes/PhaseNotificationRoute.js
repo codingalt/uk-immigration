@@ -8,7 +8,7 @@ const router = express.Router();
 router.get("/api/phases/notification", Authenticate, getPhaseNotifications);
 router.get("/api/notification", Authenticate, getClientNotifications);
 router.post("/api/notification", Authenticate, sendNotification);
-router.put("/api/notification/read", Authenticate, readNotification);
+router.put("/api/notification/read/user", Authenticate, readNotification);
 router.put(
   "/api/notification/read/admin",
   Authenticate,

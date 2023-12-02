@@ -46,7 +46,11 @@ const sendRequestToCompanyClient = async (req, res) => {
         .status(400)
         .json({ message: "User not found", success: false });
 
-        
+        if(user.isCaseWorker){
+          req.body.isCaseWorkerHandling = true;
+          req.body.caseWorkerId = user?._id;
+          req.body.caseWorkerName = user?.name;  
+        }
 
         const emails = [];
         if(req.body.phase1.companyContact){
@@ -256,6 +260,8 @@ const signupCompanyClient = async (req, res) => {
         .status(400)
         .json({ message: "Action Forbidden!", success: false });
 
+    const application = await CompanyClientModel.findById(applicationId);
+
     if (req.body.googleAccessToken) {
       const googleAccessToken = req.body.googleAccessToken;
       // Signup with google OAuth
@@ -276,6 +282,10 @@ const signupCompanyClient = async (req, res) => {
             .status(422)
             .json({ message: "Email already exist", success: false });
         }
+        let referringAgent;
+        if(application?.caseWorkerId){
+          referringAgent = application?.caseWorkerId;
+        }
 
         const user = new UserModel({
           name: data?.name,
@@ -285,6 +295,7 @@ const signupCompanyClient = async (req, res) => {
           fcmToken,
           googleId: data?.sub,
           isGroupClient: true,
+          referringAgent: referringAgent,
         });
 
         const token = await user.generateAuthToken();
@@ -346,6 +357,11 @@ const signupCompanyClient = async (req, res) => {
       }
 
       let caseWorkerId;
+
+      if (application?.caseWorkerId) {
+        caseWorkerId = application?.caseWorkerId;
+      }
+      
        if (referringAgent) {
          const isCaseWorker = await CaseWorkerModel.findOne({
            workerId: referringAgent,
@@ -359,8 +375,9 @@ const signupCompanyClient = async (req, res) => {
          const caseworker = await UserModel.findById(isCaseWorker?.userId);
          console.log("Case worker found", caseworker);
          caseWorkerId = caseworker?._id;
-         
        }
+
+       
 
       const user = new UserModel({
         name,
@@ -658,6 +675,7 @@ const postCompanyClientPhase1 = async (req, res) => {
     let isCaseWorkerHandling;
     let caseWorkerId;
     let caseWorkerName;
+
     // Assign case to case worker
     if (user.referringAgent) {
       // Find Case Worker
@@ -687,6 +705,7 @@ const postCompanyClientPhase1 = async (req, res) => {
          isCaseWorkerHandling: isCaseWorkerHandling,
          caseWorkerId: caseWorkerId,
          caseWorkerName: caseWorkerName,
+         service: [{ serviceType: application.phase1.applicationType,dateTime: new Date()}],
        },
      },
      { new: true, useFindAndModify: false }
@@ -698,6 +717,7 @@ const postCompanyClientPhase1 = async (req, res) => {
     const chat = await createChat({
       userId: req.userId.toString(),
       applicationId: application._id,
+      caseWorkerId: caseWorkerId,
     });
 
     if (!chat) {
@@ -1255,31 +1275,35 @@ const postGroupCharacter = async (req, res) => {
         .status(400)
         .json({ message: "User not found", success: false });
     console.log(req.body);
-    if (user.isAdmin || user.isCaseWorker) {
-      const application = await CompanyClientModel.findByIdAndUpdate(
-        applicationId,
-        {
-          "phase4.character": req.body,
-          "phase4.isCompleted": 9,
-          phaseSubmittedByClient: 4,
-          phase: 4,
-          phaseStatus: "approved",
-        },
-        { new: true, useFindAndModify: false }
-      );
-      return res.status(200).json({ application, success: true });
-    } else {
-      const application = await CompanyClientModel.findByIdAndUpdate(
-        applicationId,
-        {
-          "phase4.character": req.body,
-          phaseSubmittedByClient: 4,
-          "phase4.isCompleted": 9,
-        },
-        { new: true, useFindAndModify: false }
-      );
-      return res.status(200).json({ application, success: true });
-    }
+    const application = await ApplicationModel.findById(applicationId);
+
+      if (user.isAdmin || user.isCaseWorker) {
+        const application = await CompanyClientModel.findByIdAndUpdate(
+          applicationId,
+          {
+            "phase4.character": req.body,
+            "phase4.isCompleted": 9,
+            phaseSubmittedByClient: 4,
+            phase: 4,
+            phaseStatus: "approved",
+          },
+          { new: true, useFindAndModify: false }
+        );
+        return res.status(200).json({ application, success: true });
+      } else {
+        const application = await CompanyClientModel.findByIdAndUpdate(
+          applicationId,
+          {
+            "phase4.character": req.body,
+            phaseSubmittedByClient: 4,
+            "phase4.isCompleted": 9,
+          },
+          { new: true, useFindAndModify: false }
+        );
+        return res.status(200).json({ application, success: true });
+      }
+    
+    
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -2595,8 +2619,7 @@ const rejectGroupApplication = async (req, res) => {
       }
     );
 
-    let content =
-      "Apologies, form rejected. Incomplete documentation. Please resubmit with all details.";
+    let content = rejectPhaseReason;
 
     // Find Chat
     const chat = await ChatModel.findOne({ applicationId: applicationId });

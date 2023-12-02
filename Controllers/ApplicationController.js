@@ -72,6 +72,11 @@ const postApplicationPhase1 = async (req, res) => {
       userId: req.userId.toString(),
     });
 
+    let service = [];
+    service.push({ serviceType: req.body.phase1.applicationType, dateTime: new Date() });
+
+    req.body.service = service;
+
     if (isApplicationAlready)
       return res
         .status(400)
@@ -511,6 +516,14 @@ const postPhase1Manual = async (req, res) => {
       specialChars: false,
     });
 
+    let service = [];
+    service.push({
+      serviceType: req.body.phase1.applicationType,
+      dateTime: new Date(),
+    });
+
+    req.body.service = service;
+
     req.body.userId = userData._id;
     req.body.caseId = caseId;
     req.body.phaseSubmittedByClient = 1;
@@ -931,31 +944,34 @@ const postCharacter = async (req, res) => {
         .status(400)
         .json({ message: "User not found", success: false });
     console.log(req.body);
-    if (user.isAdmin || user.isCaseWorker) {
-      const application = await ApplicationModel.findByIdAndUpdate(
-        applicationId,
-        {
-          "phase4.character": req.body,
-          "phase4.isCompleted": 9,
-          phaseSubmittedByClient: 4,
-          phase: 4,
-          phaseStatus: "approved",
-        },
-        { new: true, useFindAndModify: false }
-      );
-      return res.status(200).json({ application, success: true });
-    } else {
-      const application = await ApplicationModel.findByIdAndUpdate(
-        applicationId,
-        {
-          "phase4.character": req.body,
-          phaseSubmittedByClient: 4,
-          "phase4.isCompleted": 9,
-        },
-        { new: true, useFindAndModify: false }
-      );
-      return res.status(200).json({ application, success: true });
-    }
+    const application = await ApplicationModel.findById(applicationId);
+  
+      if (user.isAdmin || user.isCaseWorker) {
+        const application = await ApplicationModel.findByIdAndUpdate(
+          applicationId,
+          {
+            "phase4.character": req.body,
+            "phase4.isCompleted": 9,
+            phaseSubmittedByClient: 4,
+            phase: 4,
+            phaseStatus: "approved",
+          },
+          { new: true, useFindAndModify: false }
+        );
+        return res.status(200).json({ application, success: true });
+      } else {
+        const application = await ApplicationModel.findByIdAndUpdate(
+          applicationId,
+          {
+            "phase4.character": req.body,
+            phaseSubmittedByClient: 4,
+            "phase4.isCompleted": 9,
+          },
+          { new: true, useFindAndModify: false }
+        );
+        return res.status(200).json({ application, success: true });
+      }
+      
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -1559,6 +1575,7 @@ const approvePhase4 = async (req, res) => {
     </div>
   </body>
 </html>`;
+
       const info = await transporter.sendMail({
         from: {
           address: "testmailingsmtp@lesoft.io",
@@ -2112,20 +2129,24 @@ const getApplicationsNotesData = async (req, res) => {
 
      for (const application of groupClient) {
        const userId = application.userId;
-       const user = await UserModel.findById(userId);
+       console.log("application",application);
+       if(application.phaseSubmittedByClient >= 1){
+        const user = await UserModel.findById(userId);
 
-       // If a user is found, add user information to the application
-       if (user) {
-         const applicationDataWithUser = {
-           ...application.toObject(), // Convert application to a plain JavaScript object
-           user: {
-             name: user.name,
-             email: user.email,
-             profilePic: user.profilePic,
-           },
-         };
-         applicationsWithUserData.push(applicationDataWithUser);
+        // If a user is found, add user information to the application
+        if (user) {
+          const applicationDataWithUser = {
+            ...application.toObject(), // Convert application to a plain JavaScript object
+            user: {
+              name: user.name,
+              email: user.email,
+              profilePic: user.profilePic,
+            },
+          };
+          applicationsWithUserData.push(applicationDataWithUser);
+        }
        }
+       
      }
 
     console.log(applicationsWithUserData);
@@ -2280,8 +2301,7 @@ const rejectApplication = async (req, res) => {
     );
 
 
-    let content =
-      "Apologies, form rejected. Incomplete documentation. Please resubmit with all details.";
+    let content = rejectPhaseReason;
 
     // Find Chat
     const chat = await ChatModel.findOne({ applicationId: applicationId });
@@ -2885,6 +2905,9 @@ const filterInvoices = async (req, res) => {
       "phase3.dateTime": true,
       "phase3.cost": true,
       "phase3.isPaid": true,
+      "phase3.isOnlinePayment": true,
+      "phase3.onlinePaymentEvidence": true,
+      "phase3.paymentEvidence": true,
     });
 
     const companyClientResult = await CompanyClientModel.find(
@@ -2898,6 +2921,9 @@ const filterInvoices = async (req, res) => {
       "phase3.dateTime": true,
       "phase3.cost": true,
       "phase3.isPaid": true,
+      "phase3.isOnlinePayment": true,
+      "phase3.onlinePaymentEvidence": true,
+      "phase3.paymentEvidence": true,
     });
 
     const result = [...applicationResult, ...companyClientResult];

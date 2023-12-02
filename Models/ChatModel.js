@@ -20,6 +20,9 @@ const chatSchema = mongoose.Schema(
       required: true,
       unique: true,
     },
+    clientId: {
+      type: String,
+    }
   },
   { timestamps: true }
 );
