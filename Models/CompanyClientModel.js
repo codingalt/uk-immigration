@@ -17,7 +17,6 @@ const companyClientSchema = mongoose.Schema(
       },
       clientContact: {
         type: String,
-        unique: true,
       },
       fullNameAsPassport: String,
       postalAddress: String,
