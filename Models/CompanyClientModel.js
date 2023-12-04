@@ -4,6 +4,10 @@ const validator = require("validator");
 const companyClientSchema = mongoose.Schema(
   {
     phase1: {
+      status: {
+        type: String,
+        default: "pending",
+      },
       doesCompanyHelp: Boolean,
       companyHelpService: String,
       applicationType: String,
@@ -22,6 +26,10 @@ const companyClientSchema = mongoose.Schema(
       passportNumber: String,
     },
     phase2: {
+      status: {
+        type: String,
+        default: "pending",
+      },
       isTerms: Boolean,
       isAuthority: Boolean,
       isAllowAccessToFile: Boolean,
@@ -40,6 +48,10 @@ const companyClientSchema = mongoose.Schema(
       otherDocumentNotes: String,
     },
     phase3: {
+      status: {
+        type: String,
+        default: "pending",
+      },
       isOnlinePayment: Boolean,
       onlinePaymentEvidence: String,
       doesCompanyHelp: Boolean,
@@ -55,6 +67,10 @@ const companyClientSchema = mongoose.Schema(
       dateTime: Date,
     },
     phase4: {
+      status: {
+        type: String,
+        default: "pending",
+      },
       isCompleted: {
         type: Number,
         default: 0,
@@ -781,6 +797,9 @@ const companyClientSchema = mongoose.Schema(
     phaseSubmittedByClient: {
       type: Number,
       default: 0,
+    },
+    reRequest: {
+      type: Number,
     },
     isInitialRequestAccepted: {
       type: Boolean,

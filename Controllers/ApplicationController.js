@@ -77,13 +77,21 @@ const postApplicationPhase1 = async (req, res) => {
 
     req.body.service = service;
 
-    if (isApplicationAlready)
-      return res
-        .status(400)
-        .json({ message: "Your Application already exists", success: false });
+    let application;
 
-    const application = await new ApplicationModel(req.body).save();
-
+    if (isApplicationAlready){
+      req.body.phase1.status = "pending"
+       application = await ApplicationModel.findByIdAndUpdate(
+         isApplicationAlready._id,
+         {
+            $set: { ...req.body, phase: 1, phaseStatus: "pending",applicationStatus: "pending" } ,
+         },
+         { new: true, useFindAndModify: false }
+       ); 
+    }else{
+      application = await new ApplicationModel(req.body).save();
+    }
+     
     const admin = await UserModel.findOne({ isAdmin: true });
     var date = new Date();
     var options = { year: "numeric", month: "long", day: "numeric" };
@@ -302,6 +310,8 @@ const postApplicationPhase2 = async (req, res) => {
             phaseSubmittedByClient: 2,
             phase: 2,
             phaseStatus: "approved",
+            "phase2.status": "approved",
+            applicationStatus: "pending",
             $push: {
               report: { phase: 2, status: "approved", dateTime: new Date() },
             },
@@ -318,7 +328,7 @@ const postApplicationPhase2 = async (req, res) => {
         Object.entries(phase2Data).filter(([key, value]) => value !== "notreq")
       );
 
-      var propertiesToExclude = ["otherDocumentNotes", "other"];
+      var propertiesToExclude = ["otherDocumentNotes", "other","status"];
       // Exclude "otherDocumentNotes" from validation
      var filteredDataKeys = Object.keys(filteredData).filter(
        (key) => !propertiesToExclude.includes(key)
@@ -339,10 +349,19 @@ const postApplicationPhase2 = async (req, res) => {
           success: false,
         });
       }
+      const filesObjTemp = {...filesObj, status: "pending"}
       // Update Phase 2
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
-        { $set: { phase2: filesObj, phaseSubmittedByClient: 2 } },
+        {
+          $set: {
+            phase2: filesObjTemp,
+            phaseSubmittedByClient: 2,
+            phase: 2,
+            phaseStatus: "pending",
+            applicationStatus: "pending"
+          },
+        },
         { new: true, useFindAndModify: false }
       );
       res.status(200).json({ application, success: true });
@@ -400,6 +419,7 @@ const postApplicationPhase3 = async (req, res) => {
             phaseSubmittedByClient: 3,
             phase: 3,
             phaseStatus: "approved",
+            "phase3.status": "approved",
             $push: {
               report: { phase: 3, status: "approved", dateTime: new Date() },
             },
@@ -419,6 +439,10 @@ const postApplicationPhase3 = async (req, res) => {
             "phase3.isPaid": true,
             "phase3.dateTime": new Date(),
             phaseSubmittedByClient: 3,
+            phase: 3,
+            phaseStatus: "pending",
+            applicationStatus: "pending",
+            "phase3.status": "pending"
           },
         },
         { new: true, useFindAndModify: false }
@@ -955,6 +979,7 @@ const postCharacter = async (req, res) => {
             phaseSubmittedByClient: 4,
             phase: 4,
             phaseStatus: "approved",
+            "phase4.status": "approved"
           },
           { new: true, useFindAndModify: false }
         );
@@ -966,6 +991,10 @@ const postCharacter = async (req, res) => {
             "phase4.character": req.body,
             phaseSubmittedByClient: 4,
             "phase4.isCompleted": 9,
+            phase: 4,
+            phaseStatus: "pending",
+            applicationStatus: "pending",
+            "phase4.status": "pending"
           },
           { new: true, useFindAndModify: false }
         );
@@ -1060,7 +1089,9 @@ const approvePhase1 = async (req, res) => {
     await ApplicationModel.updateOne(
       { _id: applicationId },
       {
+        phase: 1,
         phaseStatus: "approved",
+        "phase1.status": "approved",
         isInitialRequestAccepted: true,
         $push: {
           report: { phase: 1, status: "approved", dateTime: new Date() },
@@ -1123,14 +1154,14 @@ const approvePhase2 = async (req, res) => {
     }
 
     if (
-      isApplication.phase === 1 &&
-      isApplication.phaseStatus === phaseStaus.Approved
+      isApplication.phase === 2
     ) {
       await ApplicationModel.updateOne(
         { _id: applicationId },
         {
           phase: 2,
-          phaseStaus: phaseStaus.Approved,
+          phaseStatus: "approved",
+          "phase2.status": "approved",
           $push: {
             report: { phase: 2, status: "approved", dateTime: new Date() },
           },
@@ -1202,14 +1233,14 @@ const approvePhase3 = async (req, res) => {
     }
 
     if (
-      isApplication.phase === 2 &&
-      isApplication.phaseStatus === phaseStaus.Approved
+      isApplication.phase === 3
     ) {
       await ApplicationModel.updateOne(
         { _id: applicationId },
         {
           phase: 3,
-          phaseStaus: phaseStaus.Approved,
+          phaseStatus: phaseStaus.Approved,
+          "phase3.status": "approved",
           $push: {
             report: { phase: 3, status: "approved", dateTime: new Date() },
           },
@@ -1429,15 +1460,15 @@ const approvePhase4 = async (req, res) => {
     }
 
     if (
-      isApplication.phase === 3 &&
-      isApplication.phaseStatus === phaseStaus.Approved
+      isApplication.phase === 4
     ) {
       await ApplicationModel.updateOne(
         { _id: applicationId },
         {
           phase: 4,
-          phaseStaus: phaseStaus.Approved,
+          phaseStatus: phaseStaus.Approved,
           applicationStatus: "approved",
+          "phase4.status": "approved",
           $push: {
             report: { phase: 4, status: "approved", dateTime: new Date() },
           },
@@ -1633,25 +1664,361 @@ const requestAPhase = async (req, res) => {
     const { applicationId } = req.params;
     const application = await ApplicationModel.findById(applicationId);
     const user = await UserModel.findById(application.userId);
+
+    // Rejected Conditions 
     if (
-      application.phase === 1 &&
-      application.phaseStatus === phaseStaus.Approved
+      application.phase === 2 &&
+      application.phaseStatus === phaseStaus.Rejected
     ) {
-      if (application.requestedPhase >= 2) {
-        return res.status(400).json({
-          message: "You have already requested this phase.",
-          success: false,
-        });
-      }
+            req.body.phase2.status = application.phase2.status;
+              await ApplicationModel.findByIdAndUpdate(
+                applicationId,
+                { $set: { ...req.body, requestedPhase: 2,reRequest: 2 } },
+                { new: true, useFindAndModify: false }
+              );
+
+              // Send email to the user
+              const url = `${process.env.BASE_URL}`;
+              const html = `<!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title></title>
+          </head>
+          <body
+            style="
+              width: 100%;
+              height: 95vh;
+              background-color: #f6f9fc;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              font-family: sans-serif;
+            "
+          >
+            <div
+              class="card"
+              style="
+                width: 70%;
+                height: 90%;
+                background-color: #fff;
+                border-radius: 10px;
+                padding: 30px;
+                margin-top: 2rem;
+                padding-left: 40px;
+                margin: 2rem auto;
+              "
+            >
+              <img
+                src=${logo}
+                alt=""
+                style="margin-left: auto; margin-right: auto"
+              />
+              <h3
+                style="
+                  color:#5D982E;
+                  font-weight: 800;
+                  font-size: 1.1rem;
+                  letter-spacing: 0.5px;
+                "
+              >
+                Request to Resubmit Phase 2 Data for Immigration Application
+              </h3>
+
+              <p
+              style="
+                color: #414552 !important;
+                font-weight: 400;
+                font-size: 15px;
+                line-height: 24px;
+                margin-top: 1rem;
+                max-width: 80%;
+              "
+            >
+              Dear ${user?.name},
+            </p>
+
+            <p
+            style="
+              color: #414552 !important;
+              font-weight: 400;
+              font-size: 14px;
+              line-height: 22px;
+              margin-top: 1rem;
+              max-width: 90%;
+            "
+          >
+
+    We are writing to inform you that your recently submitted Phase 2 data for your immigration application has been reviewed by our administrative team. Regrettably, we have identified some discrepancies that require your attention.
+
+    In order to proceed with the processing of your application, we kindly request you to resubmit the Phase 2 data with the necessary corrections. Please carefully review the feedback provided by our team to address the specific issues mentioned.
+
+    To facilitate the resubmission process, please log in to your account on our immigration portal and navigate to the "Phase 1 Submission" section. Once there, you will find the option to edit and update your information. Ensure that all the required fields are filled accurately and completely.
+
+    If you encounter any difficulties or have questions regarding the corrections, please do not hesitate to reach out to our support team at [support@email.com]. We are here to assist you throughout the process and ensure a smooth experience.
+          </p>
+
+          <p
+          style="
+            color: #414552 !important;
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 22px;
+            margin-top: 1rem;
+            max-width: 80%;
+          "
+        >
+         Best regards,
+          Uk Immigration
+        </p>
+              <a
+                style="margin-top: 1.5rem; cursor: pointer"
+                href=${url}
+                target="_blank"
+                ><button
+                  style="
+                    width: 10.4rem;
+                    height: 2.8rem;
+                    border-radius: 8px;
+                    outline: none;
+                    border: none;
+                    color: #fff;
+                    background-color:#5D982E;
+                    font-weight: 600;
+                    font-size: 1.05rem;
+                    cursor: pointer;
+                  "
+                >
+                Login
+                </button></a
+              >
+
+              <p
+                style="
+                  color: #414552 !important;
+                  font-weight: 400;
+                  font-size: 16px;
+                  line-height: 24px;
+                  max-width: 88%;
+                  margin-top: 6rem;
+                "
+              >
+              All rights reserved by UK Immigration © 2023.
+              </p>
+            </div>
+          </body>
+        </html>`;
+              const info = await transporter.sendMail({
+                from: {
+                  address: "testmailingsmtp@lesoft.io",
+                  name: "Lesoft",
+                },
+                to: user?.email,
+                subject: "Approval of UK Immigration Phase 1",
+                text: "",
+                html: html,
+              });
+
+              if (info.messageId) {
+                console.log("Email sent to the user", info.messageId);
+              }
+
+              return res
+                .status(200)
+                .json({ message: "Phase 2 Requested", success: true });
+    }
+
+    if (
+      application.phase === 3 &&
+      application.phaseStatus === phaseStaus.Rejected
+    ) {
+      req.body.phase3.status = application.phase3.status;
       await ApplicationModel.findByIdAndUpdate(
         applicationId,
-        { $set: { ...req.body, requestedPhase: 2 } },
+        { $set: { ...req.body, requestedPhase: 3, reRequest: 3 } },
         { new: true, useFindAndModify: false }
       );
 
       // Send email to the user
       const url = `${process.env.BASE_URL}`;
       const html = `<!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title></title>
+          </head>
+          <body
+            style="
+              width: 100%;
+              height: 95vh;
+              background-color: #f6f9fc;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              font-family: sans-serif;
+            "
+          >
+            <div
+              class="card"
+              style="
+                width: 70%;
+                height: 90%;
+                background-color: #fff;
+                border-radius: 10px;
+                padding: 30px;
+                margin-top: 2rem;
+                padding-left: 40px;
+                margin: 2rem auto;
+              "
+            >
+              <img
+                src=${logo}
+                alt=""
+                style="margin-left: auto; margin-right: auto"
+              />
+              <h3
+                style="
+                  color:#5D982E;
+                  font-weight: 800;
+                  font-size: 1.1rem;
+                  letter-spacing: 0.5px;
+                "
+              >
+                Request to Resubmit Phase 1 Data for Immigration Application
+              </h3>
+
+              <p
+              style="
+                color: #414552 !important;
+                font-weight: 400;
+                font-size: 15px;
+                line-height: 24px;
+                margin-top: 1rem;
+                max-width: 80%;
+              "
+            >
+              Dear ${user?.name},
+            </p>
+
+            <p
+            style="
+              color: #414552 !important;
+              font-weight: 400;
+              font-size: 14px;
+              line-height: 22px;
+              margin-top: 1rem;
+              max-width: 90%;
+            "
+          >
+
+    We are writing to inform you that your recently submitted Phase 3 data for your immigration application has been reviewed by our administrative team. Regrettably, we have identified some discrepancies that require your attention.
+
+    In order to proceed with the processing of your application, we kindly request you to resubmit the Phase 3 data with the necessary corrections. Please carefully review the feedback provided by our team to address the specific issues mentioned.
+
+    To facilitate the resubmission process, please log in to your account on our immigration portal and navigate to the "Phase 3 Submission" section. Once there, you will find the option to edit and update your information. Ensure that all the required fields are filled accurately and completely.
+
+    If you encounter any difficulties or have questions regarding the corrections, please do not hesitate to reach out to our support team at [support@email.com]. We are here to assist you throughout the process and ensure a smooth experience.
+          </p>
+
+          <p
+          style="
+            color: #414552 !important;
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 22px;
+            margin-top: 1rem;
+            max-width: 80%;
+          "
+        >
+         Best regards,
+          Uk Immigration
+        </p>
+              <a
+                style="margin-top: 1.5rem; cursor: pointer"
+                href=${url}
+                target="_blank"
+                ><button
+                  style="
+                    width: 10.4rem;
+                    height: 2.8rem;
+                    border-radius: 8px;
+                    outline: none;
+                    border: none;
+                    color: #fff;
+                    background-color:#5D982E;
+                    font-weight: 600;
+                    font-size: 1.05rem;
+                    cursor: pointer;
+                  "
+                >
+                Login
+                </button></a
+              >
+
+              <p
+                style="
+                  color: #414552 !important;
+                  font-weight: 400;
+                  font-size: 16px;
+                  line-height: 24px;
+                  max-width: 88%;
+                  margin-top: 6rem;
+                "
+              >
+              All rights reserved by UK Immigration © 2023.
+              </p>
+            </div>
+          </body>
+        </html>`;
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Approval of UK Immigration Phase 1",
+        text: "",
+        html: html,
+      });
+
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
+
+      return res
+        .status(200)
+        .json({ message: "Phase 2 Requested", success: true });
+    }
+
+    // Approved Condition 
+      if (
+        application.phase === 1 &&
+        application.phaseStatus === phaseStaus.Approved
+      ) {
+        if (application.requestedPhase >= 2) {
+          return res.status(400).json({
+            message: "You have already requested this phase.",
+            success: false,
+          });
+        }
+        await ApplicationModel.findByIdAndUpdate(
+          applicationId,
+          {
+            $set: {
+              ...req.body,
+              requestedPhase: 2,
+              phase: 2,
+              phaseStatus: "pending",
+            },
+          },
+          { new: true, useFindAndModify: false }
+        );
+
+        // Send email to the user
+        const url = `${process.env.BASE_URL}`;
+        const html = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -1786,201 +2153,230 @@ const requestAPhase = async (req, res) => {
     </div>
   </body>
 </html>`;
-      const info = await transporter.sendMail({
-        from: {
-          address: "testmailingsmtp@lesoft.io",
-          name: "Lesoft",
-        },
-        to: user?.email,
-        subject: "Approval of UK Immigration Phase 1",
-        text: "",
-        html: html,
-      });
-
-      if (info.messageId) {
-        console.log("Email sent to the user", info.messageId);
-      }
-
-      return res
-        .status(200)
-        .json({ message: "Phase 2 Requested", success: true });
-    } else if (
-      application.phase === 2 &&
-      application.phaseStatus === phaseStaus.Approved
-    ) {
-      if (application.requestedPhase >= 3) {
-        return res.status(400).json({
-          message: "You have already requested this phase.",
-          success: false,
+        const info = await transporter.sendMail({
+          from: {
+            address: "testmailingsmtp@lesoft.io",
+            name: "Lesoft",
+          },
+          to: user?.email,
+          subject: "Approval of UK Immigration Phase 1",
+          text: "",
+          html: html,
         });
-      }
-      await ApplicationModel.findByIdAndUpdate(
-        applicationId,
-        { $set: { ...req.body, requestedPhase: 3 } },
-        { new: true, useFindAndModify: false }
-      );
 
-      // Send email to the user
-      const url = `${process.env.BASE_URL}`;
-      const html = `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title></title>
-  </head>
-  <body
-    style="
-      width: 100%;
-      height: 95vh;
-      background-color: #f6f9fc;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: sans-serif;
-    "
-  >
-    <div
-      class="card"
-      style="
-        width: 70%;
-        height: 90%;
-        background-color: #fff;
-        border-radius: 10px;
-        padding: 30px;
-        margin-top: 2rem;
-        padding-left: 40px;
-        margin: 2rem auto;
-      "
-    >
-      <img
-        src=${logo}
-        alt=""
-        style="margin-left: auto; margin-right: auto"
-      />
-      <h3
-        style="
-          color:#5D982E;
-          font-weight: 800;
-          font-size: 1.1rem;
-          letter-spacing: 0.5px;
-        "
-      >
-        Approval of UK Immigration Phase 2
-      </h3>
+        if (info.messageId) {
+          console.log("Email sent to the user", info.messageId);
+        }
 
+        return res
+          .status(200)
+          .json({ message: "Phase 2 Requested", success: true });
+      } else if (
+        application.phase === 2 &&
+        application.phaseStatus === phaseStaus.Approved
+      ) {
+        if (application.requestedPhase >= 3) {
+          return res.status(400).json({
+            message: "You have already requested this phase.",
+            success: false,
+          });
+        }
+        req.body.phase3.status = "pending";
+        await ApplicationModel.findByIdAndUpdate(
+          applicationId,
+          {
+            $set: {
+              ...req.body,
+              requestedPhase: 3,
+              phase: 3,
+              phaseStatus: "pending",
+              "phase1.applicationType": req.body.phase3.companyHelpService,
+              $push: {
+                service: {
+                  serviceType: req.body.phase3.companyHelpService,
+                  dateTime: new Date(),
+                },
+              },
+            },
+          },
+          { new: true, useFindAndModify: false }
+        );
 
-      <p
-      style="
-        color: #414552 !important;
-        font-weight: 400;
-        font-size: 15px;
-        line-height: 24px;
-        margin-top: 1rem;
-        max-width: 80%;
-      "
-    >
-      Dear ${user?.name}, 
-    </p>
+        // Send email to the user
+        const url = `${process.env.BASE_URL}`;
+              const html = `<!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title></title>
+          </head>
+          <body
+            style="
+              width: 100%;
+              height: 95vh;
+              background-color: #f6f9fc;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              font-family: sans-serif;
+            "
+          >
+            <div
+              class="card"
+              style="
+                width: 70%;
+                height: 90%;
+                background-color: #fff;
+                border-radius: 10px;
+                padding: 30px;
+                margin-top: 2rem;
+                padding-left: 40px;
+                margin: 2rem auto;
+              "
+            >
+              <img
+                src=${logo}
+                alt=""
+                style="margin-left: auto; margin-right: auto"
+              />
+              <h3
+                style="
+                  color:#5D982E;
+                  font-weight: 800;
+                  font-size: 1.1rem;
+                  letter-spacing: 0.5px;
+                "
+              >
+                Approval of UK Immigration Phase 2
+              </h3>
 
-    <p
-    style="
-      color: #414552 !important;
-      font-weight: 400;
-      font-size: 14px;
-      line-height: 22px;
-      margin-top: 1rem;
-      max-width: 90%;
-    "
-  >
-    We are pleased to inform you that your first
-    phase of the UK immigration application process has been approved. To
-    continue with the next phase, please log in to your account on our
-    immigration portal and complete the required information for the third
-    phase. Ensure all necessary fields are accurately filled out before
-    submitting your application. Your login details remain the same as
-    previously provided. If you encounter any issues or require assistance
-    during this phase, please don't hesitate to contact our support team at
-    immigration@support.com. We appreciate your cooperation and prompt
-    attention to this next stage of the process. We look forward to
-    receiving your completed third phase submission. 
-  </p>
-  
-  <p
-  style="
-    color: #414552 !important;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 22px;
-    margin-top: 1rem;
-    max-width: 80%;
-  "
->
- Best regards,
-  Uk Immigration
-</p>
-      <a
-        style="margin-top: 1.5rem; cursor: pointer"
-        href=${url}
-        target="_blank"
-        ><button
+              <p
+              style="
+                color: #414552 !important;
+                font-weight: 400;
+                font-size: 15px;
+                line-height: 24px;
+                margin-top: 1rem;
+                max-width: 80%;
+              "
+            >
+              Dear ${user?.name},
+            </p>
+
+            <p
+            style="
+              color: #414552 !important;
+              font-weight: 400;
+              font-size: 14px;
+              line-height: 22px;
+              margin-top: 1rem;
+              max-width: 90%;
+            "
+          >
+            We are pleased to inform you that your first
+            phase of the UK immigration application process has been approved. To
+            continue with the next phase, please log in to your account on our
+            immigration portal and complete the required information for the third
+            phase. Ensure all necessary fields are accurately filled out before
+            submitting your application. Your login details remain the same as
+            previously provided. If you encounter any issues or require assistance
+            during this phase, please don't hesitate to contact our support team at
+            immigration@support.com. We appreciate your cooperation and prompt
+            attention to this next stage of the process. We look forward to
+            receiving your completed third phase submission.
+          </p>
+
+          <p
           style="
-            width: 10.4rem;
-            height: 2.8rem;
-            border-radius: 8px;
-            outline: none;
-            border: none;
-            color: #fff;
-            background-color:#5D982E;
-            font-weight: 600;
-            font-size: 1.05rem;
-            cursor: pointer;
+            color: #414552 !important;
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 22px;
+            margin-top: 1rem;
+            max-width: 80%;
           "
         >
-        login
-        </button></a
-      >
+         Best regards,
+          Uk Immigration
+        </p>
+              <a
+                style="margin-top: 1.5rem; cursor: pointer"
+                href=${url}
+                target="_blank"
+                ><button
+                  style="
+                    width: 10.4rem;
+                    height: 2.8rem;
+                    border-radius: 8px;
+                    outline: none;
+                    border: none;
+                    color: #fff;
+                    background-color:#5D982E;
+                    font-weight: 600;
+                    font-size: 1.05rem;
+                    cursor: pointer;
+                  "
+                >
+                login
+                </button></a
+              >
 
-      <p
-        style="
-          color: #414552 !important;
-          font-weight: 400;
-          font-size: 16px;
-          line-height: 24px;
-          max-width: 88%;
-          margin-top: 6rem;
-        "
-      >
-      All rights reserved by UK Immigration © 2023.
-      </p>
-    </div>
-  </body>
-</html>`;
-      const info = await transporter.sendMail({
-        from: {
-          address: "testmailingsmtp@lesoft.io",
-          name: "Lesoft",
-        },
-        to: user?.email,
-        subject: "Approval of UK Immigration Phase 2",
-        text: "",
-        html: html,
-      });
+              <p
+                style="
+                  color: #414552 !important;
+                  font-weight: 400;
+                  font-size: 16px;
+                  line-height: 24px;
+                  max-width: 88%;
+                  margin-top: 6rem;
+                "
+              >
+              All rights reserved by UK Immigration © 2023.
+              </p>
+            </div>
+          </body>
+        </html>`;
+              const info = await transporter.sendMail({
+                from: {
+                  address: "testmailingsmtp@lesoft.io",
+                  name: "Lesoft",
+                },
+                to: user?.email,
+                subject: "Approval of UK Immigration Phase 2",
+                text: "",
+                html: html,
+              });
 
-      if (info.messageId) {
-        console.log("Email sent to the user", info.messageId);
+              if (info.messageId) {
+                console.log("Email sent to the user", info.messageId);
+              }
+        return res
+          .status(200)
+          .json({ message: "Phase 3 Requested", success: true });
+      } else if (
+        application.phase === 2 &&
+        application.phaseStatus === phaseStaus.Pending
+      ) {
+        // Pending Condition
+        if (application.requestedPhase >= 2) {
+          return res.status(400).json({
+            message: "You have already requested this phase.",
+            success: false,
+          });
+        }
+      } else if (
+        application.phase === 3 &&
+        application.phaseStatus === phaseStaus.Pending
+      ) {
+        // Pending Condition
+        if (application.requestedPhase >= 3) {
+          return res.status(400).json({
+            message: "You have already requested this phase.",
+            success: false,
+          });
+        }
       }
-      return res
-        .status(200)
-        .json({ message: "Phase 3 Requested", success: true });
-    } else {
-      return res
-        .status(400)
-        .json({
-          message: "To Request this phase, previous phase must be approved.",
-          success: false,
-        });
-    }
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -2031,6 +2427,360 @@ const updatePhaseByAdmin = async (req, res) => {
         { $set: { phase4: data } },
         { new: true, useFindAndModify: false }
       );
+      res.status(200).json({ application, success: true });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+const ReRequestPhase1 = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+
+    if(!applicationId){
+      return res.status(400).json({message: "Application Id cannot be empty",success: false})
+    }
+
+    const application = await ApplicationModel.findByIdAndUpdate(
+      applicationId,
+      {
+        $set: {
+          phaseSubmittedByClient: 0,
+          reRequest: 1,
+        },
+      },
+      { new: true, useFindAndModify: false }
+    );
+
+  if(application){
+    const user = await UserModel.findById(application?.userId);
+
+    // Send email to the user
+    const url = `${process.env.BASE_URL}`;
+              const html = `<!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title></title>
+          </head>
+          <body
+            style="
+              width: 100%;
+              height: 95vh;
+              background-color: #f6f9fc;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              font-family: sans-serif;
+            "
+          >
+            <div
+              class="card"
+              style="
+                width: 70%;
+                height: 90%;
+                background-color: #fff;
+                border-radius: 10px;
+                padding: 30px;
+                margin-top: 2rem;
+                padding-left: 40px;
+                margin: 2rem auto;
+              "
+            >
+              <img
+                src=${logo}
+                alt=""
+                style="margin-left: auto; margin-right: auto"
+              />
+              <h3
+                style="
+                  color:#5D982E;
+                  font-weight: 800;
+                  font-size: 1.1rem;
+                  letter-spacing: 0.5px;
+                "
+              >
+                Request to Resubmit Phase 1 Data for Immigration Application
+              </h3>
+
+              <p
+              style="
+                color: #414552 !important;
+                font-weight: 400;
+                font-size: 15px;
+                line-height: 24px;
+                margin-top: 1rem;
+                max-width: 80%;
+              "
+            >
+              Dear ${user?.name},
+            </p>
+
+            <p
+            style="
+              color: #414552 !important;
+              font-weight: 400;
+              font-size: 14px;
+              line-height: 22px;
+              margin-top: 1rem;
+              max-width: 90%;
+            "
+          >
+
+    We are writing to inform you that your recently submitted Phase 1 data for your immigration application has been reviewed by our administrative team. Regrettably, we have identified some discrepancies that require your attention.
+
+    In order to proceed with the processing of your application, we kindly request you to resubmit the Phase 1 data with the necessary corrections. Please carefully review the feedback provided by our team to address the specific issues mentioned.
+
+    To facilitate the resubmission process, please log in to your account on our immigration portal and navigate to the "Phase 1 Submission" section. Once there, you will find the option to edit and update your information. Ensure that all the required fields are filled accurately and completely.
+
+    If you encounter any difficulties or have questions regarding the corrections, please do not hesitate to reach out to our support team at [support@email.com]. We are here to assist you throughout the process and ensure a smooth experience.
+          </p>
+
+          <p
+          style="
+            color: #414552 !important;
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 22px;
+            margin-top: 1rem;
+            max-width: 80%;
+          "
+        >
+         Best regards,
+          Uk Immigration
+        </p>
+              <a
+                style="margin-top: 1.5rem; cursor: pointer"
+                href=${url}
+                target="_blank"
+                ><button
+                  style="
+                    width: 10.4rem;
+                    height: 2.8rem;
+                    border-radius: 8px;
+                    outline: none;
+                    border: none;
+                    color: #fff;
+                    background-color:#5D982E;
+                    font-weight: 600;
+                    font-size: 1.05rem;
+                    cursor: pointer;
+                  "
+                >
+                Login
+                </button></a
+              >
+
+              <p
+                style="
+                  color: #414552 !important;
+                  font-weight: 400;
+                  font-size: 16px;
+                  line-height: 24px;
+                  max-width: 88%;
+                  margin-top: 6rem;
+                "
+              >
+              All rights reserved by UK Immigration © 2023.
+              </p>
+            </div>
+          </body>
+        </html>`;
+              const info = await transporter.sendMail({
+                from: {
+                  address: "testmailingsmtp@lesoft.io",
+                  name: "Lesoft",
+                },
+                to: user?.email,
+                subject: "Approval of UK Immigration Phase 2",
+                text: "",
+                html: html,
+              });
+
+              if (info.messageId) {
+                console.log("Email sent to the user", info.messageId);
+        }
+
+    res.status(200).json({ application, success: true });
+  }
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+  }
+};
+
+const ReRequestPhase4 = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+
+    if (!applicationId) {
+      return res
+        .status(400)
+        .json({ message: "Application Id cannot be empty", success: false });
+    }
+
+    const application = await ApplicationModel.findByIdAndUpdate(
+      applicationId,
+      {
+        $set: {
+          phaseSubmittedByClient: 3,
+          reRequest: 4,
+        },
+      },
+      { new: true, useFindAndModify: false }
+    );
+
+    if (application) {
+      const user = await UserModel.findById(application?.userId);
+
+      // Send email to the user
+      const url = `${process.env.BASE_URL}`;
+                const html = `<!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <title></title>
+            </head>
+            <body
+              style="
+                width: 100%;
+                height: 95vh;
+                background-color: #f6f9fc;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-family: sans-serif;
+              "
+            >
+              <div
+                class="card"
+                style="
+                  width: 70%;
+                  height: 90%;
+                  background-color: #fff;
+                  border-radius: 10px;
+                  padding: 30px;
+                  margin-top: 2rem;
+                  padding-left: 40px;
+                  margin: 2rem auto;
+                "
+              >
+                <img
+                  src=${logo}
+                  alt=""
+                  style="margin-left: auto; margin-right: auto"
+                />
+                <h3
+                  style="
+                    color:#5D982E;
+                    font-weight: 800;
+                    font-size: 1.1rem;
+                    letter-spacing: 0.5px;
+                  "
+                >
+                  Request to Resubmit Phase 4 Data for Immigration Application
+                </h3>
+
+                <p
+                style="
+                  color: #414552 !important;
+                  font-weight: 400;
+                  font-size: 15px;
+                  line-height: 24px;
+                  margin-top: 1rem;
+                  max-width: 80%;
+                "
+              >
+                Dear ${user?.name},
+              </p>
+
+              <p
+              style="
+                color: #414552 !important;
+                font-weight: 400;
+                font-size: 14px;
+                line-height: 22px;
+                margin-top: 1rem;
+                max-width: 90%;
+              "
+            >
+
+      We are writing to inform you that your recently submitted Phase 4 data for your immigration application has been reviewed by our administrative team. Regrettably, we have identified some discrepancies that require your attention.
+
+      In order to proceed with the processing of your application, we kindly request you to resubmit the Phase 4 data with the necessary corrections. Please carefully review the feedback provided by our team to address the specific issues mentioned.
+
+      To facilitate the resubmission process, please log in to your account on our immigration portal and navigate to the "Phase 4 Submission" section. Once there, you will find the option to edit and update your information. Ensure that all the required fields are filled accurately and completely.
+
+      If you encounter any difficulties or have questions regarding the corrections, please do not hesitate to reach out to our support team at [support@email.com]. We are here to assist you throughout the process and ensure a smooth experience.
+            </p>
+
+            <p
+            style="
+              color: #414552 !important;
+              font-weight: 400;
+              font-size: 14px;
+              line-height: 22px;
+              margin-top: 1rem;
+              max-width: 80%;
+            "
+          >
+           Best regards,
+            Uk Immigration
+          </p>
+                <a
+                  style="margin-top: 1.5rem; cursor: pointer"
+                  href=${url}
+                  target="_blank"
+                  ><button
+                    style="
+                      width: 10.4rem;
+                      height: 2.8rem;
+                      border-radius: 8px;
+                      outline: none;
+                      border: none;
+                      color: #fff;
+                      background-color:#5D982E;
+                      font-weight: 600;
+                      font-size: 1.05rem;
+                      cursor: pointer;
+                    "
+                  >
+                  Login
+                  </button></a
+                >
+
+                <p
+                  style="
+                    color: #414552 !important;
+                    font-weight: 400;
+                    font-size: 16px;
+                    line-height: 24px;
+                    max-width: 88%;
+                    margin-top: 6rem;
+                  "
+                >
+                All rights reserved by UK Immigration © 2023.
+                </p>
+              </div>
+            </body>
+          </html>`;
+                const info = await transporter.sendMail({
+                  from: {
+                    address: "testmailingsmtp@lesoft.io",
+                    name: "Lesoft",
+                  },
+                  to: user?.email,
+                  subject: "Approval of UK Immigration Phase 2",
+                  text: "",
+                  html: html,
+                });
+
+                if (info.messageId) {
+                  console.log("Email sent to the user", info.messageId);
+          }
+
       res.status(200).json({ application, success: true });
     }
   } catch (err) {
@@ -2282,23 +3032,109 @@ const rejectApplication = async (req, res) => {
           success: false,
         });
     }
-    await ApplicationModel.updateOne(
-      { _id: applicationId },
-      {
-        $set: {
-          applicationStatus: "rejected",
-          phaseStatus: "rejected",
-          rejectPhaseReason: rejectPhaseReason,
-        },
-        $push: {
-          report: {
-            phase: isApplication.phase,
-            status: "rejected",
-            dateTime: new Date(),
+
+    if(isApplication.phase === 1){
+       await ApplicationModel.updateOne(
+         { _id: applicationId },
+         {
+           $set: {
+             applicationStatus: "rejected",
+             phaseStatus: "rejected",
+             rejectPhaseReason: rejectPhaseReason,
+             "phase1.status": "rejected",
+             requestedPhase:
+               isApplication.requestedPhase === 2
+                 ? 0
+                 : isApplication.requestedPhase === 3
+                 ? 2
+                 : 0,
+           },
+           $push: {
+             report: {
+               phase: isApplication.phase,
+               status: "rejected",
+               dateTime: new Date(),
+             },
+           },
+         }
+       );
+    }else if(isApplication.phase === 2){
+      await ApplicationModel.updateOne(
+        { _id: applicationId },
+        {
+          $set: {
+            applicationStatus: "rejected",
+            phaseStatus: "rejected",
+            rejectPhaseReason: rejectPhaseReason,
+            "phase2.status": "rejected",
+            requestedPhase:
+              isApplication.requestedPhase === 2
+                ? 0
+                : isApplication.requestedPhase === 3
+                ? 2
+                : 0,
           },
-        },
-      }
-    );
+          $push: {
+            report: {
+              phase: isApplication.phase,
+              status: "rejected",
+              dateTime: new Date(),
+            },
+          },
+        }
+      );
+    }else if(isApplication.phase === 3){
+      await ApplicationModel.updateOne(
+        { _id: applicationId },
+        {
+          $set: {
+            applicationStatus: "rejected",
+            phaseStatus: "rejected",
+            rejectPhaseReason: rejectPhaseReason,
+            "phase3.status": "rejected",
+            requestedPhase:
+              isApplication.requestedPhase === 2
+                ? 0
+                : isApplication.requestedPhase === 3
+                ? 2
+                : 0,
+          },
+          $push: {
+            report: {
+              phase: isApplication.phase,
+              status: "rejected",
+              dateTime: new Date(),
+            },
+          },
+        }
+      );
+    }else if (isApplication.phase === 4){
+      await ApplicationModel.updateOne(
+        { _id: applicationId },
+        {
+          $set: {
+            applicationStatus: "rejected",
+            phaseStatus: "rejected",
+            rejectPhaseReason: rejectPhaseReason,
+            "phase4.status": "rejected",
+            requestedPhase:
+              isApplication.requestedPhase === 2
+                ? 0
+                : isApplication.requestedPhase === 3
+                ? 2
+                : 0,
+          },
+          $push: {
+            report: {
+              phase: isApplication.phase,
+              status: "rejected",
+              dateTime: new Date(),
+            },
+          },
+        }
+      );
+    }
+   
 
 
     let content = rejectPhaseReason;
@@ -2806,7 +3642,7 @@ const generateInvoiceQueryConditions = (filters, modelName, caseWorkerId) => {
 
   // Validate that Requested phase should be grater or equal to 3 
   queryConditions.push({
-    requestedPhase: {
+    phase: {
       $gte: 3
      },
   });
@@ -3133,4 +3969,6 @@ module.exports = {
   updatePhase1Manual,
   arrayFileUploads,
   getApplicationsNotesData,
+  ReRequestPhase1,
+  ReRequestPhase4,
 };

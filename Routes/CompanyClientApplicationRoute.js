@@ -1,7 +1,7 @@
 const express = require('express');
 const Authenticate = require('../Middlewares/Auth/Auth');
 const { isAssignedCompanyCaseWorker, isAssignedCaseWorker, isAdmin, isAdminOrCaseWorker } = require('../Middlewares/Auth/role');
-const {postCompanyClientPhase1, postCompanyClientPhase2, requestCompanyClientPhase, sendRequestToCompanyClient, acceptCompanyInitialRequest, approveCompanyPhase1, approveCompanyPhase2, approveCompanyPhase3, approveCompanyPhase4, postCompanyClientPhase3, postCompanyClientPhase4, getApplicationsByCompanyId, getGroupClientApplicationsById, signupCompanyClient, getGroupClientApplicationsByUserId, assignGroupApplicationToCaseWorker, addNotesGroupClient, getAllGroupApplicationData, updateGroupApplicationService, rejectGroupApplication, linkGroupCompany, updateGroupPhaseByAdmin, postGroupGeneral, postGroupAccomodation, postGroupFamily, postGroupLanguage, postGroupEducation, postGroupEmployment, postGroupMaintenance, postGroupTravel, postGroupCharacter } = require('../Controllers/CompanyClientApplication');
+const {postCompanyClientPhase1, postCompanyClientPhase2, requestCompanyClientPhase, sendRequestToCompanyClient, acceptCompanyInitialRequest, approveCompanyPhase1, approveCompanyPhase2, approveCompanyPhase3, approveCompanyPhase4, postCompanyClientPhase3, postCompanyClientPhase4, getApplicationsByCompanyId, getGroupClientApplicationsById, signupCompanyClient, getGroupClientApplicationsByUserId, assignGroupApplicationToCaseWorker, addNotesGroupClient, getAllGroupApplicationData, updateGroupApplicationService, rejectGroupApplication, linkGroupCompany, updateGroupPhaseByAdmin, postGroupGeneral, postGroupAccomodation, postGroupFamily, postGroupLanguage, postGroupEducation, postGroupEmployment, postGroupMaintenance, postGroupTravel, postGroupCharacter, ReRequestGroupPhase1, ReRequestGroupPhase4 } = require('../Controllers/CompanyClientApplication');
 const router = express.Router();
 const multer = require("multer");
 
@@ -89,5 +89,9 @@ router.post("/api/group/application/employment/:applicationId", Authenticate, po
 router.post("/api/group/application/maintenance/:applicationId", Authenticate, postGroupMaintenance);
 router.post("/api/group/application/travel/:applicationId", Authenticate, postGroupTravel);
 router.post("/api/group/application/character/:applicationId", Authenticate, postGroupCharacter);
+
+// Re Request from admin side to Submit Phase data if rejected by admin 
+router.post("/api/rerequest/group/phase1/:applicationId", Authenticate, isAdminOrCaseWorker, isAssignedCompanyCaseWorker, ReRequestGroupPhase1);
+router.post("/api/rerequest/group/phase4/:applicationId", Authenticate, isAdminOrCaseWorker, isAssignedCompanyCaseWorker, ReRequestGroupPhase4);
 
 module.exports = router;

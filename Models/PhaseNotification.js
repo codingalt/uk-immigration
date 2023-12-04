@@ -16,6 +16,9 @@ const phaseNotificationSchema = mongoose.Schema(
       type: Number,
       default: 0,
     },
+    reSubmit: {
+      type: Number
+    },
     phaseStatus: {
       type: String,
     },

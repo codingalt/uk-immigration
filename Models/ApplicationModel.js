@@ -3,6 +3,10 @@ const mongoose = require("mongoose");
 const applicationSchema = mongoose.Schema(
   {
     phase1: {
+      status: {
+        type: String,
+        default: "pending",
+      },
       applicationType: {
         type: String,
         required: true,
@@ -64,6 +68,10 @@ const applicationSchema = mongoose.Schema(
       },
     },
     phase2: {
+      status: {
+        type: String,
+        default: "pending",
+      },
       passport: String,
       dependantPassport: String,
       utilityBill: String,
@@ -78,6 +86,10 @@ const applicationSchema = mongoose.Schema(
       otherDocumentNotes: String,
     },
     phase3: {
+      status: {
+        type: String,
+        default: "pending",
+      },
       isOnlinePayment: Boolean,
       onlinePaymentEvidence: String,
       doesCompanyHelp: Boolean,
@@ -93,6 +105,10 @@ const applicationSchema = mongoose.Schema(
       dateTime: Date,
     },
     phase4: {
+      status: {
+        type: String,
+        default: "pending",
+      },
       isCompleted: {
         type: Number,
         default: 0,
@@ -359,7 +375,7 @@ const applicationSchema = mongoose.Schema(
           type: String,
         },
         ispreviousHome: {
-          type: Boolean
+          type: Boolean,
         },
         previousHomeDetails: {
           address1: String,
@@ -817,6 +833,9 @@ const applicationSchema = mongoose.Schema(
       type: Number,
       default: 0,
     },
+    reRequest: {
+      type: Number,
+    },
     isInitialRequestAccepted: {
       type: Boolean,
       default: false,
@@ -834,15 +853,19 @@ const applicationSchema = mongoose.Schema(
     caseWorkerName: {
       type: String,
     },
-    report: [{
-      phase: Number,
-      status: String,
-      dateTime: Date,
-    }],
-    service: [{
-      serviceType: String,
-      dateTime: Date,
-    }],
+    report: [
+      {
+        phase: Number,
+        status: String,
+        dateTime: Date,
+      },
+    ],
+    service: [
+      {
+        serviceType: String,
+        dateTime: Date,
+      },
+    ],
     notes: [
       {
         name: String,

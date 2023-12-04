@@ -29,6 +29,7 @@ const sendNotification = async(req)=>{
         phaseStatus: phaseStatus,
         notificationType,
         phaseSubmittedByClient: phaseSubmittedByClient,
+        reSubmit: req.reSubmit && req.reSubmit,
       }).save();
 
       const user = await UserModel.findById(userId);
