@@ -205,20 +205,20 @@ To access and submit your visa application, please click on the following button
     </div>
   </body>
 </html>`;
-    // const info = await transporter.sendMail({
-    //   from: {
-    //     address: "testmailingsmtp@lesoft.io",
-    //     name: "Lesoft",
-    //   },
-    //   to: emails,
-    //   subject: "Invitation to Complete Your Visa Application",
-    //   text: "",
-    //   html: html,
-    // });
+    const info = await transporter.sendMail({
+      from: {
+        address: "testmailingsmtp@lesoft.io",
+        name: "Lesoft",
+      },
+      to: emails,
+      subject: "Invitation to Complete Your Visa Application",
+      text: "",
+      html: html,
+    });
 
-    // if (info.messageId) {
-    //   console.log("Email sent to the user", info.messageId);
-    // }
+    if (info.messageId) {
+      console.log("Email sent to the user", info.messageId);
+    }
 
     const { phase1, companyId, isInitialRequestAccepted, _id } = application;
     const result = {
@@ -519,19 +519,19 @@ const signupCompanyClient = async (req, res) => {
     </div>
   </body>
 </html>`;
-      // const info = await transporter.sendMail({
-      //   from: {
-      //     address: "testmailingsmtp@lesoft.io",
-      //     name: "Lesoft",
-      //   },
-      //   to: email,
-      //   subject:
-      //     "Verify your Email - Get started with your new Uk Immigration account",
-      //   text: "",
-      //   html: html,
-      // });
-      // console.log("Email Res", info);
-      const info = {messageId: "hello"}
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: email,
+        subject:
+          "Verify your Email - Get started with your new Uk Immigration account",
+        text: "",
+        html: html,
+      });
+      console.log("Email Res", info);
+      // const info = {messageId: "hello"}
 
       if (info.messageId) {
         console.log("Email sent successfully");
@@ -1496,20 +1496,20 @@ const requestCompanyClientPhase = async (req, res) => {
             </div>
           </body>
         </html>`;
-      // const info = await transporter.sendMail({
-      //   from: {
-      //     address: "testmailingsmtp@lesoft.io",
-      //     name: "Lesoft",
-      //   },
-      //   to: user?.email,
-      //   subject: "Request to Resubmit Phase 2 Data for Immigration Application",
-      //   text: "",
-      //   html: html,
-      // });
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Request to Resubmit Phase 2 Data for Immigration Application",
+        text: "",
+        html: html,
+      });
 
-      // if (info.messageId) {
-      //   console.log("Email sent to the user", info.messageId);
-      // }
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
 
       return res
         .status(200)
@@ -1659,20 +1659,20 @@ const requestCompanyClientPhase = async (req, res) => {
             </div>
           </body>
         </html>`;
-      // const info = await transporter.sendMail({
-      //   from: {
-      //     address: "testmailingsmtp@lesoft.io",
-      //     name: "Lesoft",
-      //   },
-      //   to: user?.email,
-      //   subject: "Request to Resubmit Phase 3 Data for Immigration Application",
-      //   text: "",
-      //   html: html,
-      // });
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Request to Resubmit Phase 3 Data for Immigration Application",
+        text: "",
+        html: html,
+      });
 
-      // if (info.messageId) {
-      //   console.log("Email sent to the user", info.messageId);
-      // }
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
 
       return res
         .status(200)
@@ -1840,20 +1840,20 @@ const requestCompanyClientPhase = async (req, res) => {
     </div>
   </body>
 </html>`;
-      // const info = await transporter.sendMail({
-      //   from: {
-      //     address: "testmailingsmtp@lesoft.io",
-      //     name: "Lesoft",
-      //   },
-      //   to: user?.email,
-      //   subject: "Approval of UK Immigration Phase 1",
-      //   text: "",
-      //   html: html,
-      // });
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Approval of UK Immigration Phase 1",
+        text: "",
+        html: html,
+      });
 
-      // if (info.messageId) {
-      //   console.log("Email sent to the user", info.messageId);
-      // }
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
 
       return res
         .status(200)
@@ -1878,11 +1878,11 @@ const requestCompanyClientPhase = async (req, res) => {
             phase: 3,
             phaseStatus: "pending",
             "phase1.applicationType": req.body.phase3.companyHelpService,
-            $push: {
-              service: {
-                serviceType: req.body.phase3.companyHelpService,
-                dateTime: new Date(),
-              },
+          },
+          $push: {
+            service: {
+              serviceType: req.body.phase3.companyHelpService,
+              dateTime: new Date(),
             },
           },
         },
@@ -2024,20 +2024,20 @@ const requestCompanyClientPhase = async (req, res) => {
           </div>
         </body>
       </html>`;
-            // const info = await transporter.sendMail({
-            //   from: {
-            //     address: "testmailingsmtp@lesoft.io",
-            //     name: "Lesoft",
-            //   },
-            //   to: user?.email,
-            //   subject: "Approval of UK Immigration Phase 2",
-            //   text: "",
-            //   html: html,
-            // });
+            const info = await transporter.sendMail({
+              from: {
+                address: "testmailingsmtp@lesoft.io",
+                name: "Lesoft",
+              },
+              to: user?.email,
+              subject: "Approval of UK Immigration Phase 2",
+              text: "",
+              html: html,
+            });
 
-            // if (info.messageId) {
-            //   console.log("Email sent to the user", info.messageId);
-            // }
+            if (info.messageId) {
+              console.log("Email sent to the user", info.messageId);
+            }
       return res
         .status(200)
         .json({ message: "Phase 3 Requested", success: true });
@@ -2408,20 +2408,20 @@ const approveCompanyPhase3 = async (req, res) => {
     </div>
   </body>
 </html>`;
-      // const info = await transporter.sendMail({
-      //   from: {
-      //     address: "testmailingsmtp@lesoft.io",
-      //     name: "Lesoft",
-      //   },
-      //   to: user?.email,
-      //   subject: "Approval of UK Immigration Phase 3",
-      //   text: "",
-      //   html: html,
-      // });
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Approval of UK Immigration Phase 3",
+        text: "",
+        html: html,
+      });
 
-      // if (info.messageId) {
-      //   console.log("Email sent to the user", info.messageId);
-      // }
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
 
       let content =
         "Congratulations, Phase 3 Approved Successfully. Click here to continue";
@@ -2630,20 +2630,20 @@ const approveCompanyPhase4 = async (req, res) => {
     </div>
   </body>
 </html>`;
-      // const info = await transporter.sendMail({
-      //   from: {
-      //     address: "testmailingsmtp@lesoft.io",
-      //     name: "Lesoft",
-      //   },
-      //   to: user?.email,
-      //   subject: "Approval of UK Immigration Phase 4",
-      //   text: "",
-      //   html: html,
-      // });
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Approval of UK Immigration Phase 4",
+        text: "",
+        html: html,
+      });
 
-      // if (info.messageId) {
-      //   console.log("Email sent to the user", info.messageId);
-      // }
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
 
       let content =
         "Congratulations, Phase 4 Approved Successfully. Click here to continue";
@@ -2838,21 +2838,21 @@ const ReRequestGroupPhase1 = async (req, res) => {
               </div>
             </body>
           </html>`;
-                // const info = await transporter.sendMail({
-                //   from: {
-                //     address: "testmailingsmtp@lesoft.io",
-                //     name: "Lesoft",
-                //   },
-                //   to: user?.email,
-                //   subject:
-                //     "Request to Resubmit Phase 1 Data for Immigration Application",
-                //   text: "",
-                //   html: html,
-                // });
+                const info = await transporter.sendMail({
+                  from: {
+                    address: "testmailingsmtp@lesoft.io",
+                    name: "Lesoft",
+                  },
+                  to: user?.email,
+                  subject:
+                    "Request to Resubmit Phase 1 Data for Immigration Application",
+                  text: "",
+                  html: html,
+                });
 
-                // if (info.messageId) {
-                //   console.log("Email sent to the user", info.messageId);
-                // }
+                if (info.messageId) {
+                  console.log("Email sent to the user", info.messageId);
+                }
 
       res.status(200).json({ application, success: true });
     }
@@ -3017,21 +3017,21 @@ const ReRequestGroupPhase4 = async (req, res) => {
               </div>
             </body>
           </html>`;
-                // const info = await transporter.sendMail({
-                //   from: {
-                //     address: "testmailingsmtp@lesoft.io",
-                //     name: "Lesoft",
-                //   },
-                //   to: user?.email,
-                //   subject:
-                //     "Request to Resubmit Phase 4 Data for Immigration Application",
-                //   text: "",
-                //   html: html,
-                // });
+                const info = await transporter.sendMail({
+                  from: {
+                    address: "testmailingsmtp@lesoft.io",
+                    name: "Lesoft",
+                  },
+                  to: user?.email,
+                  subject:
+                    "Request to Resubmit Phase 4 Data for Immigration Application",
+                  text: "",
+                  html: html,
+                });
 
-                // if (info.messageId) {
-                //   console.log("Email sent to the user", info.messageId);
-                //  }
+                if (info.messageId) {
+                  console.log("Email sent to the user", info.messageId);
+                 }
 
       res.status(200).json({ application, success: true });
     }
@@ -3225,20 +3225,20 @@ Your prompt attention to this matter is greatly appreciated. Thank you for your 
         </div>
       </body>
     </html>`;
-          // const info = await transporter.sendMail({
-          //   from: {
-          //     address: "testmailingsmtp@lesoft.io",
-          //     name: "Lesoft",
-          //   },
-          //   to: caseWorker?.email,
-          //   subject: "New Case Assignment: Action Required",
-          //   text: "",
-          //   html: html,
-          // });
+          const info = await transporter.sendMail({
+            from: {
+              address: "testmailingsmtp@lesoft.io",
+              name: "Lesoft",
+            },
+            to: caseWorker?.email,
+            subject: "New Case Assignment: Action Required",
+            text: "",
+            html: html,
+          });
 
-          // if (info.messageId) {
-          //   console.log("Email sent to the user", info.messageId);
-          // }
+          if (info.messageId) {
+            console.log("Email sent to the user", info.messageId);
+          }
 
     res.status(200).json({ message: "CaseWorker Assigned", success: true });
   } catch (err) {

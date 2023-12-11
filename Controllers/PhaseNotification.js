@@ -364,9 +364,12 @@ const getClientNotifications = async(req, res)=>{
 
       console.log(notifications);
 
-      return res
-        .status(200)
-        .json({ notifications, success: true, companyClient: false });
+      return res.status(200).json({
+        notifications,
+        success: true,
+        companyClient: false,
+        cost: parseInt(application?.phase3?.cost),
+      });
     }else{
     const groupApp = await CompanyClientModel.findOne({userId: req.userId.toString()});
     const notifications = await PhaseNotificationModel.find({
@@ -375,7 +378,7 @@ const getClientNotifications = async(req, res)=>{
       notificationType: "client",
     });
     console.log(notifications);
-    return res.status(200).json({ notifications, success: true,companyClient: true });
+    return res.status(200).json({ notifications, success: true,companyClient: true, cost: parseInt(groupApp?.phase3?.cost) });
 
     }
     
