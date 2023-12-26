@@ -4,7 +4,6 @@ const eventSchema = new mongoose.Schema({
   userId: {
     type: String,
     required: true,
-    unique: true
   },
   day: { type: Number, required: true },
   month: { type: Number, required: true },
@@ -12,7 +11,7 @@ const eventSchema = new mongoose.Schema({
   events: [
     {
       title: { type: String, required: true },
-      time: { type: String, required: true },
+      time: { type: Date, required: true },
     },
   ],
 });

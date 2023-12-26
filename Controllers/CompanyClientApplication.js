@@ -3252,7 +3252,7 @@ const addNotesGroupClient = async (req, res) => {
     const { applicationId } = req.params;
     const { name, content } = req.body;
     console.log(req.body);
-    const notes = { name: name, content: content };
+    const notes = { name: name, content: content, dateTime: new Date() };
     const isApplication = await CompanyClientModel.findById(applicationId);
     if (!isApplication) {
       return res.status(400).json({

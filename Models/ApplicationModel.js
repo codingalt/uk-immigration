@@ -870,6 +870,7 @@ const applicationSchema = mongoose.Schema(
       {
         name: String,
         content: String,
+        dateTime: Date
       },
     ],
     linkedCompany: {

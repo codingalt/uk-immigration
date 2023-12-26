@@ -302,15 +302,15 @@ const postApplicationPhase2 = async (req, res) => {
 
     if (user.isAdmin || user.isCaseWorker) {
       // Update Phase 2
+      const filesObjTemp = { ...filesObj, status: "approved" };
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
         {
           $set: {
-            phase2: filesObj,
+            phase2: filesObjTemp,
             phaseSubmittedByClient: 2,
             phase: 2,
             phaseStatus: "approved",
-            "phase2.status": "approved",
             applicationStatus: "pending",
             $push: {
               report: { phase: 2, status: "approved", dateTime: new Date() },
@@ -553,6 +553,7 @@ const postPhase1Manual = async (req, res) => {
     req.body.phaseSubmittedByClient = 1;
     req.body.phase = 1;
     req.body.phaseStatus = "approved";
+    req.body.phase1.status = "approved";
     req.body.isInitialRequestAccepted = true;
     req.body.isManual = true;
    if (!req.body.report) {
@@ -3367,7 +3368,7 @@ const addNotes = async (req, res) => {
     const { applicationId } = req.params;
     const { name, content } = req.body;
     console.log(req.body);
-    const notes = { name: name, content: content };
+    const notes = { name: name, content: content, dateTime: new Date() };
     const isApplication = await ApplicationModel.findById(applicationId);
     if (!isApplication) {
       return res.status(400).json({

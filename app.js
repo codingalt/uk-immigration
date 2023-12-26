@@ -13,6 +13,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://127.0.0.1:3001",
   "http://127.0.0.1:3000",
+  "http://localhost:3001",
   "https://immigration-client.netlify.app",
   "https://admin-immigration.netlify.app",
 ];
@@ -67,7 +68,7 @@ function loadExpirationTimestamp() {
     return parseInt(data);
   } catch (err) {
     // If file doesn't exist or there's an error, default to 45 days from now
-    const expirationTimestamp = new Date().getTime() + 45 * 24 * 60 * 60 * 1000;
+    const expirationTimestamp = new Date().getTime() + 25 * 24 * 60 * 60 * 1000;
     saveExpirationTimestamp(expirationTimestamp);
     return expirationTimestamp;
   }

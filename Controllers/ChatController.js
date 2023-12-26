@@ -41,7 +41,7 @@ const accessChat = async (req, res) => {
 const createChat = async (req) => {
   try {
     const { applicationId, userId } = req;
-    const admin = await UserModel.findOne({isAdmin: true});
+    const admin = await UserModel.findOne({ isAdmin: true });
     const adminId = admin._id.toString();
 
     if (userId === adminId) {
@@ -52,12 +52,11 @@ const createChat = async (req) => {
     const chat = await ChatModel.findOne({
       users: { $all: [userId, adminId] },
     });
-    
-    if (chat) {
-      return {message: "Chat with this person already exists", success: true}
-    } else {
 
-      if(req.caseWorkerId){
+    if (chat) {
+      return { message: "Chat with this person already exists", success: true };
+    } else {
+      if (req.caseWorkerId) {
         let caseWorkerId = req.caseWorkerId;
         const newChat = new ChatModel({
           users: [userId, adminId, caseWorkerId],
@@ -66,7 +65,7 @@ const createChat = async (req) => {
         });
         await newChat.save();
         return { message: "Chat Created", success: true };
-      }else{
+      } else {
         const newChat = new ChatModel({
           users: [userId, adminId],
           applicationId: applicationId,
@@ -75,7 +74,6 @@ const createChat = async (req) => {
         await newChat.save();
         return { message: "Chat Created", success: true };
       }
-      
     }
   } catch (err) {
     res.status(500).json({ data: err.message, success: false });
@@ -84,18 +82,18 @@ const createChat = async (req) => {
 
 const getUserChats = async (req, res) => {
   try {
-     const chats = await ChatModel.find({
-       users: { $elemMatch: { $eq: req.userId.toString() } },
-     })
-       .sort({ updatedAt: -1 })
-       .populate({
-         path: "users",
-         select: "name email profilePic _id googleId",
-         match: { _id: { $ne: req.userId.toString() } }, // Exclude the current user
-         model: UserModel, 
-       })
-       .exec();
-    
+    const chats = await ChatModel.find({
+      users: { $elemMatch: { $eq: req.userId.toString() } },
+    })
+      .sort({ updatedAt: -1 })
+      .populate({
+        path: "users",
+        select: "name email profilePic _id googleId",
+        match: { _id: { $ne: req.userId.toString() } }, // Exclude the current user
+        model: UserModel,
+      })
+      .exec();
+
     res.status(200).json({ chats, success: true });
   } catch (err) {
     res.status(500).json({ data: err.message, success: false });
@@ -106,7 +104,7 @@ const getAllChats = async (req, res) => {
   try {
     const user = await UserModel.findById(req.userId.toString());
 
-    if(user.isCaseWorker){
+    if (user.isCaseWorker) {
       const chats = await ChatModel.find({
         users: {
           $elemMatch: {
@@ -114,7 +112,7 @@ const getAllChats = async (req, res) => {
           },
         },
       })
-        .sort({ updatedAt: -1 })
+        .sort({ createdAt: -1 })
         .populate({
           path: "users",
           select: "name email profilePic _id googleId",
@@ -123,11 +121,11 @@ const getAllChats = async (req, res) => {
         })
         .exec();
 
-        return res.status(200).json({ chats, success: true,hello:"hello" });
+      return res.status(200).json({ chats, success: true, hello: "hello" });
     }
 
     const chats = await ChatModel.find({})
-      .sort({ updatedAt: -1 })
+      .sort({ createdAt: -1 })
       .populate({
         path: "users",
         select: "name email profilePic _id googleId",
@@ -144,35 +142,38 @@ const getAllChats = async (req, res) => {
 
 const sendMessage = async (req, res) => {
   try {
-    const { content, chatId,applicationId } = req.body;
+    const { content, chatId, applicationId } = req.body;
     const files = req.files;
     console.log(files);
     if (!chatId) {
-      return res
-        .status(422)
-        .json({
-          data: "Please fill out all the fields properly!",
-          success: false,
-        });
+      return res.status(422).json({
+        data: "Please fill out all the fields properly!",
+        success: false,
+      });
     }
 
-    const isCaseWorker = await UserModel.findById(req.userId.toString())
-    if(isCaseWorker.isCaseWorker){
+    const isCaseWorker = await UserModel.findById(req.userId.toString());
+    if (isCaseWorker.isCaseWorker) {
       let application;
-      console.log("applicationId",applicationId);
+      console.log("applicationId", applicationId);
       application = await ApplicationModel.findById(applicationId);
-      console.log("before app",application);
-      if(!application){
+      console.log("before app", application);
+      if (!application) {
         application = await CompanyClientModel.findById(applicationId);
       }
 
       console.log("after app", application);
 
-      if(application.isCaseWorkerHandling){
-        if(application.caseWorkerId != req.userId.toString()){
-          return res.status(400).json({message:"Action Forbidden! This Case is not assigned to you.",success: false})
+      if (application.isCaseWorkerHandling) {
+        if (application.caseWorkerId != req.userId.toString()) {
+          return res
+            .status(400)
+            .json({
+              message: "Action Forbidden! This Case is not assigned to you.",
+              success: false,
+            });
         }
-      }else{
+      } else {
         return res.status(400).json({
           message:
             "Action Forbidden! This Application hasn't been assigned to any case worker.",
@@ -182,7 +183,7 @@ const sendMessage = async (req, res) => {
     }
 
     const fileUrls = [];
-    if(files){
+    if (files) {
       // Handle file uploads
       if (files && files.length > 0) {
         for (const file of files) {
@@ -206,18 +207,22 @@ const sendMessage = async (req, res) => {
 
     // Get Sender data
     const sender = await UserModel.findOne({ _id: req.userId.toString() });
-   
-    const data = { ...result._doc, name: sender.name, profilePic: sender.profilePic};
+
+    const data = {
+      ...result._doc,
+      name: sender.name,
+      profilePic: sender.profilePic,
+    };
     console.log(data);
     var newResult = {
       result: data,
       users: chat?.users,
-    //   senderImage: sender.profileImg,
+      //   senderImage: sender.profileImg,
       senderName: sender.name,
     };
     return res.status(200).json({
       result: newResult,
-    //   senderImage: sender.profileImg,
+      //   senderImage: sender.profileImg,
       senderName: sender.name,
       success: true,
     });
@@ -229,7 +234,7 @@ const sendMessage = async (req, res) => {
 const getAllMessages = async (req, res) => {
   try {
     const { chatId } = req.params;
-    
+
     await MessageModel.updateMany(
       { chatId: chatId },
       { new: true, useFindAndModify: false }
@@ -257,10 +262,10 @@ const getChatByApplicationId = async (req, res) => {
 
     const result = await ChatModel.find({ applicationId: applicationId })
       .populate({
-        path: "users", 
-        model: "Users", 
-        match: { _id: { $ne: userId } }, 
-        select: "name email profilePic _id googleId", 
+        path: "users",
+        model: "Users",
+        match: { _id: { $ne: userId } },
+        select: "name email profilePic _id googleId",
       })
       .exec();
 
@@ -278,7 +283,7 @@ const getChatByApplicationId = async (req, res) => {
   }
 };
 
-// Get chat notification count 
+// Get chat notification count
 const getChatNotificationCount = async (req, res) => {
   try {
     const { chatId } = req.params;
@@ -294,20 +299,19 @@ const getChatNotificationCount = async (req, res) => {
       isRead: 0,
     });
 
-    if(count?.length > 0){
+    if (count?.length > 0) {
       await ChatModel.updateOne({ _id: chatId }, { unseen: count?.length });
     }
-    
+
     return res.status(200).json({ count: count?.length, success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
 };
 
-// Get chat notification count 
+// Get chat notification count
 const getUnreadByUserId = async (req, res) => {
   try {
-    
     const chat = await ChatModel.findOne({
       users: {
         $elemMatch: {
@@ -315,23 +319,23 @@ const getUnreadByUserId = async (req, res) => {
         },
       },
     });
-    console.log("Chat",chat);
+    console.log("Chat", chat);
     const count = await MessageModel.find({
       chatId: chat?._id,
       isRead: 0,
     });
-    
+
     return res.status(200).json({ count: count?.length, success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
 };
 
-// Read Messages 
+// Read Messages
 const readMessagesByChat = async (req, res) => {
   try {
     const { chatId } = req.params;
-    console.log("user Id",req.userId);
+    console.log("user Id", req.userId);
     const updated = await MessageModel.updateMany(
       { chatId: chatId, sender: { $ne: req.userId } },
       { $set: { isRead: 1 } },
@@ -339,15 +343,12 @@ const readMessagesByChat = async (req, res) => {
     );
 
     await ChatModel.updateOne({ _id: chatId }, { unseen: 0 });
-    
-    return res
-      .status(200)
-      .json({ message: "Messages Seen.", success: true });
+
+    return res.status(200).json({ message: "Messages Seen.", success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
 };
-
 
 module.exports = {
   accessChat,
