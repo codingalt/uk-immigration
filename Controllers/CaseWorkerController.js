@@ -12,6 +12,7 @@ const createCaseWorker = async (req, res) => {
       country,
       birthDate,
       state,
+      workerId,
       languages,
       password,
       confirmPassword,
@@ -23,6 +24,7 @@ const createCaseWorker = async (req, res) => {
       !email ||
       !contact ||
       !country ||
+      !workerId ||
       !birthDate ||
       !state ||
       !languages ||
@@ -53,12 +55,12 @@ const createCaseWorker = async (req, res) => {
         .json({ message: "Password do not match", success: false });
 
     // Generating WorkerId
-    const workerId = otpGenerator.generate(6,{
-      digits: true,
-      lowerCaseAlphabets: false,
-      upperCaseAlphabets: false,
-      specialChars: false
-    });
+    // const workerId = otpGenerator.generate(6,{
+    //   digits: true,
+    //   lowerCaseAlphabets: false,
+    //   upperCaseAlphabets: false,
+    //   specialChars: false
+    // });
 
     const user = new UserModel({
       name: firstName + " " + lastName,

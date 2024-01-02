@@ -38,6 +38,12 @@ const applicationSchema = mongoose.Schema(
       permissionInCountry: {
         type: String,
       },
+      temporaryVisaDetails: {
+        type: String,
+      },
+      temporaryVisaValidUntill: {
+        type: String
+      },
       speakEnglish: {
         type: Boolean,
         required: true,
