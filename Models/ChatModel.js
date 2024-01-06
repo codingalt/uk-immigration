@@ -17,11 +17,12 @@ const chatSchema = mongoose.Schema(
     },
     applicationId: {
       type: String,
-      required: true,
-      unique: true,
     },
     clientId: {
       type: String,
+    },
+    caseWorkerChat: {
+      type: Boolean
     }
   },
   { timestamps: true }

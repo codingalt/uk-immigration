@@ -4,6 +4,7 @@ const UserModel = require("../Models/UserModel");
 const MessageModel = require("../Models/MessageModel");
 const ApplicationModel = require("../Models/ApplicationModel");
 const CompanyClientModel = require("../Models/CompanyClientModel");
+const otpGenerator = require("otp-generator");
 
 const accessChat = async (req, res) => {
   try {
@@ -74,6 +75,46 @@ const createChat = async (req) => {
         await newChat.save();
         return { message: "Chat Created", success: true };
       }
+    }
+  } catch (err) {
+    res.status(500).json({ data: err.message, success: false });
+  }
+};
+
+const createCaseWorkerChat = async (req, res) => {
+  try {
+    const { receiverId } = req.body;
+    if (!receiverId) {
+      return res
+        .status(400)
+        .json({ message: "UserId cannot be empty", success: false });
+    }
+
+    // Generating ApplicationId
+    const caseId = otpGenerator.generate(6, {
+      digits: true,
+      lowerCaseAlphabets: false,
+      upperCaseAlphabets: false,
+      specialChars: false,
+    });
+
+    // check if chat is already present
+    const chat = await ChatModel.findOne({
+      users: { $all: [req.userId.toString(), receiverId] },
+    });
+    if (chat) {
+      return res.status(200).json({
+        message: "Chat with this person is already Created",
+        success: true,
+        chat: chat,
+      });
+    } else {
+      const newChat = new ChatModel({
+        users: [req.userId.toString(), receiverId],
+        applicationId: caseId,
+      });
+      const result = await newChat.save();
+      res.status(200).json({ chat: result, success: true });
     }
   } catch (err) {
     res.status(500).json({ data: err.message, success: false });
@@ -152,36 +193,35 @@ const sendMessage = async (req, res) => {
       });
     }
 
-    const isCaseWorker = await UserModel.findById(req.userId.toString());
-    if (isCaseWorker.isCaseWorker) {
-      let application;
-      console.log("applicationId", applicationId);
-      application = await ApplicationModel.findById(applicationId);
-      console.log("before app", application);
-      if (!application) {
-        application = await CompanyClientModel.findById(applicationId);
-      }
+    const checkChat = await ChatModel.findById(chatId);
 
-      console.log("after app", application);
+    if (checkChat && !checkChat.caseWorkerChat) {
+      const isCaseWorker = await UserModel.findById(req.userId.toString());
+      if (isCaseWorker.isCaseWorker) {
+        let application;
+     
+        application = await ApplicationModel.findById(applicationId);
+        if (!application) {
+          application = await CompanyClientModel.findById(applicationId);
+        }
 
-      if (application.isCaseWorkerHandling) {
-        if (application.caseWorkerId != req.userId.toString()) {
-          return res
-            .status(400)
-            .json({
+        if (application.isCaseWorkerHandling) {
+          if (application.caseWorkerId != req.userId.toString()) {
+            return res.status(400).json({
               message: "Action Forbidden! This Case is not assigned to you.",
               success: false,
             });
+          }
+        } else {
+          return res.status(400).json({
+            message:
+              "Action Forbidden! This Application hasn't been assigned to any case worker.",
+            success: false,
+          });
         }
-      } else {
-        return res.status(400).json({
-          message:
-            "Action Forbidden! This Application hasn't been assigned to any case worker.",
-          success: false,
-        });
       }
     }
-
+    
     const fileUrls = [];
     if (files) {
       // Handle file uploads
@@ -217,12 +257,10 @@ const sendMessage = async (req, res) => {
     var newResult = {
       result: data,
       users: chat?.users,
-      //   senderImage: sender.profileImg,
       senderName: sender.name,
     };
     return res.status(200).json({
       result: newResult,
-      //   senderImage: sender.profileImg,
       senderName: sender.name,
       success: true,
     });
@@ -361,4 +399,5 @@ module.exports = {
   getChatNotificationCount,
   readMessagesByChat,
   getUnreadByUserId,
+  createCaseWorkerChat,
 };

@@ -1,6 +1,6 @@
 const express = require("express");
 const Authenticate = require("../Middlewares/Auth/Auth");
-const { accessChat, getUserChats, sendMessage, getAllMessages, getChatByApplicationId, getAllChats, getChatNotificationCount, readMessagesByChat, getUnreadByUserId } = require("../Controllers/ChatController");
+const { accessChat, getUserChats, sendMessage, getAllMessages, getChatByApplicationId, getAllChats, getChatNotificationCount, readMessagesByChat, getUnreadByUserId, createCaseWorkerChat } = require("../Controllers/ChatController");
 const multer = require("multer");
 const { isAssignedCaseWorker, isAdminOrCaseWorker } = require("../Middlewares/Auth/role");
 
@@ -30,5 +30,8 @@ router.get("/api/chat/unread/count", Authenticate, getUnreadByUserId);
 router.post("/api/chat/read/:chatId", Authenticate, readMessagesByChat);
 
 router.post("/api/chat/unseen/count/:chatId", Authenticate, getChatNotificationCount);
+
+// Create Chat between Case Workers 
+router.post("/api/create/chat/caseworker", Authenticate, createCaseWorkerChat);
 
 module.exports = router;

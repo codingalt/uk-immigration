@@ -327,7 +327,7 @@ const signupCompanyClient = async (req, res) => {
           googleId,
           token: userToken.token,
         };
-        return res.status(200).json({ user: result, success: true });
+        return res.status(200).json({ user: result, token: token, success: true });
       } catch (err) {
         res
           .status(500)
@@ -572,6 +572,7 @@ const signupCompanyClient = async (req, res) => {
 
         return res.status(200).json({
           user: result,
+          token: token,
           message: "Please Check your Email to verify your account",
           success: true,
         });
@@ -588,7 +589,6 @@ const signupCompanyClient = async (req, res) => {
     console.log(err);
   }
 };
-
 
 const getApplicationsByCompanyId = async(req,res)=>{
   try {

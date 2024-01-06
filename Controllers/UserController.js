@@ -100,7 +100,7 @@ const signupUser = async (req, res) => {
             referringAgent,
             token: userToken.token,
           };
-          return res.status(200).json({ user: result, success: true });
+          return res.status(200).json({ user: result, token: token, success: true });
         } catch (err) {
           res
             .status(500)
@@ -335,6 +335,7 @@ const signupUser = async (req, res) => {
 
            return res.status(200).json({
              user: result,
+             token: token,
              message: "Please Check your Email to verify your account",
              success: true,
            });
@@ -344,10 +345,8 @@ const signupUser = async (req, res) => {
           await EmailTokenModel.deleteOne({userId: user._id})
           return res.status(500).json({message:"Error Sending Email", success: false})
         }
-
        
       }
-
 
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
@@ -437,7 +436,13 @@ const verifyEmail = async(req,res)=>{
             sameSite: "none",
             secure: true,
           });
-          return res.status(200).json({ message: "Email verified", success: true });
+          return res
+            .status(200)
+            .json({
+              message: "Email verified",
+              success: true,
+              token: userToken.token,
+            });
         }else{
           return res.status(400).json({message: "Invalid Link",success:false});
         }
@@ -889,7 +894,7 @@ const loginUser = async (req, res) => {
 
         return res
           .status(200)
-          .json({ user: result, redirect: "/companyscreen", success: true });
+          .json({ user: result, redirect: "/companyscreen", token: token, success: true });
       } catch (err) {
         res.status(500).json({message: "Something went wrong", success: false});
       }
@@ -973,7 +978,7 @@ const loginUser = async (req, res) => {
               secure: true,
               sameSite: "none",
             });
-             return res.status(200).json({success: true, user: result, redirect: "/admin/dashboard"});
+             return res.status(200).json({success: true, user: result, token: token, redirect: "/admin/dashboard"});
           }
 
           // Check if he is case worker
@@ -986,7 +991,7 @@ const loginUser = async (req, res) => {
               sameSite: "none",
               secure: true,
             });
-            return res.status(200).json({success: true, user: result, redirect: "/admin/dashboard"});
+            return res.status(200).json({success: true, user: result, token: token, redirect: "/admin/dashboard"});
 
           } 
 
@@ -1162,6 +1167,7 @@ const loginUser = async (req, res) => {
             message: "Login Successfully",
             success: true,
             user: result,
+            token: token,
             redirect: "/companyscreen",
           });
         } else {

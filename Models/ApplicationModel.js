@@ -400,7 +400,6 @@ const applicationSchema = mongoose.Schema(
       family: {
         maritalStatus: {
           type: String,
-          required: false,
         },
         spouseName: {
           type: String,
@@ -431,14 +430,12 @@ const applicationSchema = mongoose.Schema(
         },
         isLiveTogether: {
           type: Boolean,
-          required: false,
         },
         whichDateStartedLivingTogether: {
           type: Date,
         },
         isChildren: {
           type: Boolean,
-          required: false,
         },
         numberOfChildren: {
           type: Number,
