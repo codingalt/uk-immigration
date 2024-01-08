@@ -99,23 +99,54 @@ const createCaseWorkerChat = async (req, res) => {
     });
 
     // check if chat is already present
-    const chat = await ChatModel.findOne({
+    const chat = await ChatModel.find({
       users: { $all: [req.userId.toString(), receiverId] },
-    });
-    if (chat) {
+    })
+      .populate({
+        path: "users",
+        select: "name email profilePic _id googleId",
+        match: { _id: { $ne: req.userId.toString() } }, // Exclude the current user
+        model: UserModel,
+      })
+      .exec();
+
+    let isCaseWorkerChat;
+
+    if(chat && chat.length > 0){
+      chat.forEach((item)=> {
+        if(item.caseWorkerChat){
+          isCaseWorkerChat = item;
+        }
+      })
+    }
+
+    if(isCaseWorkerChat){
       return res.status(200).json({
         message: "Chat with this person is already Created",
         success: true,
-        chat: chat,
+        chat: isCaseWorkerChat,
       });
-    } else {
+    }else{
+      // Create New chat between case workers
       const newChat = new ChatModel({
         users: [req.userId.toString(), receiverId],
         applicationId: caseId,
+        caseWorkerChat: true,
       });
       const result = await newChat.save();
       res.status(200).json({ chat: result, success: true });
     }
+
+    if(!chat){
+       const newChat = new ChatModel({
+         users: [req.userId.toString(), receiverId],
+         applicationId: caseId,
+         caseWorkerChat: true,
+       });
+       const result = await newChat.save();
+       res.status(200).json({ chat: result, success: true });
+    }
+   
   } catch (err) {
     res.status(500).json({ data: err.message, success: false });
   }
@@ -145,7 +176,7 @@ const getAllChats = async (req, res) => {
   try {
     const user = await UserModel.findById(req.userId.toString());
 
-    if (user.isCaseWorker) {
+    if (user.isCaseWorker || user.isAdmin) {
       const chats = await ChatModel.find({
         users: {
           $elemMatch: {
@@ -165,17 +196,17 @@ const getAllChats = async (req, res) => {
       return res.status(200).json({ chats, success: true, hello: "hello" });
     }
 
-    const chats = await ChatModel.find({})
-      .sort({ createdAt: -1 })
-      .populate({
-        path: "users",
-        select: "name email profilePic _id googleId",
-        match: { _id: { $ne: req.userId.toString() } }, // Exclude the current user
-        model: UserModel,
-      })
-      .exec();
+    // const chats = await ChatModel.find({})
+    //   .sort({ createdAt: -1 })
+    //   .populate({
+    //     path: "users",
+    //     select: "name email profilePic _id googleId",
+    //     match: { _id: { $ne: req.userId.toString() } }, // Exclude the current user
+    //     model: UserModel,
+    //   })
+    //   .exec();
 
-    res.status(200).json({ chats, success: true });
+    // res.status(200).json({ chats, success: true });
   } catch (err) {
     res.status(500).json({ data: err.message, success: false });
   }
@@ -250,15 +281,18 @@ const sendMessage = async (req, res) => {
 
     const data = {
       ...result._doc,
-      name: sender.name,
-      profilePic: sender.profilePic,
+      sender: {
+        _id: sender._id,
+        name: sender.name,
+      },
     };
-    console.log(data);
+
     var newResult = {
       result: data,
       users: chat?.users,
       senderName: sender.name,
     };
+
     return res.status(200).json({
       result: newResult,
       senderName: sender.name,
@@ -278,7 +312,22 @@ const getAllMessages = async (req, res) => {
       { new: true, useFindAndModify: false }
     );
 
-    const result = await MessageModel.find({ chatId });
+    // const result = await MessageModel.find({ chatId })
+    //   .populate({
+    //     path: "users",
+    //     model: "Users",
+    //     match: { _id: { $eq: result.senderId } },
+    //     select: "name",
+    //   })
+    //   .exec();
+    const result = await MessageModel.find({ chatId })
+      .populate({
+        path: "sender", 
+        model: "Users",
+        select: "name",
+      })
+      .exec();
+
     // Get Sender Details
     const sender = await UserModel.findOne({ _id: req.userId.toString() });
     res.status(200).json({
@@ -331,11 +380,23 @@ const getChatNotificationCount = async (req, res) => {
     //   sender: {$ne: req.userId},
     //   isRead: 0,
     // });
-    const count = await MessageModel.find({
-      chatId: chatId,
-      sender: chat.clientId,
-      isRead: 0,
-    });
+    let count;
+    if(chat.caseWorkerChat){
+
+      count = await MessageModel.find({
+        chatId: chatId,
+        sender: { $ne: req.userId },
+        isRead: 0,
+      });
+
+    }else{
+      count = await MessageModel.find({
+        chatId: chatId,
+        sender: chat.clientId,
+        isRead: 0,
+      });
+    }
+     
 
     if (count?.length > 0) {
       await ChatModel.updateOne({ _id: chatId }, { unseen: count?.length });
