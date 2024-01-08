@@ -411,9 +411,8 @@ const sendmail = async(req,res)=>{
 
 const verifyEmail = async(req,res)=>{
     try {
-
         const {id,token} = req.params;
-        const {otp} = req.params;
+
         console.log(id);
         console.log("token",token);
         const user = await UserModel.findById(id);
