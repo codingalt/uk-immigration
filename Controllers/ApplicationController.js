@@ -1888,7 +1888,7 @@ const requestAPhase = async (req, res) => {
                   letter-spacing: 0.5px;
                 "
               >
-                Request to Resubmit Phase 1 Data for Immigration Application
+                Request to Resubmit Phase 3 Data for Immigration Application
               </h3>
 
               <p
@@ -1991,7 +1991,7 @@ const requestAPhase = async (req, res) => {
 
       return res
         .status(200)
-        .json({ message: "Phase 2 Requested", success: true });
+        .json({ message: "Phase 3 Requested", success: true });
     }
 
     // Approved Condition 
@@ -2184,25 +2184,52 @@ const requestAPhase = async (req, res) => {
           });
         }
         req.body.phase3.status = "pending";
-        await ApplicationModel.findByIdAndUpdate(
-          applicationId,
-          {
-            $set: {
-              ...req.body,
-              requestedPhase: 3,
-              phase: 3,
-              phaseStatus: "pending",
-              "phase1.applicationType": req.body.phase3.companyHelpService,
-            },
-            $push: {
-              service: {
-                serviceType: req.body.phase3.companyHelpService,
-                dateTime: new Date(),
+        let updatedRecord;
+        if (!req.body.phase3.doesCompanyHelp){
+          req.body.phase3.applicationType = application.phase1.applicationType;
+          req.body.phase3.status = "rejected";
+           updatedRecord = await ApplicationModel.findByIdAndUpdate(
+            applicationId,
+            {
+              $set: {
+                ...req.body,
+                requestedPhase: 3,
+                phase: 3,
+                phaseStatus: "rejected",
+                applicationStatus: "rejected",
+              },
+              $push: {
+                service: {
+                  serviceType: "Company cannot help",
+                  dateTime: new Date(),
+                },
               },
             },
-          },
-          { new: true, useFindAndModify: false }
-        );
+            { new: true, useFindAndModify: false }
+          );
+            console.log("updatedRecord", updatedRecord);
+        }else{
+         updatedRecord = await ApplicationModel.findByIdAndUpdate(
+            applicationId,
+            {
+              $set: {
+                ...req.body,
+                requestedPhase: 3,
+                phase: 3,
+                phaseStatus: "pending",
+                "phase1.applicationType": req.body.phase3.companyHelpService,
+              },
+              $push: {
+                service: {
+                  serviceType: req.body.phase3.companyHelpService,
+                  dateTime: new Date(),
+                },
+              },
+            },
+            { new: true, useFindAndModify: false }
+          );
+        }
+          
 
         // Send email to the user
         const url = `${process.env.BASE_URL}`;
@@ -2355,7 +2382,7 @@ const requestAPhase = async (req, res) => {
               }
         return res
           .status(200)
-          .json({ message: "Phase 3 Requested", success: true });
+          .json({ message: "Phase 3 Requested", data: updatedRecord, success: true });
       } else if (
         application.phase === 2 &&
         application.phaseStatus === phaseStaus.Pending

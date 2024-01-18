@@ -1573,7 +1573,7 @@ const requestCompanyClientPhase = async (req, res) => {
                   letter-spacing: 0.5px;
                 "
               >
-                Request to Resubmit Phase 1 Data for Immigration Application
+                Request to Resubmit Phase 3 Data for Immigration Application
               </h3>
 
               <p
@@ -1676,7 +1676,7 @@ const requestCompanyClientPhase = async (req, res) => {
 
       return res
         .status(200)
-        .json({ message: "Phase 2 Requested", success: true });
+        .json({ message: "Phase 3 Requested", success: true });
     }
 
     // Approved Condition
@@ -1869,6 +1869,31 @@ const requestCompanyClientPhase = async (req, res) => {
         });
       }
       req.body.phase3.status = "pending";
+
+       if (!req.body.phase3.doesCompanyHelp) {
+         req.body.phase3.applicationType = application.phase1.applicationType;
+         req.body.phase3.status = "rejected";
+         await CompanyClientModel.findByIdAndUpdate(
+           applicationId,
+           {
+             $set: {
+               ...req.body,
+               requestedPhase: 3,
+               phase: 3,
+               phaseStatus: "rejected",
+               applicationStatus: "rejected",
+             },
+             $push: {
+               service: {
+                 serviceType: "Company cannot help",
+                 dateTime: new Date(),
+               },
+             },
+           },
+           { new: true, useFindAndModify: false }
+         );
+       }else{
+
       await CompanyClientModel.findByIdAndUpdate(
         applicationId,
         {
@@ -1888,6 +1913,7 @@ const requestCompanyClientPhase = async (req, res) => {
         },
         { new: true, useFindAndModify: false }
       );
+       }
 
       // Send email to the user
       const url = `${process.env.BASE_URL}`;
