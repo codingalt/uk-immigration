@@ -116,6 +116,7 @@ const getCaseWorker = async (req, res) => {
           workerId: 1,
           languages: 1,
           userId: 1,
+          createdAt: 1,
           name: "$user.name",
           email: "$user.email",
           contact: "$user.contact",
