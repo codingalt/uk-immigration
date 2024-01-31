@@ -46,31 +46,29 @@ const sendRequestToCompanyClient = async (req, res) => {
         .status(400)
         .json({ message: "User not found", success: false });
 
-        if(user.isCaseWorker){
-          req.body.isCaseWorkerHandling = true;
-          req.body.caseWorkerId = user?._id;
-          req.body.caseWorkerName = user?.name;  
-        }
+    if (user.isCaseWorker) {
+      req.body.isCaseWorkerHandling = true;
+      req.body.caseWorkerId = user?._id;
+      req.body.caseWorkerName = user?.name;
+    }
 
-        const emails = [];
-        if(req.body.phase1.companyContact){
-          emails.push(req.body.phase1.companyContact)
-        }
+    const emails = [];
+    if (req.body.phase1.companyContact) {
+      emails.push(req.body.phase1.companyContact);
+    }
 
-        if (req.body.phase1.clientContact) {
-           const isAlreadyApp = await CompanyClientModel.findOne({
-             "phase1.clientContact": req.body.phase1.clientContact,
-           });
-           if (isAlreadyApp) {
-             return res
-               .status(422)
-               .json({
-                 message: "Client Application with this Email already Exist.",
-                 success: false,
-               });
-           }
-          emails.push(req.body.phase1.clientContact);
-        }
+    if (req.body.phase1.clientContact) {
+      const isAlreadyApp = await CompanyClientModel.findOne({
+        "phase1.clientContact": req.body.phase1.clientContact,
+      });
+      if (isAlreadyApp) {
+        return res.status(422).json({
+          message: "Client Application with this Email already Exist.",
+          success: false,
+        });
+      }
+      emails.push(req.body.phase1.clientContact);
+    }
     // Generating CaseID
     const caseId = otpGenerator.generate(6, {
       digits: true,
@@ -84,9 +82,9 @@ const sendRequestToCompanyClient = async (req, res) => {
 
     const application = await new CompanyClientModel(req.body).save();
     let email;
-    if(req.body.phase1){
-      email = req.body.phase1.companyContact
-    }else{
+    if (req.body.phase1) {
+      email = req.body.phase1.companyContact;
+    } else {
       email = req.body.phase1.clientContact;
     }
 
@@ -228,7 +226,7 @@ To access and submit your visa application, please click on the following button
       phase: application.phase,
       phaseStatus: application.phaseStatus,
       isInitialRequestAccepted,
-      _id
+      _id,
     };
     res.status(200).json({ result, success: true });
   } catch (err) {
@@ -283,7 +281,7 @@ const signupCompanyClient = async (req, res) => {
             .json({ message: "Email already exist", success: false });
         }
         let referringAgent;
-        if(application?.caseWorkerId){
+        if (application?.caseWorkerId) {
           referringAgent = application?.caseWorkerId;
         }
 
@@ -307,11 +305,19 @@ const signupCompanyClient = async (req, res) => {
           secure: true,
         });
 
-        const { _id, email, name,contact, isCaseWorker, isEmailVerified, tokens, googleId } =
-          userData;
+        const {
+          _id,
+          email,
+          name,
+          contact,
+          isCaseWorker,
+          isEmailVerified,
+          tokens,
+          googleId,
+        } = userData;
         const userToken = tokens[tokens.length - 1];
 
-        // Update User Id in Client Application 
+        // Update User Id in Client Application
         const updateUserId = await CompanyClientModel.updateOne(
           { _id: applicationId },
           { userId: userData?._id }
@@ -327,7 +333,9 @@ const signupCompanyClient = async (req, res) => {
           googleId,
           token: userToken.token,
         };
-        return res.status(200).json({ user: result, token: token, success: true });
+        return res
+          .status(200)
+          .json({ user: result, token: token, success: true });
       } catch (err) {
         res
           .status(500)
@@ -361,23 +369,21 @@ const signupCompanyClient = async (req, res) => {
       if (application?.caseWorkerId) {
         caseWorkerId = application?.caseWorkerId;
       }
-      
-       if (referringAgent) {
-         const isCaseWorker = await CaseWorkerModel.findOne({
-           workerId: referringAgent,
-         });
-         console.log("is case worker", isCaseWorker);
-         if (!isCaseWorker)
-           return res.status(400).json({
-             message: "Case worker not found with this ID",
-             success: false,
-           });
-         const caseworker = await UserModel.findById(isCaseWorker?.userId);
-         console.log("Case worker found", caseworker);
-         caseWorkerId = caseworker?._id;
-       }
 
-       
+      if (referringAgent) {
+        const isCaseWorker = await CaseWorkerModel.findOne({
+          workerId: referringAgent,
+        });
+        console.log("is case worker", isCaseWorker);
+        if (!isCaseWorker)
+          return res.status(400).json({
+            message: "Case worker not found with this ID",
+            success: false,
+          });
+        const caseworker = await UserModel.findById(isCaseWorker?.userId);
+        console.log("Case worker found", caseworker);
+        caseWorkerId = caseworker?._id;
+      }
 
       const user = new UserModel({
         name,
@@ -542,7 +548,7 @@ const signupCompanyClient = async (req, res) => {
           secure: true,
         });
 
-        // Update User Id in Client Application 
+        // Update User Id in Client Application
         const updateUserId = await CompanyClientModel.updateOne(
           { _id: applicationId },
           { userId: userData?._id }
@@ -590,30 +596,89 @@ const signupCompanyClient = async (req, res) => {
   }
 };
 
-const getApplicationsByCompanyId = async(req,res)=>{
+// const getApplicationsByCompanyId = async(req,res)=>{
+//   try {
+//     const {companyId} = req.params;
+//     ApplicationModel
+//     const applications = await CompanyClientModel.find({
+//       companyId: companyId,
+//       phaseSubmittedByClient: {
+//         $gte: 1,
+//       },
+//     }).select({
+//       _id: true,
+//       caseId: true,
+//       "phase1.fullNameAsPassport": true,
+//       "phase1.clientContact": true,
+//       "phase1.companyContact": true,
+//       "phase1.birthDate": true,
+//       "phase1.applicationType": true,
+//       "phase1.nationality": true,
+//     });
+//     return res.status(200).json({ applications,success: true });
+
+//   } catch (err) {
+//     res.status(500).json({ message: err.message, success: false });
+//   }
+// }
+
+const getApplicationsByCompanyId = async (req, res) => {
   try {
-    const {companyId} = req.params;
-    const applications = await CompanyClientModel.find({
-      companyId: companyId,
+    const { companyId } = req.params;
+    const mainQuery = await CompanyClientModel.aggregate([
+      {
+        $match: {
+          companyId: companyId,
+          phaseSubmittedByClient: { $gte: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: true,
+          caseId: true,
+          phase1: {
+            applicationType: "$phase1.applicationType",
+            companyContact: "$phase1.companyContact",
+            clientContact: "$phase1.clientContact",
+            birthDate: "$phase1.birthDate",
+            fullNameAsPassport: "$phase1.fullNameAsPassport",
+            nationality: "$phase1.nationality",
+          },
+        },
+      },
+    ]);
+
+    const linkedApplicationsQuery = await ApplicationModel.find({
+      "linkedCompany.companyId": companyId,
       phaseSubmittedByClient: {
         $gte: 1,
       },
     }).select({
       _id: true,
       caseId: true,
-      "phase1.fullNameAsPassport": true,
-      "phase1.clientContact": true,
-      "phase1.companyContact": true,
+      "phase1.name": true,
+      "phase1.contact": true,
+      "phase1.country": true,
+      "phase1.email": true,
       "phase1.birthDate": true,
       "phase1.applicationType": true,
-      "phase1.nationality": true,
     });
-    return res.status(200).json({ applications,success: true });
-    
+
+
+    // Combine the results in your application code
+      const linkedResult = linkedApplicationsQuery?.forEach((linked) =>
+        mainQuery.push(linked)
+      ); 
+
+    return res
+      .status(200)
+      .json({ applications: mainQuery, success: true });
+
+    return res.status(200).json({ applications, success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
-}
+};
 
 const getGroupClientApplicationsById = async (req, res) => {
   try {
@@ -627,7 +692,9 @@ const getGroupClientApplicationsById = async (req, res) => {
 
 const getGroupClientApplicationsByUserId = async (req, res) => {
   try {
-    const application = await CompanyClientModel.findOne({userId: req.userId.toString()});
+    const application = await CompanyClientModel.findOne({
+      userId: req.userId.toString(),
+    });
     return res.status(200).json({ application, success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
@@ -694,37 +761,36 @@ const postCompanyClientPhase1 = async (req, res) => {
       }
     }
 
-   const updatedDocument = await CompanyClientModel.findByIdAndUpdate(
-     applicationId,
-     {
-       $set: {
-         "phase1.fullNameAsPassport": fullNameAsPassport,
-         "phase1.postalAddress": postalAddress,
-         "phase1.birthDate": birthDate,
-         "phase1.nationality": nationality,
-         "phase1.passportNumber": passportNumber,
-         phaseSubmittedByClient: 1,
-         phase: 1,
-         phaseStatus: "pending",
-         applicationStatus: "pending",
-         "phase1.status": "pending",
-         userId: req.userId.toString(),
-         isCaseWorkerHandling: isCaseWorkerHandling,
-         caseWorkerId: caseWorkerId,
-         caseWorkerName: caseWorkerName,
-       },
-       $push: {
-         service: {
-           serviceType: application.phase1.companyHelpService,
-           dateTime: new Date(),
-         },
-       },
-     },
-     { new: true, useFindAndModify: false }
-   );
+    const updatedDocument = await CompanyClientModel.findByIdAndUpdate(
+      applicationId,
+      {
+        $set: {
+          "phase1.fullNameAsPassport": fullNameAsPassport,
+          "phase1.postalAddress": postalAddress,
+          "phase1.birthDate": birthDate,
+          "phase1.nationality": nationality,
+          "phase1.passportNumber": passportNumber,
+          phaseSubmittedByClient: 1,
+          phase: 1,
+          phaseStatus: "pending",
+          applicationStatus: "pending",
+          "phase1.status": "pending",
+          userId: req.userId.toString(),
+          isCaseWorkerHandling: isCaseWorkerHandling,
+          caseWorkerId: caseWorkerId,
+          caseWorkerName: caseWorkerName,
+        },
+        $push: {
+          service: {
+            serviceType: application.phase1.companyHelpService,
+            dateTime: new Date(),
+          },
+        },
+      },
+      { new: true, useFindAndModify: false }
+    );
 
-
-   console.log("Updated Document", updatedDocument);
+    console.log("Updated Document", updatedDocument);
 
     // Create Chat with this Application
     const chat = await createChat({
@@ -748,8 +814,7 @@ const postCompanyClientPhase1 = async (req, res) => {
 const postCompanyClientPhase2 = async (req, res) => {
   try {
     const { phaseStatus, phase, applicationStatus } = req.body;
-         const applicationId =
-           req.params.applicationId || req.body.applicationId;
+    const applicationId = req.params.applicationId || req.body.applicationId;
 
     const files = req.files;
     if (phaseStatus || phase || applicationStatus) {
@@ -811,7 +876,7 @@ const postCompanyClientPhase2 = async (req, res) => {
       "isAuthority",
       "isAllowAccessToFile",
       "isShareClientDetails",
-      "status"
+      "status",
     ];
 
     // Filter out excluded properties from filteredDataKeys
@@ -835,7 +900,14 @@ const postCompanyClientPhase2 = async (req, res) => {
     const { isTerms, isAuthority, isAllowAccessToFile, isShareClientDetails } =
       isRequested.phase2;
 
-      const finalValues = {...filesObj, isTerms, isAuthority, isAllowAccessToFile, isShareClientDetails, status: "pending"}
+    const finalValues = {
+      ...filesObj,
+      isTerms,
+      isAuthority,
+      isAllowAccessToFile,
+      isShareClientDetails,
+      status: "pending",
+    };
 
     // Update Phase 2
     const result = await CompanyClientModel.findByIdAndUpdate(
@@ -881,35 +953,32 @@ const postCompanyClientPhase3 = async (req, res) => {
 
     if (!user.isAdmin) {
       if (isRequested.requestedPhase < 3) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "You can't submit phase 3 data right now, Untill admin requests you to submit phase 3 data.",
-          });
+        return res.status(400).json({
+          message:
+            "You can't submit phase 3 data right now, Untill admin requests you to submit phase 3 data.",
+        });
       }
     }
 
-      // Update Phase 3
-      const application = await CompanyClientModel.findByIdAndUpdate(
-        applicationId,
-        {
-          $set: {
-            "phase3.paymentEvidence": chalanFile,
-            "phase3.isOnlinePayment": false,
-            "phase3.isPaid": true,
-            "phase3.dateTime": new Date(),
-            phaseSubmittedByClient: 3,
-            phase: 3,
-            phaseStatus: "pending",
-            applicationStatus: "pending",
-            "phase3.status": "pending",
-          },
+    // Update Phase 3
+    const application = await CompanyClientModel.findByIdAndUpdate(
+      applicationId,
+      {
+        $set: {
+          "phase3.paymentEvidence": chalanFile,
+          "phase3.isOnlinePayment": false,
+          "phase3.isPaid": true,
+          "phase3.dateTime": new Date(),
+          phaseSubmittedByClient: 3,
+          phase: 3,
+          phaseStatus: "pending",
+          applicationStatus: "pending",
+          "phase3.status": "pending",
         },
-        { new: true, useFindAndModify: false }
-      );
-      res.status(200).json({ application, success: true });
-    
+      },
+      { new: true, useFindAndModify: false }
+    );
+    res.status(200).json({ application, success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -969,14 +1038,13 @@ const postCompanyClientPhase4 = async (req, res) => {
     //     });
     // }
 
-      const application = await CompanyClientModel.findByIdAndUpdate(
-        applicationId,
-        { ...req.body, phaseSubmittedByClient: 4 },
-        { new: true, useFindAndModify: false }
-      );
+    const application = await CompanyClientModel.findByIdAndUpdate(
+      applicationId,
+      { ...req.body, phaseSubmittedByClient: 4 },
+      { new: true, useFindAndModify: false }
+    );
 
-      res.status(200).json({ application, success: true });
-    
+    res.status(200).json({ application, success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -1302,38 +1370,36 @@ const postGroupCharacter = async (req, res) => {
         .json({ message: "User not found", success: false });
     console.log(req.body);
 
-      if (user.isAdmin || user.isCaseWorker) {
-        const application = await CompanyClientModel.findByIdAndUpdate(
-          applicationId,
-          {
-            "phase4.character": req.body,
-            "phase4.isCompleted": 9,
-            phaseSubmittedByClient: 4,
-            phase: 4,
-            phaseStatus: "approved",
-            "phase4.status": "approved",
-          },
-          { new: true, useFindAndModify: false }
-        );
-        return res.status(200).json({ application, success: true });
-      } else {
-        const application = await CompanyClientModel.findByIdAndUpdate(
-          applicationId,
-          {
-            "phase4.character": req.body,
-            phaseSubmittedByClient: 4,
-            "phase4.isCompleted": 9,
-            phase: 4,
-            phaseStatus: "pending",
-            applicationStatus: "pending",
-            "phase4.status": "pending",
-          },
-          { new: true, useFindAndModify: false }
-        );
-        return res.status(200).json({ application, success: true });
-      }
-    
-    
+    if (user.isAdmin || user.isCaseWorker) {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        {
+          "phase4.character": req.body,
+          "phase4.isCompleted": 9,
+          phaseSubmittedByClient: 4,
+          phase: 4,
+          phaseStatus: "approved",
+          "phase4.status": "approved",
+        },
+        { new: true, useFindAndModify: false }
+      );
+      return res.status(200).json({ application, success: true });
+    } else {
+      const application = await CompanyClientModel.findByIdAndUpdate(
+        applicationId,
+        {
+          "phase4.character": req.body,
+          phaseSubmittedByClient: 4,
+          "phase4.isCompleted": 9,
+          phase: 4,
+          phaseStatus: "pending",
+          applicationStatus: "pending",
+          "phase4.status": "pending",
+        },
+        { new: true, useFindAndModify: false }
+      );
+      return res.status(200).json({ application, success: true });
+    }
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -1345,12 +1411,10 @@ const requestCompanyClientPhase = async (req, res) => {
     const application = await CompanyClientModel.findById(applicationId);
     const user = await UserModel.findById(application.userId);
     if (Object.keys(req.body).length === 0 && req.body.constructor === Object)
-      return res
-        .status(400)
-        .json({
-          message: "Please fill out all the required fields",
-          success: false,
-        });
+      return res.status(400).json({
+        message: "Please fill out all the required fields",
+        success: false,
+      });
 
     // Rejected Conditions
     if (
@@ -1870,54 +1934,53 @@ const requestCompanyClientPhase = async (req, res) => {
       }
       req.body.phase3.status = "pending";
 
-       if (!req.body.phase3.doesCompanyHelp) {
-         req.body.phase3.applicationType = application.phase1.applicationType;
-         req.body.phase3.status = "rejected";
-         await CompanyClientModel.findByIdAndUpdate(
-           applicationId,
-           {
-             $set: {
-               ...req.body,
-               requestedPhase: 3,
-               phase: 3,
-               phaseStatus: "rejected",
-               applicationStatus: "rejected",
-             },
-             $push: {
-               service: {
-                 serviceType: "Company cannot help",
-                 dateTime: new Date(),
-               },
-             },
-           },
-           { new: true, useFindAndModify: false }
-         );
-       }else{
-
-      await CompanyClientModel.findByIdAndUpdate(
-        applicationId,
-        {
-          $set: {
-            ...req.body,
-            requestedPhase: 3,
-            phase: 3,
-            phaseStatus: "pending",
-            "phase1.applicationType": req.body.phase3.companyHelpService,
-          },
-          $push: {
-            service: {
-              serviceType: req.body.phase3.companyHelpService,
-              dateTime: new Date(),
+      if (!req.body.phase3.doesCompanyHelp) {
+        req.body.phase3.applicationType = application.phase1.applicationType;
+        req.body.phase3.status = "rejected";
+        await CompanyClientModel.findByIdAndUpdate(
+          applicationId,
+          {
+            $set: {
+              ...req.body,
+              requestedPhase: 3,
+              phase: 3,
+              phaseStatus: "rejected",
+              applicationStatus: "rejected",
+            },
+            $push: {
+              service: {
+                serviceType: "Company cannot help",
+                dateTime: new Date(),
+              },
             },
           },
-        },
-        { new: true, useFindAndModify: false }
-      );
-       }
+          { new: true, useFindAndModify: false }
+        );
+      } else {
+        await CompanyClientModel.findByIdAndUpdate(
+          applicationId,
+          {
+            $set: {
+              ...req.body,
+              requestedPhase: 3,
+              phase: 3,
+              phaseStatus: "pending",
+              "phase1.applicationType": req.body.phase3.companyHelpService,
+            },
+            $push: {
+              service: {
+                serviceType: req.body.phase3.companyHelpService,
+                dateTime: new Date(),
+              },
+            },
+          },
+          { new: true, useFindAndModify: false }
+        );
+      }
 
       // Send email to the user
       const url = `${process.env.BASE_URL}`;
-            const html = `<!DOCTYPE html>
+      const html = `<!DOCTYPE html>
       <html lang="en">
         <head>
           <meta charset="UTF-8" />
@@ -2050,20 +2113,20 @@ const requestCompanyClientPhase = async (req, res) => {
           </div>
         </body>
       </html>`;
-            const info = await transporter.sendMail({
-              from: {
-                address: "testmailingsmtp@lesoft.io",
-                name: "Lesoft",
-              },
-              to: user?.email,
-              subject: "Approval of UK Immigration Phase 2",
-              text: "",
-              html: html,
-            });
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Approval of UK Immigration Phase 2",
+        text: "",
+        html: html,
+      });
 
-            if (info.messageId) {
-              console.log("Email sent to the user", info.messageId);
-            }
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
       return res
         .status(200)
         .json({ message: "Phase 3 Requested", success: true });
@@ -2111,12 +2174,10 @@ const acceptCompanyInitialRequest = async (req, res) => {
       { new: true, useFindAndModify: false }
     );
 
-    res
-      .status(200)
-      .json({
-        message: "Application's Initial Request Accepted.",
-        success: true,
-      });
+    res.status(200).json({
+      message: "Application's Initial Request Accepted.",
+      success: true,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -2207,9 +2268,7 @@ const approveCompanyPhase2 = async (req, res) => {
         .json({ message: "This Phase is Already Approved", success: false });
     }
 
-    if (
-      isApplication.phase === 2
-    ) {
+    if (isApplication.phase === 2) {
       await CompanyClientModel.updateOne(
         { _id: applicationId },
         {
@@ -2282,9 +2341,7 @@ const approveCompanyPhase3 = async (req, res) => {
         .json({ message: "This Phase is Already Approved", success: false });
     }
 
-    if (
-      isApplication.phase === 3
-    ) {
+    if (isApplication.phase === 3) {
       await CompanyClientModel.updateOne(
         { _id: applicationId },
         {
@@ -2509,9 +2566,7 @@ const approveCompanyPhase4 = async (req, res) => {
         .json({ message: "This Phase is Already Approved", success: false });
     }
 
-    if (
-      isApplication.phase === 4
-    ) {
+    if (isApplication.phase === 4) {
       await CompanyClientModel.updateOne(
         { _id: applicationId },
         {
@@ -2734,7 +2789,7 @@ const ReRequestGroupPhase1 = async (req, res) => {
 
       // Send email to the user
       const url = `${process.env.BASE_URL}`;
-                const html = `<!DOCTYPE html>
+      const html = `<!DOCTYPE html>
           <html lang="en">
             <head>
               <meta charset="UTF-8" />
@@ -2864,21 +2919,20 @@ const ReRequestGroupPhase1 = async (req, res) => {
               </div>
             </body>
           </html>`;
-                const info = await transporter.sendMail({
-                  from: {
-                    address: "testmailingsmtp@lesoft.io",
-                    name: "Lesoft",
-                  },
-                  to: user?.email,
-                  subject:
-                    "Request to Resubmit Phase 1 Data for Immigration Application",
-                  text: "",
-                  html: html,
-                });
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Request to Resubmit Phase 1 Data for Immigration Application",
+        text: "",
+        html: html,
+      });
 
-                if (info.messageId) {
-                  console.log("Email sent to the user", info.messageId);
-                }
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
 
       res.status(200).json({ application, success: true });
     }
@@ -2913,7 +2967,7 @@ const ReRequestGroupPhase4 = async (req, res) => {
 
       // Send email to the user
       const url = `${process.env.BASE_URL}`;
-                const html = `<!DOCTYPE html>
+      const html = `<!DOCTYPE html>
           <html lang="en">
             <head>
               <meta charset="UTF-8" />
@@ -3043,21 +3097,20 @@ const ReRequestGroupPhase4 = async (req, res) => {
               </div>
             </body>
           </html>`;
-                const info = await transporter.sendMail({
-                  from: {
-                    address: "testmailingsmtp@lesoft.io",
-                    name: "Lesoft",
-                  },
-                  to: user?.email,
-                  subject:
-                    "Request to Resubmit Phase 4 Data for Immigration Application",
-                  text: "",
-                  html: html,
-                });
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Request to Resubmit Phase 4 Data for Immigration Application",
+        text: "",
+        html: html,
+      });
 
-                if (info.messageId) {
-                  console.log("Email sent to the user", info.messageId);
-                 }
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
 
       res.status(200).json({ application, success: true });
     }
@@ -3089,25 +3142,24 @@ const assignGroupApplicationToCaseWorker = async (req, res) => {
       }
     );
 
-    // Add CaseWorker Id to notifications 
-     await PhaseNotificationModel.updateMany(
-       { applicationId: applicationId },
-       {
-         $set: {
-           caseWorkerId: caseWorkerId,
-         },
-       }
-     );
+    // Add CaseWorker Id to notifications
+    await PhaseNotificationModel.updateMany(
+      { applicationId: applicationId },
+      {
+        $set: {
+          caseWorkerId: caseWorkerId,
+        },
+      }
+    );
 
-     const user = await UserModel.updateOne(
-       { _id: isApplication.userId },
-       {
-         $set: {
-           referringAgent: caseWorkerId,
-         },
-       }
-     );
-
+    const user = await UserModel.updateOne(
+      { _id: isApplication.userId },
+      {
+        $set: {
+          referringAgent: caseWorkerId,
+        },
+      }
+    );
 
     // Add This CaseWorker ID to Chat
     const chat = await ChatModel.updateOne(
@@ -3117,8 +3169,8 @@ const assignGroupApplicationToCaseWorker = async (req, res) => {
     );
 
     // Send email to the user
-          const url = `${process.env.BASE_URL}`;
-          const html = `<!DOCTYPE html>
+    const url = `${process.env.BASE_URL}`;
+    const html = `<!DOCTYPE html>
     <html lang="en">
       <head>
         <meta charset="UTF-8" />
@@ -3251,20 +3303,20 @@ Your prompt attention to this matter is greatly appreciated. Thank you for your 
         </div>
       </body>
     </html>`;
-          const info = await transporter.sendMail({
-            from: {
-              address: "testmailingsmtp@lesoft.io",
-              name: "Lesoft",
-            },
-            to: caseWorker?.email,
-            subject: "New Case Assignment: Action Required",
-            text: "",
-            html: html,
-          });
+    const info = await transporter.sendMail({
+      from: {
+        address: "testmailingsmtp@lesoft.io",
+        name: "Lesoft",
+      },
+      to: caseWorker?.email,
+      subject: "New Case Assignment: Action Required",
+      text: "",
+      html: html,
+    });
 
-          if (info.messageId) {
-            console.log("Email sent to the user", info.messageId);
-          }
+    if (info.messageId) {
+      console.log("Email sent to the user", info.messageId);
+    }
 
     res.status(200).json({ message: "CaseWorker Assigned", success: true });
   } catch (err) {
@@ -3520,17 +3572,11 @@ const linkGroupCompany = async (req, res) => {
     const { applicationId } = req.params;
     const { companyId, name } = req.body;
 
-    if (
-      !companyId ||
-      !name ||
-      !applicationId
-    ) {
-      return res
-        .status(400)
-        .json({
-          message: "Please fill out all required fields",
-          success: false,
-        });
+    if (!companyId || !name || !applicationId) {
+      return res.status(400).json({
+        message: "Please fill out all required fields",
+        success: false,
+      });
     }
 
     const application = await CompanyClientModel.findByIdAndUpdate(
@@ -3597,7 +3643,6 @@ const updateGroupPhaseByAdmin = async (req, res) => {
   }
 };
 
-
 module.exports = {
   sendRequestToCompanyClient,
   postCompanyClientPhase1,
@@ -3631,5 +3676,5 @@ module.exports = {
   postGroupTravel,
   postGroupCharacter,
   ReRequestGroupPhase1,
-  ReRequestGroupPhase4
+  ReRequestGroupPhase4,
 };
