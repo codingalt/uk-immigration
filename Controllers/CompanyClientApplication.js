@@ -672,9 +672,8 @@ const getApplicationsByCompanyId = async (req, res) => {
 
     return res
       .status(200)
-      .json({ applications: mainQuery, success: true });
+      .json({ applications: mainQuery, success: true, hello: "hello" });
 
-    return res.status(200).json({ applications, success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
