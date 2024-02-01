@@ -16,6 +16,8 @@ const allowedOrigins = [
   "http://localhost:3001",
   "https://immigration-client.netlify.app",
   "https://admin-immigration.netlify.app",
+  "https://admin.immigration.lesoftvps.com",
+  "https://lesoftvps.com",
 ];
 app.use((req, res, next) => {
   const origin = req.headers.origin;
