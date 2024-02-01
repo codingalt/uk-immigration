@@ -1671,12 +1671,14 @@ const requestAPhase = async (req, res) => {
       application.phase === 2 &&
       application.phaseStatus === phaseStaus.Rejected
     ) {
+              let updatedRecord;
             req.body.phase2.status = application.phase2.status;
-              await ApplicationModel.findByIdAndUpdate(
+              updatedRecord = await ApplicationModel.findByIdAndUpdate(
                 applicationId,
                 { $set: { ...req.body, requestedPhase: 2,reRequest: 2 } },
                 { new: true, useFindAndModify: false }
               );
+
 
               // Send email to the user
               const url = `${process.env.BASE_URL}`;
@@ -1828,7 +1830,7 @@ const requestAPhase = async (req, res) => {
 
               return res
                 .status(200)
-                .json({ message: "Phase 2 Requested", success: true });
+                .json({ message: "Phase 2 Requested", data: updatedRecord, success: true });
     }
 
     if (
@@ -1836,7 +1838,8 @@ const requestAPhase = async (req, res) => {
       application.phaseStatus === phaseStaus.Rejected
     ) {
       req.body.phase3.status = application.phase3.status;
-      await ApplicationModel.findByIdAndUpdate(
+      let updatedRecord;
+      updatedRecord = await ApplicationModel.findByIdAndUpdate(
         applicationId,
         { $set: { ...req.body, requestedPhase: 3, reRequest: 3 } },
         { new: true, useFindAndModify: false }
@@ -1991,7 +1994,7 @@ const requestAPhase = async (req, res) => {
 
       return res
         .status(200)
-        .json({ message: "Phase 3 Requested", success: true });
+        .json({ message: "Phase 3 Requested", data: updatedRecord, success: true });
     }
 
     // Approved Condition 
