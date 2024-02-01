@@ -214,16 +214,16 @@ Date of Submission: ${formattedDate} <br>
     </div>
   </body>
 </html>`;
-    await transporter.sendMail({
-      from: {
-        address: "testmailingsmtp@lesoft.io",
-        name: "Lesoft",
-      },
-      to: admin?.email,
-      subject: "Client Submission - UK Immigration Phase 1",
-      text: "",
-      html: html,
-    });
+    // await transporter.sendMail({
+    //   from: {
+    //     address: "testmailingsmtp@lesoft.io",
+    //     name: "Lesoft",
+    //   },
+    //   to: admin?.email,
+    //   subject: "Client Submission - UK Immigration Phase 1",
+    //   text: "",
+    //   html: html,
+    // });
 
     // Create Chat with this Application
     const chat = await createChat({
@@ -1169,28 +1169,28 @@ const approvePhase2 = async (req, res) => {
         }
       );
 
-      let content =
-        "Congratulations, Phase 2 Approved Successfully. Click here to continue";
+      // let content =
+      //   "Congratulations, Phase 2 Approved Successfully. Click here to continue";
 
-      // Find Chat
-      const chat = await ChatModel.findOne({ applicationId: applicationId });
-      if (chat) {
-        // Append Approved Phase Message
-        const newMessage = new MessageModel({
-          sender: req.userId.toString(),
-          content: content,
-          chatId: chat?._id,
-          isPhaseApprovedMessage: true,
-          redirect: "/phase3",
-        });
-        const approveMsg = await newMessage.save();
-        console.log(approveMsg);
+      // // Find Chat
+      // const chat = await ChatModel.findOne({ applicationId: applicationId });
+      // if (chat) {
+      //   // Append Approved Phase Message
+      //   const newMessage = new MessageModel({
+      //     sender: req.userId.toString(),
+      //     content: content,
+      //     chatId: chat?._id,
+      //     isPhaseApprovedMessage: true,
+      //     redirect: "/phase3",
+      //   });
+      //   const approveMsg = await newMessage.save();
+      //   console.log(approveMsg);
 
-        // Update Latest Message
-        await ChatModel.findByIdAndUpdate(chat?._id, {
-          latestMessage: content,
-        });
-      }
+      //   // Update Latest Message
+      //   await ChatModel.findByIdAndUpdate(chat?._id, {
+      //     latestMessage: content,
+      //   });
+      // }
 
       res
         .status(200)
@@ -1810,21 +1810,21 @@ const requestAPhase = async (req, res) => {
             </div>
           </body>
         </html>`;
-              const info = await transporter.sendMail({
-                from: {
-                  address: "testmailingsmtp@lesoft.io",
-                  name: "Lesoft",
-                },
-                to: user?.email,
-                subject:
-                  "Request to Resubmit Phase 2 Data for Immigration Application",
-                text: "",
-                html: html,
-              });
+              // const info = await transporter.sendMail({
+              //   from: {
+              //     address: "testmailingsmtp@lesoft.io",
+              //     name: "Lesoft",
+              //   },
+              //   to: user?.email,
+              //   subject:
+              //     "Request to Resubmit Phase 2 Data for Immigration Application",
+              //   text: "",
+              //   html: html,
+              // });
 
-              if (info.messageId) {
-                console.log("Email sent to the user", info.messageId);
-              }
+              // if (info.messageId) {
+              //   console.log("Email sent to the user", info.messageId);
+              // }
 
               return res
                 .status(200)
@@ -1974,20 +1974,20 @@ const requestAPhase = async (req, res) => {
             </div>
           </body>
         </html>`;
-      const info = await transporter.sendMail({
-        from: {
-          address: "testmailingsmtp@lesoft.io",
-          name: "Lesoft",
-        },
-        to: user?.email,
-        subject: "Request to Resubmit Phase 3 Data for Immigration Application",
-        text: "",
-        html: html,
-      });
+      // const info = await transporter.sendMail({
+      //   from: {
+      //     address: "testmailingsmtp@lesoft.io",
+      //     name: "Lesoft",
+      //   },
+      //   to: user?.email,
+      //   subject: "Request to Resubmit Phase 3 Data for Immigration Application",
+      //   text: "",
+      //   html: html,
+      // });
 
-      if (info.messageId) {
-        console.log("Email sent to the user", info.messageId);
-      }
+      // if (info.messageId) {
+      //   console.log("Email sent to the user", info.messageId);
+      // }
 
       return res
         .status(200)
@@ -2155,20 +2155,20 @@ const requestAPhase = async (req, res) => {
     </div>
   </body>
 </html>`;
-        const info = await transporter.sendMail({
-          from: {
-            address: "testmailingsmtp@lesoft.io",
-            name: "Lesoft",
-          },
-          to: user?.email,
-          subject: "Approval of UK Immigration Phase 1",
-          text: "",
-          html: html,
-        });
+        // const info = await transporter.sendMail({
+        //   from: {
+        //     address: "testmailingsmtp@lesoft.io",
+        //     name: "Lesoft",
+        //   },
+        //   to: user?.email,
+        //   subject: "Approval of UK Immigration Phase 1",
+        //   text: "",
+        //   html: html,
+        // });
 
-        if (info.messageId) {
-          console.log("Email sent to the user", info.messageId);
-        }
+        // if (info.messageId) {
+        //   console.log("Email sent to the user", info.messageId);
+        // }
 
         return res
           .status(200)
@@ -2229,11 +2229,182 @@ const requestAPhase = async (req, res) => {
             { new: true, useFindAndModify: false }
           );
         }
-          
 
         // Send email to the user
         const url = `${process.env.BASE_URL}`;
-              const html = `<!DOCTYPE html>
+        let html;
+        if (!req.body.phase3.doesCompanyHelp){
+          let content =
+            "Phase 2 Rejected";
+
+          // Find Chat
+          const chat = await ChatModel.findOne({
+            applicationId: applicationId,
+          });
+          if (chat) {
+            // Append Approved Phase Message
+            const newMessage = new MessageModel({
+              sender: req.userId.toString(),
+              content: content,
+              chatId: chat?._id,
+              isPhaseRejectMessage: true,
+              redirect: "/",
+            });
+            const approveMsg = await newMessage.save();
+            console.log(approveMsg);
+
+            // Update Latest Message
+            await ChatModel.findByIdAndUpdate(chat?._id, {
+              latestMessage: content,
+            });
+          }
+           html = `<!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title></title>
+          </head>
+          <body
+            style="
+              width: 100%;
+              height: 95vh;
+              background-color: #f6f9fc;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              font-family: sans-serif;
+            "
+          >
+            <div
+              class="card"
+              style="
+                width: 70%;
+                height: 90%;
+                background-color: #fff;
+                border-radius: 10px;
+                padding: 30px;
+                margin-top: 2rem;
+                padding-left: 40px;
+                margin: 2rem auto;
+              "
+            >
+              <img
+                src=${logo}
+                alt=""
+                style="margin-left: auto; margin-right: auto"
+              />
+              <h3
+                style="
+                  color:#5D982E;
+                  font-weight: 800;
+                  font-size: 1.1rem;
+                  letter-spacing: 0.5px;
+                "
+              >
+                Phase 2 Rejected
+              </h3>
+
+              <p
+              style="
+                color: #414552 !important;
+                font-weight: 400;
+                font-size: 15px;
+                line-height: 24px;
+                margin-top: 1rem;
+                max-width: 80%;
+              "
+            >
+              Dear ${user?.name},
+            </p>
+
+            <p
+            style="
+              color: #414552 !important;
+              font-weight: 400;
+              font-size: 14px;
+              line-height: 22px;
+              margin-top: 1rem;
+              max-width: 90%;
+            "
+          >
+            Dear Customer your submission of phase 2 has been rejected.
+          </p>
+
+          <p
+          style="
+            color: #414552 !important;
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 22px;
+            margin-top: 1rem;
+            max-width: 80%;
+          "
+        >
+         Best regards,
+          Uk Immigration
+        </p>
+              <a
+                style="margin-top: 1.5rem; cursor: pointer"
+                href=${url}
+                target="_blank"
+                ><button
+                  style="
+                    width: 10.4rem;
+                    height: 2.8rem;
+                    border-radius: 8px;
+                    outline: none;
+                    border: none;
+                    color: #fff;
+                    background-color:#5D982E;
+                    font-weight: 600;
+                    font-size: 1.05rem;
+                    cursor: pointer;
+                  "
+                >
+                login
+                </button></a
+              >
+
+              <p
+                style="
+                  color: #414552 !important;
+                  font-weight: 400;
+                  font-size: 16px;
+                  line-height: 24px;
+                  max-width: 88%;
+                  margin-top: 6rem;
+                "
+              >
+              All rights reserved by UK Immigration © 2023.
+              </p>
+            </div>
+          </body>
+        </html>`;
+        }else{
+          let content =
+              "Congratulations, Phase 2 Approved Successfully. Click here to continue";
+
+            // Find Chat
+            const chat = await ChatModel.findOne({ applicationId: applicationId });
+            if (chat) {
+              // Append Approved Phase Message
+              const newMessage = new MessageModel({
+                sender: req.userId.toString(),
+                content: content,
+                chatId: chat?._id,
+                isPhaseApprovedMessage: true,
+                redirect: "/phase3",
+              });
+              const approveMsg = await newMessage.save();
+              console.log(approveMsg);
+
+              // Update Latest Message
+              await ChatModel.findByIdAndUpdate(chat?._id, {
+                latestMessage: content,
+              });
+            }
+            (html = `<!DOCTYPE html>
         <html lang="en">
           <head>
             <meta charset="UTF-8" />
@@ -2365,21 +2536,23 @@ const requestAPhase = async (req, res) => {
               </p>
             </div>
           </body>
-        </html>`;
-              const info = await transporter.sendMail({
-                from: {
-                  address: "testmailingsmtp@lesoft.io",
-                  name: "Lesoft",
-                },
-                to: user?.email,
-                subject: "Approval of UK Immigration Phase 2",
-                text: "",
-                html: html,
-              });
+        </html>`);
+        }
+              
+              // const info = await transporter.sendMail({
+              //   from: {
+              //     address: "testmailingsmtp@lesoft.io",
+              //     name: "Lesoft",
+              //   },
+              //   to: user?.email,
+              //   subject: "Approval of UK Immigration Phase 2",
+              //   text: "",
+              //   html: html,
+              // });
 
-              if (info.messageId) {
-                console.log("Email sent to the user", info.messageId);
-              }
+              // if (info.messageId) {
+              //   console.log("Email sent to the user", info.messageId);
+              // }
         return res
           .status(200)
           .json({ message: "Phase 3 Requested", data: updatedRecord, success: true });
