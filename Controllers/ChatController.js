@@ -334,6 +334,7 @@ const getAllMessages = async (req, res) => {
       result,
       profilePic: sender.profilePic,
       name: sender.name,
+      test: "hello",
       success: true,
     });
   } catch (err) {
