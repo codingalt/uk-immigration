@@ -184,7 +184,6 @@ app.get("/timeleft", (req, res) => {
 
     // Send Notification to Client of phase Approval from Admin
     socket.on("phase notification", async (request) => {
-      console.log("Phase Notification", request);
       if (!request) return console.log("Phase Notification is undefined");
 
       // Send Notification and Store Request In Database
@@ -197,6 +196,7 @@ app.get("/timeleft", (req, res) => {
         phaseStatus: request.phaseStatus,
         phaseSubmittedByClient: request.phaseSubmittedByClient,
         reSubmit: request.reSubmit,
+        finalConfirmation: request.finalConfirmation,
       });
       socket.in(request.userId).emit("phase notification received", request);
     });

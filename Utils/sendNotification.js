@@ -30,6 +30,7 @@ const sendNotification = async(req)=>{
         notificationType,
         phaseSubmittedByClient: phaseSubmittedByClient,
         reSubmit: req.reSubmit && req.reSubmit,
+        finalConfirmation: req.finalConfirmation && req.finalConfirmation,
       }).save();
 
       const user = await UserModel.findById(userId);
@@ -57,20 +58,20 @@ const sendNotification = async(req)=>{
       };
 
       // Send the message
-      messaging
-        .send(message)
-        .then((response) => {
-          console.log("Successfully sent notification.", response);         
-          return {
-            message: "Notification Sent",
-            success: true,
-            response,
-          }
-        })
-        .catch((error) => {
-          console.error("Error sending message:", error);
-          return { message: "Error sending Notification", success: false }
-        });
+      // messaging
+      //   .send(message)
+      //   .then((response) => {
+      //     console.log("Successfully sent notification.", response);         
+      //     return {
+      //       message: "Notification Sent",
+      //       success: true,
+      //       response,
+      //     }
+      //   })
+      //   .catch((error) => {
+      //     console.error("Error sending message:", error);
+      //     return { message: "Error sending Notification", success: false }
+      //   });
     } catch (err) {
         console.log(err);
     }

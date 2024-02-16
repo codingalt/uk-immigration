@@ -44,6 +44,9 @@ const phaseNotificationSchema = mongoose.Schema(
       type: Number,
       default: 0,
     },
+    finalConfirmation: {
+      type: String,
+    }
   },
   { timestamps: true }
 );

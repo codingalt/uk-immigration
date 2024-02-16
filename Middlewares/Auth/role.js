@@ -69,7 +69,6 @@ const isAssignedCaseWorker = async (req, res, next) => {
   try {
     const applicationId  =
       req.params.applicationId || req.body.applicationId;
-      console.log(applicationId);
       
       if(!applicationId){
         return res.status(400).json({message:"Application Id cannot be empty", success: false});
@@ -128,7 +127,6 @@ const isAssignedCaseWorker = async (req, res, next) => {
 const isAssignedCompanyCaseWorker = async (req, res, next) => {
   try {
      const applicationId = req.params.applicationId || req.body.applicationId;
-     console.log(applicationId);
     const application = await CompanyClientModel.findById(applicationId);
 
     if (application.isCaseWorkerHandling) {

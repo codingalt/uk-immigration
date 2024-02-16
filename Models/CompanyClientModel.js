@@ -831,9 +831,14 @@ const companyClientSchema = mongoose.Schema(
       {
         name: String,
         content: String,
-        dateTime: Date
+        dateTime: Date,
       },
     ],
+    finalConfirmation: {
+      pdf: String,
+      description: String,
+      status: String,
+    },
   },
   { timestamps: true }
 );

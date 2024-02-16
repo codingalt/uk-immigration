@@ -73,25 +73,33 @@ const postApplicationPhase1 = async (req, res) => {
     });
 
     let service = [];
-    service.push({ serviceType: req.body.phase1.applicationType, dateTime: new Date() });
+    service.push({
+      serviceType: req.body.phase1.applicationType,
+      dateTime: new Date(),
+    });
 
     req.body.service = service;
 
     let application;
 
-    if (isApplicationAlready){
-      req.body.phase1.status = "pending"
-       application = await ApplicationModel.findByIdAndUpdate(
-         isApplicationAlready._id,
-         {
-            $set: { ...req.body, phase: 1, phaseStatus: "pending",applicationStatus: "pending" } ,
-         },
-         { new: true, useFindAndModify: false }
-       ); 
-    }else{
+    if (isApplicationAlready) {
+      req.body.phase1.status = "pending";
+      application = await ApplicationModel.findByIdAndUpdate(
+        isApplicationAlready._id,
+        {
+          $set: {
+            ...req.body,
+            phase: 1,
+            phaseStatus: "pending",
+            applicationStatus: "pending",
+          },
+        },
+        { new: true, useFindAndModify: false }
+      );
+    } else {
       application = await new ApplicationModel(req.body).save();
     }
-     
+
     const admin = await UserModel.findOne({ isAdmin: true });
     var date = new Date();
     var options = { year: "numeric", month: "long", day: "numeric" };
@@ -328,13 +336,13 @@ const postApplicationPhase2 = async (req, res) => {
         Object.entries(phase2Data).filter(([key, value]) => value !== "notreq")
       );
 
-      var propertiesToExclude = ["otherDocumentNotes", "other","status"];
+      var propertiesToExclude = ["otherDocumentNotes", "other", "status"];
       // Exclude "otherDocumentNotes" from validation
-     var filteredDataKeys = Object.keys(filteredData).filter(
-       (key) => !propertiesToExclude.includes(key)
-     );
+      var filteredDataKeys = Object.keys(filteredData).filter(
+        (key) => !propertiesToExclude.includes(key)
+      );
 
-     console.log(filteredDataKeys);
+      console.log(filteredDataKeys);
 
       // Now validate whether required fields are submitted by client
       const missingProperties = filteredDataKeys.filter(
@@ -349,7 +357,7 @@ const postApplicationPhase2 = async (req, res) => {
           success: false,
         });
       }
-      const filesObjTemp = {...filesObj, status: "pending"}
+      const filesObjTemp = { ...filesObj, status: "pending" };
       // Update Phase 2
       const application = await ApplicationModel.findByIdAndUpdate(
         applicationId,
@@ -359,7 +367,7 @@ const postApplicationPhase2 = async (req, res) => {
             phaseSubmittedByClient: 2,
             phase: 2,
             phaseStatus: "pending",
-            applicationStatus: "pending"
+            applicationStatus: "pending",
           },
         },
         { new: true, useFindAndModify: false }
@@ -377,9 +385,9 @@ const postApplicationPhase3 = async (req, res) => {
     const { phaseStatus, phase, applicationStatus } = req.body;
     const { applicationId } = req.params;
     const files = req.files;
-    console.log("Files",files);
+    console.log("Files", files);
     const chalanFile = `/Uploads/${files?.chalan[0]?.filename}`;
-    console.log("Chalan File",chalanFile);
+    console.log("Chalan File", chalanFile);
     if (phaseStatus || phase || applicationStatus) {
       return res.status(400).json({
         message: "Action Forbidden! You don't have access to change.",
@@ -394,16 +402,7 @@ const postApplicationPhase3 = async (req, res) => {
     // Check if admin has requested client for phase
     const isRequested = await ApplicationModel.findById(applicationId);
 
-    // if (!user.isAdmin || !user.isCaseWorker) {
-    //   if (isRequested.requestedPhase < 3) {
-    //     return res.status(400).json({
-    //       message:
-    //         "You can't submit phase 3 data right now, Untill admin requests you to submit phase 3 data.",
-    //     });
-    //   }
-    // }
-
-    console.log("isAdmin",user.isAdmin,"isCaseworker",user.isCaseWorker);
+    console.log("isAdmin", user.isAdmin, "isCaseworker", user.isCaseWorker);
 
     if (user.isAdmin || user.isCaseWorker) {
       console.log("Admin condition running");
@@ -442,12 +441,12 @@ const postApplicationPhase3 = async (req, res) => {
             phase: 3,
             phaseStatus: "pending",
             applicationStatus: "pending",
-            "phase3.status": "pending"
+            "phase3.status": "pending",
           },
         },
         { new: true, useFindAndModify: false }
       );
-      if(application){
+      if (application) {
         return res.status(200).json({ application, success: true });
       }
     }
@@ -556,15 +555,15 @@ const postPhase1Manual = async (req, res) => {
     req.body.phase1.status = "approved";
     req.body.isInitialRequestAccepted = true;
     req.body.isManual = true;
-   if (!req.body.report) {
-     req.body.report = [];
-   }
+    if (!req.body.report) {
+      req.body.report = [];
+    }
 
-   req.body.report.push({
-     phase: 1,
-     status: "approved",
-     dateTime: new Date(),
-   });
+    req.body.report.push({
+      phase: 1,
+      status: "approved",
+      dateTime: new Date(),
+    });
 
     // Check if application is already exist
     const isApplicationAlready = await ApplicationModel.findOne({
@@ -577,8 +576,8 @@ const postPhase1Manual = async (req, res) => {
         .json({ message: "Your Application already exists", success: false });
 
     const application = await new ApplicationModel(req.body).save();
-    console.log("Application phase 1 manual save",application);
-    if(!application){
+    console.log("Application phase 1 manual save", application);
+    if (!application) {
       await UserModel.deleteOne({ _id: userData._id });
     }
 
@@ -613,7 +612,7 @@ const postPhase1Manual = async (req, res) => {
         .json({ message: "Error Creating Chat", success: false });
     }
   } catch (err) {
-    console.log("catch block userId",req.body.userId);
+    console.log("catch block userId", req.body.userId);
     await UserModel.deleteOne({ _id: req.body.userId });
     res.status(500).json({ message: err.message, success: false });
     console.log(err);
@@ -670,7 +669,7 @@ const postGeneral = async (req, res) => {
         applicationId,
         {
           "phase4.general": req.body,
-          "phase4.isCompleted": 1
+          "phase4.isCompleted": 1,
         },
         { new: true, useFindAndModify: false }
       );
@@ -970,38 +969,37 @@ const postCharacter = async (req, res) => {
         .json({ message: "User not found", success: false });
     console.log(req.body);
     const application = await ApplicationModel.findById(applicationId);
-  
-      if (user.isAdmin || user.isCaseWorker) {
-        const application = await ApplicationModel.findByIdAndUpdate(
-          applicationId,
-          {
-            "phase4.character": req.body,
-            "phase4.isCompleted": 9,
-            phaseSubmittedByClient: 4,
-            phase: 4,
-            phaseStatus: "approved",
-            "phase4.status": "approved"
-          },
-          { new: true, useFindAndModify: false }
-        );
-        return res.status(200).json({ application, success: true });
-      } else {
-        const application = await ApplicationModel.findByIdAndUpdate(
-          applicationId,
-          {
-            "phase4.character": req.body,
-            phaseSubmittedByClient: 4,
-            "phase4.isCompleted": 9,
-            phase: 4,
-            phaseStatus: "pending",
-            applicationStatus: "pending",
-            "phase4.status": "pending"
-          },
-          { new: true, useFindAndModify: false }
-        );
-        return res.status(200).json({ application, success: true });
-      }
-      
+
+    if (user.isAdmin || user.isCaseWorker) {
+      const application = await ApplicationModel.findByIdAndUpdate(
+        applicationId,
+        {
+          "phase4.character": req.body,
+          "phase4.isCompleted": 9,
+          phaseSubmittedByClient: 4,
+          phase: 4,
+          phaseStatus: "approved",
+          "phase4.status": "approved",
+        },
+        { new: true, useFindAndModify: false }
+      );
+      return res.status(200).json({ application, success: true });
+    } else {
+      const application = await ApplicationModel.findByIdAndUpdate(
+        applicationId,
+        {
+          "phase4.character": req.body,
+          phaseSubmittedByClient: 4,
+          "phase4.isCompleted": 9,
+          phase: 4,
+          phaseStatus: "pending",
+          applicationStatus: "pending",
+          "phase4.status": "pending",
+        },
+        { new: true, useFindAndModify: false }
+      );
+      return res.status(200).json({ application, success: true });
+    }
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -1017,18 +1015,20 @@ const updateApplicationService = async (req, res) => {
       });
     }
 
-      const application = await ApplicationModel.findByIdAndUpdate(
-        applicationId,
-        {
-          "phase1.applicationType": req.body.applicationType,
-          $push: {
-            service: {serviceType: req.body.applicationType, dateTime: new Date()}
-          }
+    const application = await ApplicationModel.findByIdAndUpdate(
+      applicationId,
+      {
+        "phase1.applicationType": req.body.applicationType,
+        $push: {
+          service: {
+            serviceType: req.body.applicationType,
+            dateTime: new Date(),
+          },
         },
-        { new: true, useFindAndModify: false }
-      );
-      res.status(200).json({ application, success: true });
-    
+      },
+      { new: true, useFindAndModify: false }
+    );
+    res.status(200).json({ application, success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -1056,12 +1056,10 @@ const acceptInitialRequest = async (req, res) => {
       { new: true, useFindAndModify: false }
     );
 
-    res
-      .status(200)
-      .json({
-        message: "Application's Initial Request Accepted.",
-        success: true,
-      });
+    res.status(200).json({
+      message: "Application's Initial Request Accepted.",
+      success: true,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -1123,12 +1121,10 @@ const approvePhase1 = async (req, res) => {
       });
     }
 
-    res
-      .status(200)
-      .json({
-        message: "Application(Phase 1) Approved Successfully.",
-        success: true,
-      });
+    res.status(200).json({
+      message: "Application(Phase 1) Approved Successfully.",
+      success: true,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -1154,9 +1150,7 @@ const approvePhase2 = async (req, res) => {
         .json({ message: "This Phase is Already Approved", success: false });
     }
 
-    if (
-      isApplication.phase === 2
-    ) {
+    if (isApplication.phase === 2) {
       await ApplicationModel.updateOne(
         { _id: applicationId },
         {
@@ -1192,20 +1186,16 @@ const approvePhase2 = async (req, res) => {
       //   });
       // }
 
-      res
-        .status(200)
-        .json({
-          message: "Application(Phase 2) Approved Successfully.",
-          success: true,
-        });
+      res.status(200).json({
+        message: "Application(Phase 2) Approved Successfully.",
+        success: true,
+      });
     } else {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Action Forbidden! To approve phase 2, Application's phase 1 must be approved.",
-          success: false,
-        });
+      return res.status(400).json({
+        message:
+          "Action Forbidden! To approve phase 2, Application's phase 1 must be approved.",
+        success: false,
+      });
     }
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
@@ -1233,9 +1223,7 @@ const approvePhase3 = async (req, res) => {
         .json({ message: "This Phase is Already Approved", success: false });
     }
 
-    if (
-      isApplication.phase === 3
-    ) {
+    if (isApplication.phase === 3) {
       await ApplicationModel.updateOne(
         { _id: applicationId },
         {
@@ -1460,9 +1448,7 @@ const approvePhase4 = async (req, res) => {
         .json({ message: "This Phase is Already Approved", success: false });
     }
 
-    if (
-      isApplication.phase === 4
-    ) {
+    if (isApplication.phase === 4) {
       await ApplicationModel.updateOne(
         { _id: applicationId },
         {
@@ -1666,23 +1652,22 @@ const requestAPhase = async (req, res) => {
     const application = await ApplicationModel.findById(applicationId);
     const user = await UserModel.findById(application.userId);
 
-    // Rejected Conditions 
+    // Rejected Conditions
     if (
       application.phase === 2 &&
       application.phaseStatus === phaseStaus.Rejected
     ) {
-              let updatedRecord;
-            req.body.phase2.status = application.phase2.status;
-              updatedRecord = await ApplicationModel.findByIdAndUpdate(
-                applicationId,
-                { $set: { ...req.body, requestedPhase: 2,reRequest: 2 } },
-                { new: true, useFindAndModify: false }
-              );
+      let updatedRecord;
+      req.body.phase2.status = application.phase2.status;
+      updatedRecord = await ApplicationModel.findByIdAndUpdate(
+        applicationId,
+        { $set: { ...req.body, requestedPhase: 2, reRequest: 2 } },
+        { new: true, useFindAndModify: false }
+      );
 
-
-              // Send email to the user
-              const url = `${process.env.BASE_URL}`;
-              const html = `<!DOCTYPE html>
+      // Send email to the user
+      const url = `${process.env.BASE_URL}`;
+      const html = `<!DOCTYPE html>
         <html lang="en">
           <head>
             <meta charset="UTF-8" />
@@ -1812,25 +1797,26 @@ const requestAPhase = async (req, res) => {
             </div>
           </body>
         </html>`;
-              const info = await transporter.sendMail({
-                from: {
-                  address: "testmailingsmtp@lesoft.io",
-                  name: "Lesoft",
-                },
-                to: user?.email,
-                subject:
-                  "Request to Resubmit Phase 2 Data for Immigration Application",
-                text: "",
-                html: html,
-              });
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Request to Resubmit Phase 2 Data for Immigration Application",
+        text: "",
+        html: html,
+      });
 
-              if (info.messageId) {
-                console.log("Email sent to the user", info.messageId);
-              }
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
 
-              return res
-                .status(200)
-                .json({ message: "Phase 2 Requested", data: updatedRecord, success: true });
+      return res.status(200).json({
+        message: "Phase 2 Requested",
+        data: updatedRecord,
+        success: true,
+      });
     }
 
     if (
@@ -1992,38 +1978,40 @@ const requestAPhase = async (req, res) => {
         console.log("Email sent to the user", info.messageId);
       }
 
-      return res
-        .status(200)
-        .json({ message: "Phase 3 Requested", data: updatedRecord, success: true });
+      return res.status(200).json({
+        message: "Phase 3 Requested",
+        data: updatedRecord,
+        success: true,
+      });
     }
 
-    // Approved Condition 
-      if (
-        application.phase === 1 &&
-        application.phaseStatus === phaseStaus.Approved
-      ) {
-        if (application.requestedPhase >= 2) {
-          return res.status(400).json({
-            message: "You have already requested this phase.",
-            success: false,
-          });
-        }
-        await ApplicationModel.findByIdAndUpdate(
-          applicationId,
-          {
-            $set: {
-              ...req.body,
-              requestedPhase: 2,
-              phase: 2,
-              phaseStatus: "pending",
-            },
+    // Approved Condition
+    if (
+      application.phase === 1 &&
+      application.phaseStatus === phaseStaus.Approved
+    ) {
+      if (application.requestedPhase >= 2) {
+        return res.status(400).json({
+          message: "You have already requested this phase.",
+          success: false,
+        });
+      }
+      await ApplicationModel.findByIdAndUpdate(
+        applicationId,
+        {
+          $set: {
+            ...req.body,
+            requestedPhase: 2,
+            phase: 2,
+            phaseStatus: "pending",
           },
-          { new: true, useFindAndModify: false }
-        );
+        },
+        { new: true, useFindAndModify: false }
+      );
 
-        // Send email to the user
-        const url = `${process.env.BASE_URL}`;
-        const html = `<!DOCTYPE html>
+      // Send email to the user
+      const url = `${process.env.BASE_URL}`;
+      const html = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -2158,110 +2146,109 @@ const requestAPhase = async (req, res) => {
     </div>
   </body>
 </html>`;
-        const info = await transporter.sendMail({
-          from: {
-            address: "testmailingsmtp@lesoft.io",
-            name: "Lesoft",
-          },
-          to: user?.email,
-          subject: "Approval of UK Immigration Phase 1",
-          text: "",
-          html: html,
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Approval of UK Immigration Phase 1",
+        text: "",
+        html: html,
+      });
+
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
+
+      return res
+        .status(200)
+        .json({ message: "Phase 2 Requested", success: true });
+    } else if (
+      application.phase === 2 &&
+      application.phaseStatus === phaseStaus.Approved
+    ) {
+      if (application.requestedPhase >= 3) {
+        return res.status(400).json({
+          message: "You have already requested this phase.",
+          success: false,
         });
-
-        if (info.messageId) {
-          console.log("Email sent to the user", info.messageId);
-        }
-
-        return res
-          .status(200)
-          .json({ message: "Phase 2 Requested", success: true });
-      } else if (
-        application.phase === 2 &&
-        application.phaseStatus === phaseStaus.Approved
-      ) {
-        if (application.requestedPhase >= 3) {
-          return res.status(400).json({
-            message: "You have already requested this phase.",
-            success: false,
-          });
-        }
-        req.body.phase3.status = "pending";
-        let updatedRecord;
-        if (!req.body.phase3.doesCompanyHelp){
-          req.body.phase3.applicationType = application.phase1.applicationType;
-          req.body.phase3.status = "rejected";
-           updatedRecord = await ApplicationModel.findByIdAndUpdate(
-            applicationId,
-            {
-              $set: {
-                ...req.body,
-                requestedPhase: 3,
-                phase: 3,
-                phaseStatus: "rejected",
-                applicationStatus: "rejected",
-              },
-              $push: {
-                service: {
-                  serviceType: "Company cannot help",
-                  dateTime: new Date(),
-                },
+      }
+      req.body.phase3.status = "pending";
+      let updatedRecord;
+      if (!req.body.phase3.doesCompanyHelp) {
+        req.body.phase3.applicationType = application.phase1.applicationType;
+        req.body.phase3.status = "rejected";
+        updatedRecord = await ApplicationModel.findByIdAndUpdate(
+          applicationId,
+          {
+            $set: {
+              ...req.body,
+              requestedPhase: 3,
+              phase: 3,
+              phaseStatus: "rejected",
+              applicationStatus: "rejected",
+            },
+            $push: {
+              service: {
+                serviceType: "Company cannot help",
+                dateTime: new Date(),
               },
             },
-            { new: true, useFindAndModify: false }
-          );
-            console.log("updatedRecord", updatedRecord);
-        }else{
-         updatedRecord = await ApplicationModel.findByIdAndUpdate(
-            applicationId,
-            {
-              $set: {
-                ...req.body,
-                requestedPhase: 3,
-                phase: 3,
-                phaseStatus: "pending",
-                "phase1.applicationType": req.body.phase3.companyHelpService,
-              },
-              $push: {
-                service: {
-                  serviceType: req.body.phase3.companyHelpService,
-                  dateTime: new Date(),
-                },
+          },
+          { new: true, useFindAndModify: false }
+        );
+        console.log("updatedRecord", updatedRecord);
+      } else {
+        updatedRecord = await ApplicationModel.findByIdAndUpdate(
+          applicationId,
+          {
+            $set: {
+              ...req.body,
+              requestedPhase: 3,
+              phase: 3,
+              phaseStatus: "pending",
+              "phase1.applicationType": req.body.phase3.companyHelpService,
+            },
+            $push: {
+              service: {
+                serviceType: req.body.phase3.companyHelpService,
+                dateTime: new Date(),
               },
             },
-            { new: true, useFindAndModify: false }
-          );
-        }
+          },
+          { new: true, useFindAndModify: false }
+        );
+      }
 
-        // Send email to the user
-        const url = `${process.env.BASE_URL}`;
-        let html;
-        if (!req.body.phase3.doesCompanyHelp){
-          let content =
-            "Phase 2 Rejected";
+      // Send email to the user
+      const url = `${process.env.BASE_URL}`;
+      let html;
+      if (!req.body.phase3.doesCompanyHelp) {
+        let content = "Phase 2 Rejected";
 
-          // Find Chat
-          const chat = await ChatModel.findOne({
-            applicationId: applicationId,
+        // Find Chat
+        const chat = await ChatModel.findOne({
+          applicationId: applicationId,
+        });
+        if (chat) {
+          // Append Approved Phase Message
+          const newMessage = new MessageModel({
+            sender: req.userId.toString(),
+            content: content,
+            chatId: chat?._id,
+            isPhaseRejectMessage: true,
+            redirect: "/",
           });
-          if (chat) {
-            // Append Approved Phase Message
-            const newMessage = new MessageModel({
-              sender: req.userId.toString(),
-              content: content,
-              chatId: chat?._id,
-              isPhaseRejectMessage: true,
-              redirect: "/",
-            });
-            const approveMsg = await newMessage.save();
-            console.log(approveMsg);
+          const approveMsg = await newMessage.save();
+          console.log(approveMsg);
 
-            // Update Latest Message
-            await ChatModel.findByIdAndUpdate(chat?._id, {
-              latestMessage: content,
-            });
-          }
-           html = `<!DOCTYPE html>
+          // Update Latest Message
+          await ChatModel.findByIdAndUpdate(chat?._id, {
+            latestMessage: content,
+          });
+        }
+        html = `<!DOCTYPE html>
         <html lang="en">
           <head>
             <meta charset="UTF-8" />
@@ -2384,30 +2371,30 @@ const requestAPhase = async (req, res) => {
             </div>
           </body>
         </html>`;
-        }else{
-          let content =
-              "Congratulations, Phase 2 Approved Successfully. Click here to continue";
+      } else {
+        let content =
+          "Congratulations, Phase 2 Approved Successfully. Click here to continue";
 
-            // Find Chat
-            const chat = await ChatModel.findOne({ applicationId: applicationId });
-            if (chat) {
-              // Append Approved Phase Message
-              const newMessage = new MessageModel({
-                sender: req.userId.toString(),
-                content: content,
-                chatId: chat?._id,
-                isPhaseApprovedMessage: true,
-                redirect: "/phase3",
-              });
-              const approveMsg = await newMessage.save();
-              console.log(approveMsg);
+        // Find Chat
+        const chat = await ChatModel.findOne({ applicationId: applicationId });
+        if (chat) {
+          // Append Approved Phase Message
+          const newMessage = new MessageModel({
+            sender: req.userId.toString(),
+            content: content,
+            chatId: chat?._id,
+            isPhaseApprovedMessage: true,
+            redirect: "/phase3",
+          });
+          const approveMsg = await newMessage.save();
+          console.log(approveMsg);
 
-              // Update Latest Message
-              await ChatModel.findByIdAndUpdate(chat?._id, {
-                latestMessage: content,
-              });
-            }
-            (html = `<!DOCTYPE html>
+          // Update Latest Message
+          await ChatModel.findByIdAndUpdate(chat?._id, {
+            latestMessage: content,
+          });
+        }
+        html = `<!DOCTYPE html>
         <html lang="en">
           <head>
             <meta charset="UTF-8" />
@@ -2539,49 +2526,51 @@ const requestAPhase = async (req, res) => {
               </p>
             </div>
           </body>
-        </html>`);
-        }
-              
-              const info = await transporter.sendMail({
-                from: {
-                  address: "testmailingsmtp@lesoft.io",
-                  name: "Lesoft",
-                },
-                to: user?.email,
-                subject: "Approval of UK Immigration Phase 2",
-                text: "",
-                html: html,
-              });
-
-              if (info.messageId) {
-                console.log("Email sent to the user", info.messageId);
-              }
-        return res
-          .status(200)
-          .json({ message: "Phase 3 Requested", data: updatedRecord, success: true });
-      } else if (
-        application.phase === 2 &&
-        application.phaseStatus === phaseStaus.Pending
-      ) {
-        // Pending Condition
-        if (application.requestedPhase >= 2) {
-          return res.status(400).json({
-            message: "You have already requested this phase.",
-            success: false,
-          });
-        }
-      } else if (
-        application.phase === 3 &&
-        application.phaseStatus === phaseStaus.Pending
-      ) {
-        // Pending Condition
-        if (application.requestedPhase >= 3) {
-          return res.status(400).json({
-            message: "You have already requested this phase.",
-            success: false,
-          });
-        }
+        </html>`;
       }
+
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Approval of UK Immigration Phase 2",
+        text: "",
+        html: html,
+      });
+
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
+      return res.status(200).json({
+        message: "Phase 3 Requested",
+        data: updatedRecord,
+        success: true,
+      });
+    } else if (
+      application.phase === 2 &&
+      application.phaseStatus === phaseStaus.Pending
+    ) {
+      // Pending Condition
+      if (application.requestedPhase >= 2) {
+        return res.status(400).json({
+          message: "You have already requested this phase.",
+          success: false,
+        });
+      }
+    } else if (
+      application.phase === 3 &&
+      application.phaseStatus === phaseStaus.Pending
+    ) {
+      // Pending Condition
+      if (application.requestedPhase >= 3) {
+        return res.status(400).json({
+          message: "You have already requested this phase.",
+          success: false,
+        });
+      }
+    }
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -2643,8 +2632,10 @@ const ReRequestPhase1 = async (req, res) => {
   try {
     const { applicationId } = req.params;
 
-    if(!applicationId){
-      return res.status(400).json({message: "Application Id cannot be empty",success: false})
+    if (!applicationId) {
+      return res
+        .status(400)
+        .json({ message: "Application Id cannot be empty", success: false });
     }
 
     const application = await ApplicationModel.findByIdAndUpdate(
@@ -2658,12 +2649,12 @@ const ReRequestPhase1 = async (req, res) => {
       { new: true, useFindAndModify: false }
     );
 
-  if(application){
-    const user = await UserModel.findById(application?.userId);
+    if (application) {
+      const user = await UserModel.findById(application?.userId);
 
-    // Send email to the user
-    const url = `${process.env.BASE_URL}`;
-              const html = `<!DOCTYPE html>
+      // Send email to the user
+      const url = `${process.env.BASE_URL}`;
+      const html = `<!DOCTYPE html>
         <html lang="en">
           <head>
             <meta charset="UTF-8" />
@@ -2793,24 +2784,23 @@ const ReRequestPhase1 = async (req, res) => {
             </div>
           </body>
         </html>`;
-              const info = await transporter.sendMail({
-                from: {
-                  address: "testmailingsmtp@lesoft.io",
-                  name: "Lesoft",
-                },
-                to: user?.email,
-                subject:
-                  "Request to Resubmit Phase 1 Data for Immigration Application",
-                text: "",
-                html: html,
-              });
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Request to Resubmit Phase 1 Data for Immigration Application",
+        text: "",
+        html: html,
+      });
 
-              if (info.messageId) {
-                console.log("Email sent to the user", info.messageId);
-               }
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
 
-    res.status(200).json({ application, success: true });
-  }
+      res.status(200).json({ application, success: true });
+    }
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
   }
@@ -2842,7 +2832,7 @@ const ReRequestPhase4 = async (req, res) => {
 
       // Send email to the user
       const url = `${process.env.BASE_URL}`;
-                const html = `<!DOCTYPE html>
+      const html = `<!DOCTYPE html>
           <html lang="en">
             <head>
               <meta charset="UTF-8" />
@@ -2972,21 +2962,20 @@ const ReRequestPhase4 = async (req, res) => {
               </div>
             </body>
           </html>`;
-                const info = await transporter.sendMail({
-                  from: {
-                    address: "testmailingsmtp@lesoft.io",
-                    name: "Lesoft",
-                  },
-                  to: user?.email,
-                  subject:
-                    "Request to Resubmit Phase 4 Data for Immigration Application",
-                  text: "",
-                  html: html,
-                });
+      const info = await transporter.sendMail({
+        from: {
+          address: "testmailingsmtp@lesoft.io",
+          name: "Lesoft",
+        },
+        to: user?.email,
+        subject: "Request to Resubmit Phase 4 Data for Immigration Application",
+        text: "",
+        html: html,
+      });
 
-                if (info.messageId) {
-                  console.log("Email sent to the user", info.messageId);
-                }
+      if (info.messageId) {
+        console.log("Email sent to the user", info.messageId);
+      }
 
       res.status(200).json({ application, success: true });
     }
@@ -3052,10 +3041,10 @@ const getApplicationsNotesData = async (req, res) => {
     let groupClient;
 
     const isAdmin = await UserModel.findById(req.userId.toString());
-    if(isAdmin.isAdmin){
+    if (isAdmin.isAdmin) {
       applications = await ApplicationModel.find({});
       groupClient = await CompanyClientModel.find({});
-    }else{
+    } else {
       applications = await ApplicationModel.find({
         caseWorkerId: req.userId.toString(),
       });
@@ -3063,7 +3052,7 @@ const getApplicationsNotesData = async (req, res) => {
         caseWorkerId: req.userId.toString(),
       });
     }
-     
+
     const applicationsWithUserData = [];
 
     for (const application of applications) {
@@ -3084,10 +3073,10 @@ const getApplicationsNotesData = async (req, res) => {
       }
     }
 
-     for (const application of groupClient) {
-       const userId = application.userId;
-       console.log("application",application);
-       if(application.phaseSubmittedByClient >= 1){
+    for (const application of groupClient) {
+      const userId = application.userId;
+      console.log("application", application);
+      if (application.phaseSubmittedByClient >= 1) {
         const user = await UserModel.findById(userId);
 
         // If a user is found, add user information to the application
@@ -3102,9 +3091,8 @@ const getApplicationsNotesData = async (req, res) => {
           };
           applicationsWithUserData.push(applicationDataWithUser);
         }
-       }
-       
-     }
+      }
+    }
 
     console.log(applicationsWithUserData);
 
@@ -3123,7 +3111,6 @@ const getApplicationsNotesData = async (req, res) => {
     res.status(500).json({ message: err.message, success: false });
   }
 };
-
 
 const getApplicationNotification = async (req, res) => {
   try {
@@ -3208,12 +3195,10 @@ const updateApplicationData = async (req, res) => {
     const { applicationId } = req.body;
     const isApplication = await ApplicationModel.findById(applicationId);
     if (!isApplication) {
-      return res
-        .status(400)
-        .json({
-          message: "Application not found with this id",
-          success: false,
-        });
+      return res.status(400).json({
+        message: "Application not found with this id",
+        success: false,
+      });
     }
     await ApplicationModel.updateOne({
       _id: applicationId,
@@ -3232,40 +3217,38 @@ const rejectApplication = async (req, res) => {
     const { applicationId, rejectPhaseReason } = req.body;
     const isApplication = await ApplicationModel.findById(applicationId);
     if (!isApplication) {
-      return res
-        .status(400)
-        .json({
-          message: "Application not found with this id.",
-          success: false,
-        });
+      return res.status(400).json({
+        message: "Application not found with this id.",
+        success: false,
+      });
     }
 
-    if(isApplication.phase === 1){
-       await ApplicationModel.updateOne(
-         { _id: applicationId },
-         {
-           $set: {
-             applicationStatus: "rejected",
-             phaseStatus: "rejected",
-             rejectPhaseReason: rejectPhaseReason,
-             "phase1.status": "rejected",
-             requestedPhase:
-               isApplication.requestedPhase === 2
-                 ? 0
-                 : isApplication.requestedPhase === 3
-                 ? 2
-                 : 0,
-           },
-           $push: {
-             report: {
-               phase: isApplication.phase,
-               status: "rejected",
-               dateTime: new Date(),
-             },
-           },
-         }
-       );
-    }else if(isApplication.phase === 2){
+    if (isApplication.phase === 1) {
+      await ApplicationModel.updateOne(
+        { _id: applicationId },
+        {
+          $set: {
+            applicationStatus: "rejected",
+            phaseStatus: "rejected",
+            rejectPhaseReason: rejectPhaseReason,
+            "phase1.status": "rejected",
+            requestedPhase:
+              isApplication.requestedPhase === 2
+                ? 0
+                : isApplication.requestedPhase === 3
+                ? 2
+                : 0,
+          },
+          $push: {
+            report: {
+              phase: isApplication.phase,
+              status: "rejected",
+              dateTime: new Date(),
+            },
+          },
+        }
+      );
+    } else if (isApplication.phase === 2) {
       await ApplicationModel.updateOne(
         { _id: applicationId },
         {
@@ -3290,7 +3273,7 @@ const rejectApplication = async (req, res) => {
           },
         }
       );
-    }else if(isApplication.phase === 3){
+    } else if (isApplication.phase === 3) {
       await ApplicationModel.updateOne(
         { _id: applicationId },
         {
@@ -3315,7 +3298,7 @@ const rejectApplication = async (req, res) => {
           },
         }
       );
-    }else if (isApplication.phase === 4){
+    } else if (isApplication.phase === 4) {
       await ApplicationModel.updateOne(
         { _id: applicationId },
         {
@@ -3341,8 +3324,6 @@ const rejectApplication = async (req, res) => {
         }
       );
     }
-   
-
 
     let content = rejectPhaseReason;
 
@@ -3436,7 +3417,6 @@ const rejectApplication = async (req, res) => {
 //   }
 // };
 
-
 const generateQueryConditions = (filters, modelName, caseWorkerId) => {
   const queryConditions = [];
 
@@ -3499,7 +3479,7 @@ const filterApplication = async (req, res) => {
   try {
     const user = await UserModel.findById(req.userId.toString());
     let caseWorkerId;
-    if(user.isCaseWorker){
+    if (user.isCaseWorker) {
       caseWorkerId = user._id;
     }
     const { filters } = req.body;
@@ -3555,15 +3535,14 @@ const filterApplication = async (req, res) => {
       companyId: true,
     });
 
-   const result = [...applicationResult, ...companyClientResult];
-    console.log("result",result);
+    const result = [...applicationResult, ...companyClientResult];
+    console.log("result", result);
 
     res.status(200).json({ result, success: true });
   } catch (error) {
     res.status(500).json(error);
   }
 };
-
 
 // Add Note to Application By Admin
 const addNotes = async (req, res) => {
@@ -3847,11 +3826,11 @@ const generateInvoiceQueryConditions = (filters, modelName, caseWorkerId) => {
     });
   }
 
-  // Validate that Requested phase should be grater or equal to 3 
+  // Validate that Requested phase should be grater or equal to 3
   queryConditions.push({
     phase: {
-      $gte: 3
-     },
+      $gte: 3,
+    },
   });
 
   if (filters.name) {
@@ -4097,22 +4076,16 @@ const linkCompany = async (req, res) => {
     const { applicationId } = req.params;
     const { companyId, name } = req.body;
 
-    if (
-      !companyId ||
-      !name ||
-      !applicationId
-    ) {
-      return res
-        .status(400)
-        .json({
-          message: "Please fill out all required fields",
-          success: false,
-        });
+    if (!companyId || !name || !applicationId) {
+      return res.status(400).json({
+        message: "Please fill out all required fields",
+        success: false,
+      });
     }
 
     const application = await ApplicationModel.findByIdAndUpdate(
       { _id: applicationId },
-      { linkedCompany: { companyId, name} },
+      { linkedCompany: { companyId, name } },
       { new: true, useFindAndModify: false }
     );
 
@@ -4126,11 +4099,338 @@ const arrayFileUploads = async (req, res) => {
   try {
     // const { applicationId } = req.params;
     const files = req.files;
-    console.log("Files",files);
+    console.log("Files", files);
     const filesObj = {};
 
     res.send(files);
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+    console.log(err);
+  }
+};
 
+const finalApplicationConfirmation = async (req, res) => {
+  try {
+    const { description, isApprove } = req.body;
+    const { applicationId } = req.params;
+    let status;
+    if (isApprove === "true") {
+      console.log("if condition -----");
+      console.log("Type of -----", typeof isApprove);
+      status = "approved";
+    } else {
+      status = "rejected";
+    }
+
+    const files = req.files;
+    if (!description) {
+      return res.status(400).json({
+        message: "Please enter description",
+      });
+    }
+
+    const pdfFile = `/Uploads/${files?.pdf[0]?.filename}`;
+
+    // Update Application
+    const application = await ApplicationModel.findByIdAndUpdate(
+      applicationId,
+      {
+        $set: {
+          "finalConfirmation.pdf": pdfFile,
+          "finalConfirmation.description": description,
+          "finalConfirmation.status": status,
+          $push: {
+            report: {
+              phase: 4,
+              status: "approved",
+              dateTime: new Date(),
+            },
+          },
+        },
+      },
+      { new: true, useFindAndModify: false }
+    );
+
+    const user = await UserModel.findById(application.userId);
+
+    // Send email to the user
+    const url = `${process.env.BASE_URL}`;
+    let html;
+
+    if (isApprove === "true") {
+      html = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body
+    style="
+      width: 100%;
+      height: 95vh;
+      background-color: #f6f9fc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+    "
+  >
+    <div
+      class="card"
+      style="
+        width: 70%;
+        height: 85%;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 30px;
+        margin-top: 2rem;
+        padding-left: 40px;
+        margin: 2rem auto;
+      "
+    >
+      <img
+        src=${logo}
+        alt=""
+        style="margin-left: auto; margin-right: auto"
+      />
+      <h3
+        style="
+          color:#5D982E;
+          font-weight: 800;
+          font-size: 1.1rem;
+          letter-spacing: 0.5px;
+        "
+      >
+        Approval of UK Immigration Phase 4
+      </h3>
+
+
+      <p
+      style="
+        color: #414552 !important;
+        font-weight: 400;
+        font-size: 15px;
+        line-height: 22px;
+        margin-top: 1rem;
+        max-width: 90%;
+      "
+    >
+      Dear ${user?.name}, 
+    </p>
+
+    <p
+    style="
+      color: #414552 !important;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 22px;
+      margin-top: 1rem;
+      max-width: 90%;
+    "
+  >
+    We are delighted to inform you that your application has successfully cleared the final step with the authorities. It is with great pleasure that we extend our congratulations to you.
+
+Your hard work and dedication throughout this process have truly paid off. We are here to support you every step of the way as you move forward.
+
+Please feel free to reach out if you have any questions or need further assistance. Once again, congratulations on this significant achievement!
+  </p>
+  
+  <p
+  style="
+    color: #414552 !important;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 24px;
+    margin-top: 1rem;
+    max-width: 80%;
+  "
+>
+ Best regards,
+  Uk Immigration
+</p>
+      <a
+        style="margin-top: 1.5rem; cursor: pointer"
+        href=${url}
+        target="_blank"
+        ><button
+          style="
+            width: 10.4rem;
+            height: 2.8rem;
+            border-radius: 8px;
+            outline: none;
+            border: none;
+            color: #fff;
+            background-color:#5D982E;
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+          "
+        >
+        login
+        </button></a
+      >
+
+      <p
+        style="
+          color: #414552 !important;
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 24px;
+          max-width: 88%;
+          margin-top: 6rem;
+        "
+      >
+      All rights reserved by UK Immigration © 2023.
+      </p>
+    </div>
+  </body>
+</html>`;
+    } else {
+      html = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body
+    style="
+      width: 100%;
+      height: 95vh;
+      background-color: #f6f9fc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+    "
+  >
+    <div
+      class="card"
+      style="
+        width: 70%;
+        height: 85%;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 30px;
+        margin-top: 2rem;
+        padding-left: 40px;
+        margin: 2rem auto;
+      "
+    >
+      <img
+        src=${logo}
+        alt=""
+        style="margin-left: auto; margin-right: auto"
+      />
+      <h3
+        style="
+          color:#5D982E;
+          font-weight: 800;
+          font-size: 1.1rem;
+          letter-spacing: 0.5px;
+        "
+      >
+        Approval of UK Immigration Phase 4
+      </h3>
+
+
+      <p
+      style="
+        color: #414552 !important;
+        font-weight: 400;
+        font-size: 15px;
+        line-height: 22px;
+        margin-top: 1rem;
+        max-width: 90%;
+      "
+    >
+      Dear ${user?.name}, 
+    </p>
+
+    <p
+    style="
+      color: #414552 !important;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 22px;
+      margin-top: 1rem;
+      max-width: 90%;
+    "
+  >
+    We regret to inform you that your application has been rejected by the authorities. We understand that this may be disappointing news, and we want to assure you that we are here to support you during this time.
+
+Although this outcome is not what we had hoped for, please know that it does not diminish the value of your efforts and dedication. We remain committed to assisting you in any way we can and exploring alternative options to achieve your goals.
+
+If you have any questions or would like further clarification on the decision, please do not hesitate to reach out to us. We are here to provide guidance and assistance as you navigate this situation.
+
+Thank you for your understanding and cooperation.
+  </p>
+  
+  <p
+  style="
+    color: #414552 !important;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 24px;
+    margin-top: 1rem;
+    max-width: 80%;
+  "
+>
+ Best regards,
+  Uk Immigration
+</p>
+      <a
+        style="margin-top: 1.5rem; cursor: pointer"
+        href=${url}
+        target="_blank"
+        ><button
+          style="
+            width: 10.4rem;
+            height: 2.8rem;
+            border-radius: 8px;
+            outline: none;
+            border: none;
+            color: #fff;
+            background-color:#5D982E;
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+          "
+        >
+        login
+        </button></a
+      >
+
+      <p
+        style="
+          color: #414552 !important;
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 24px;
+          max-width: 88%;
+          margin-top: 6rem;
+        "
+      >
+      All rights reserved by UK Immigration © 2023.
+      </p>
+    </div>
+  </body>
+</html>`;
+    }
+
+    const info = await transporter.sendMail({
+      from: {
+        address: "testmailingsmtp@lesoft.io",
+        name: "Lesoft",
+      },
+      to: user?.email,
+      subject: "Update on Authority Confitmation",
+      text: "",
+      html: html,
+    });
+    
+    return res.status(200).json({ application, success: true });
   } catch (err) {
     res.status(500).json({ message: err.message, success: false });
     console.log(err);
@@ -4178,4 +4478,5 @@ module.exports = {
   getApplicationsNotesData,
   ReRequestPhase1,
   ReRequestPhase4,
+  finalApplicationConfirmation,
 };

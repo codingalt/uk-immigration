@@ -42,7 +42,7 @@ const applicationSchema = mongoose.Schema(
         type: String,
       },
       temporaryVisaValidUntill: {
-        type: String
+        type: String,
       },
       speakEnglish: {
         type: Boolean,
@@ -873,7 +873,7 @@ const applicationSchema = mongoose.Schema(
       {
         name: String,
         content: String,
-        dateTime: Date
+        dateTime: Date,
       },
     ],
     linkedCompany: {
@@ -881,6 +881,11 @@ const applicationSchema = mongoose.Schema(
       name: String,
       email: String,
       fullNameCompanyContact: String,
+    },
+    finalConfirmation: {
+      pdf: String,
+      description: String,
+      status: String,
     },
   },
   { timestamps: true }
