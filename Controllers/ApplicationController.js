@@ -4115,8 +4115,6 @@ const finalApplicationConfirmation = async (req, res) => {
     const { applicationId } = req.params;
     let status;
     if (isApprove === "true") {
-      console.log("if condition -----");
-      console.log("Type of -----", typeof isApprove);
       status = "approved";
     } else {
       status = "rejected";

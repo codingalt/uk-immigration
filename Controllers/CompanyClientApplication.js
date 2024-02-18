@@ -3642,6 +3642,332 @@ const updateGroupPhaseByAdmin = async (req, res) => {
   }
 };
 
+const finalApplicationConfirmationGroup = async (req, res) => {
+  try {
+    const { description, isApprove } = req.body;
+    const { applicationId } = req.params;
+    let status;
+    if (isApprove === "true") {
+      status = "approved";
+    } else {
+      status = "rejected";
+    }
+
+    const files = req.files;
+    if (!description) {
+      return res.status(400).json({
+        message: "Please enter description",
+      });
+    }
+
+    const pdfFile = `/Uploads/${files?.pdf[0]?.filename}`;
+
+    // Update Application
+    const application = await CompanyClientModel.findByIdAndUpdate(
+      applicationId,
+      {
+        $set: {
+          "finalConfirmation.pdf": pdfFile,
+          "finalConfirmation.description": description,
+          "finalConfirmation.status": status,
+          $push: {
+            report: {
+              phase: 4,
+              status: "approved",
+              dateTime: new Date(),
+            },
+          },
+        },
+      },
+      { new: true, useFindAndModify: false }
+    );
+
+    const user = await UserModel.findById(application.userId);
+
+    // Send email to the user
+    const url = `${process.env.BASE_URL}`;
+    let html;
+
+    if (isApprove === "true") {
+      html = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body
+    style="
+      width: 100%;
+      height: 95vh;
+      background-color: #f6f9fc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+    "
+  >
+    <div
+      class="card"
+      style="
+        width: 70%;
+        height: 85%;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 30px;
+        margin-top: 2rem;
+        padding-left: 40px;
+        margin: 2rem auto;
+      "
+    >
+      <img
+        src=${logo}
+        alt=""
+        style="margin-left: auto; margin-right: auto"
+      />
+      <h3
+        style="
+          color:#5D982E;
+          font-weight: 800;
+          font-size: 1.1rem;
+          letter-spacing: 0.5px;
+        "
+      >
+        Approval of UK Immigration Phase 4
+      </h3>
+
+
+      <p
+      style="
+        color: #414552 !important;
+        font-weight: 400;
+        font-size: 15px;
+        line-height: 22px;
+        margin-top: 1rem;
+        max-width: 90%;
+      "
+    >
+      Dear ${user?.name}, 
+    </p>
+
+    <p
+    style="
+      color: #414552 !important;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 22px;
+      margin-top: 1rem;
+      max-width: 90%;
+    "
+  >
+    We are delighted to inform you that your application has successfully cleared the final step with the authorities. It is with great pleasure that we extend our congratulations to you.
+
+Your hard work and dedication throughout this process have truly paid off. We are here to support you every step of the way as you move forward.
+
+Please feel free to reach out if you have any questions or need further assistance. Once again, congratulations on this significant achievement!
+  </p>
+  
+  <p
+  style="
+    color: #414552 !important;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 24px;
+    margin-top: 1rem;
+    max-width: 80%;
+  "
+>
+ Best regards,
+  Uk Immigration
+</p>
+      <a
+        style="margin-top: 1.5rem; cursor: pointer"
+        href=${url}
+        target="_blank"
+        ><button
+          style="
+            width: 10.4rem;
+            height: 2.8rem;
+            border-radius: 8px;
+            outline: none;
+            border: none;
+            color: #fff;
+            background-color:#5D982E;
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+          "
+        >
+        login
+        </button></a
+      >
+
+      <p
+        style="
+          color: #414552 !important;
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 24px;
+          max-width: 88%;
+          margin-top: 6rem;
+        "
+      >
+      All rights reserved by UK Immigration © 2023.
+      </p>
+    </div>
+  </body>
+</html>`;
+    } else {
+      html = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body
+    style="
+      width: 100%;
+      height: 95vh;
+      background-color: #f6f9fc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+    "
+  >
+    <div
+      class="card"
+      style="
+        width: 70%;
+        height: 85%;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 30px;
+        margin-top: 2rem;
+        padding-left: 40px;
+        margin: 2rem auto;
+      "
+    >
+      <img
+        src=${logo}
+        alt=""
+        style="margin-left: auto; margin-right: auto"
+      />
+      <h3
+        style="
+          color:#5D982E;
+          font-weight: 800;
+          font-size: 1.1rem;
+          letter-spacing: 0.5px;
+        "
+      >
+        Approval of UK Immigration Phase 4
+      </h3>
+
+
+      <p
+      style="
+        color: #414552 !important;
+        font-weight: 400;
+        font-size: 15px;
+        line-height: 22px;
+        margin-top: 1rem;
+        max-width: 90%;
+      "
+    >
+      Dear ${user?.name}, 
+    </p>
+
+    <p
+    style="
+      color: #414552 !important;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 22px;
+      margin-top: 1rem;
+      max-width: 90%;
+    "
+  >
+    We regret to inform you that your application has been rejected by the authorities. We understand that this may be disappointing news, and we want to assure you that we are here to support you during this time.
+
+Although this outcome is not what we had hoped for, please know that it does not diminish the value of your efforts and dedication. We remain committed to assisting you in any way we can and exploring alternative options to achieve your goals.
+
+If you have any questions or would like further clarification on the decision, please do not hesitate to reach out to us. We are here to provide guidance and assistance as you navigate this situation.
+
+Thank you for your understanding and cooperation.
+  </p>
+  
+  <p
+  style="
+    color: #414552 !important;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 24px;
+    margin-top: 1rem;
+    max-width: 80%;
+  "
+>
+ Best regards,
+  Uk Immigration
+</p>
+      <a
+        style="margin-top: 1.5rem; cursor: pointer"
+        href=${url}
+        target="_blank"
+        ><button
+          style="
+            width: 10.4rem;
+            height: 2.8rem;
+            border-radius: 8px;
+            outline: none;
+            border: none;
+            color: #fff;
+            background-color:#5D982E;
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+          "
+        >
+        login
+        </button></a
+      >
+
+      <p
+        style="
+          color: #414552 !important;
+          font-weight: 400;
+          font-size: 16px;
+          line-height: 24px;
+          max-width: 88%;
+          margin-top: 6rem;
+        "
+      >
+      All rights reserved by UK Immigration © 2023.
+      </p>
+    </div>
+  </body>
+</html>`;
+    }
+
+    const info = await transporter.sendMail({
+      from: {
+        address: "testmailingsmtp@lesoft.io",
+        name: "Lesoft",
+      },
+      to: user?.email,
+      subject: "Update on Authority Confitmation",
+      text: "",
+      html: html,
+    });
+
+    return res.status(200).json({ application, success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message, success: false });
+    console.log(err);
+  }
+};
+
 module.exports = {
   sendRequestToCompanyClient,
   postCompanyClientPhase1,
@@ -3676,4 +4002,5 @@ module.exports = {
   postGroupCharacter,
   ReRequestGroupPhase1,
   ReRequestGroupPhase4,
+  finalApplicationConfirmationGroup,
 };

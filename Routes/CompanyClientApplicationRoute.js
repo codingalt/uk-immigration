@@ -1,7 +1,7 @@
 const express = require('express');
 const Authenticate = require('../Middlewares/Auth/Auth');
 const { isAssignedCompanyCaseWorker, isAssignedCaseWorker, isAdmin, isAdminOrCaseWorker } = require('../Middlewares/Auth/role');
-const {postCompanyClientPhase1, postCompanyClientPhase2, requestCompanyClientPhase, sendRequestToCompanyClient, acceptCompanyInitialRequest, approveCompanyPhase1, approveCompanyPhase2, approveCompanyPhase3, approveCompanyPhase4, postCompanyClientPhase3, postCompanyClientPhase4, getApplicationsByCompanyId, getGroupClientApplicationsById, signupCompanyClient, getGroupClientApplicationsByUserId, assignGroupApplicationToCaseWorker, addNotesGroupClient, getAllGroupApplicationData, updateGroupApplicationService, rejectGroupApplication, linkGroupCompany, updateGroupPhaseByAdmin, postGroupGeneral, postGroupAccomodation, postGroupFamily, postGroupLanguage, postGroupEducation, postGroupEmployment, postGroupMaintenance, postGroupTravel, postGroupCharacter, ReRequestGroupPhase1, ReRequestGroupPhase4 } = require('../Controllers/CompanyClientApplication');
+const {postCompanyClientPhase1, postCompanyClientPhase2, requestCompanyClientPhase, sendRequestToCompanyClient, acceptCompanyInitialRequest, approveCompanyPhase1, approveCompanyPhase2, approveCompanyPhase3, approveCompanyPhase4, postCompanyClientPhase3, postCompanyClientPhase4, getApplicationsByCompanyId, getGroupClientApplicationsById, signupCompanyClient, getGroupClientApplicationsByUserId, assignGroupApplicationToCaseWorker, addNotesGroupClient, getAllGroupApplicationData, updateGroupApplicationService, rejectGroupApplication, linkGroupCompany, updateGroupPhaseByAdmin, postGroupGeneral, postGroupAccomodation, postGroupFamily, postGroupLanguage, postGroupEducation, postGroupEmployment, postGroupMaintenance, postGroupTravel, postGroupCharacter, ReRequestGroupPhase1, ReRequestGroupPhase4, finalApplicationConfirmationGroup } = require('../Controllers/CompanyClientApplication');
 const router = express.Router();
 const multer = require("multer");
 
@@ -30,6 +30,11 @@ const applicationUpload = multer({
 });
 
 const chalanUpload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
+
+const pdfFinalConfirmation = multer({
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
 });
@@ -93,5 +98,15 @@ router.post("/api/group/application/character/:applicationId", Authenticate, pos
 // Re Request from admin side to Submit Phase data if rejected by admin 
 router.post("/api/rerequest/group/phase1/:applicationId", Authenticate, isAdminOrCaseWorker, isAssignedCompanyCaseWorker, ReRequestGroupPhase1);
 router.post("/api/rerequest/group/phase4/:applicationId", Authenticate, isAdminOrCaseWorker, isAssignedCompanyCaseWorker, ReRequestGroupPhase4);
+
+// Final Group Application Approval 
+router.post(
+  "/api/group/finalConfirmation/:applicationId",
+  Authenticate,
+  pdfFinalConfirmation.fields([{ name: "pdf", maxCount: 1 }]),
+  isAdminOrCaseWorker,
+  isAssignedCompanyCaseWorker,
+  finalApplicationConfirmationGroup
+);
 
 module.exports = router;
